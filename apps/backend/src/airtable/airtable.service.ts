@@ -6,6 +6,7 @@ import {
   mapFormat,
   mapTargetAudience,
   mapModality,
+  mapThemes,
   extractImageUrl,
   computeIsDuringWeek,
   parseAirtableDateTime,
@@ -156,6 +157,7 @@ export class AirtableService {
     const { format, type } = mapFormat(f['Format']);
     const modality = mapModality(f["Type de l'événement"]);
     const targetAudience = mapTargetAudience(f['Public']);
+    const themes = mapThemes(f['Thématique']);
     const imageUrl = extractImageUrl(f["Visuel de l'événement"]);
     const isDuringWeek = computeIsDuringWeek(
       f["Date de début de l'événement"],
@@ -187,6 +189,7 @@ export class AirtableService {
       latitude: 0,
       longitude: 0,
       type,
+      themes,
       organizer: f['Nom de la structure organisatrice'] || '',
       organizerContact,
       registrationUrl: f["Lien d'inscription à l'événement"] || undefined,

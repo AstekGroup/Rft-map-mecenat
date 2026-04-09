@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Event } from '@/types/event';
+import { Event, EventTheme } from '@/types/event';
 import { EventFilters } from '@/hooks';
 import { EventCard } from './EventCard';
 import { FilterPanel } from '@/components/Filters/FilterPanel';
@@ -13,6 +13,7 @@ interface SidebarProps {
   onUpdateFilters: (filters: Partial<EventFilters>) => void;
   onToggleRegion: (region: string) => void;
   onToggleType: (type: string) => void;
+  onToggleTheme: (theme: EventTheme) => void;
   onToggleAudience: (audience: string) => void;
   onResetFilters: () => void;
   selectedEvent: Event | null;
@@ -33,6 +34,7 @@ export function Sidebar({
   onUpdateFilters,
   onToggleRegion,
   onToggleType,
+  onToggleTheme,
   onToggleAudience,
   onResetFilters,
   selectedEvent,
@@ -234,6 +236,7 @@ export function Sidebar({
             onUpdateFilters={onUpdateFilters}
             onToggleRegion={onToggleRegion}
             onToggleType={onToggleType}
+            onToggleTheme={onToggleTheme}
             onToggleAudience={onToggleAudience}
             onResetFilters={onResetFilters}
             stats={stats}

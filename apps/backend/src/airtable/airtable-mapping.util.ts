@@ -7,8 +7,61 @@ import type {
   EventFormat,
   TargetAudience,
   EventModality,
+  EventTheme,
 } from '@make-map/types';
 import type { AirtableAttachment } from './airtable.types';
+
+// ============================================================
+// Mapping Thématique Airtable -> EventTheme[]
+// ============================================================
+
+const THEME_MAP: Record<string, EventTheme> = {
+  'Santé mentale': 'sante-mentale',
+  'Activité physique': 'activite-physique',
+  'Alimentation': 'alimentation',
+  'Addictions': 'addictions',
+  'Maladies chroniques':
+    'maladies-chroniques',
+  'Vaccination': 'vaccination',
+  'Dépistage': 'depistage',
+  'Santé environnementale': 'sante-environnementale',
+  'Risques liés au numérique': 'numerique',
+  'Soins ciblés': 'soins-cibles',
+  Autres: 'autre',
+};
+
+export function mapThemes(airtableThemes: string[] | undefined): EventTheme[] {
+  if (!airtableThemes || airtableThemes.length === 0) return ['autre'];
+
+  const mapped = airtableThemes
+    .map((t) => {
+      const exact = THEME_MAP[t];
+      if (exact) return exact;
+
+      const lower = t.toLowerCase();
+      if (lower.includes('mental') || lower.includes('bien-être'))
+        return 'sante-mentale';
+      if (lower.includes('physique') || lower.includes('sport'))
+        return 'activite-physique';
+      if (lower.includes('aliment') || lower.includes('nutri'))
+        return 'alimentation';
+      if (lower.includes('addict')) return 'addictions';
+      if (lower.includes('maladie') && lower.includes('chronique'))
+        return 'maladies-chroniques';
+      if (lower.includes('vaccin')) return 'vaccination';
+      if (lower.includes('dépistage') || lower.includes('bilan'))
+        return 'depistage';
+      if (lower.includes('environ')) return 'sante-environnementale';
+      if (lower.includes('numérique')) return 'numerique';
+      if (lower.includes('soins') || lower.includes('bucco'))
+        return 'soins-cibles';
+
+      return 'autre';
+    })
+    .filter((t): t is EventTheme => t !== null);
+
+  return [...new Set(mapped)]; // Remove duplicates
+}
 
 // ============================================================
 // Mapping Format Airtable -> EventFormat + EventType

@@ -1,14 +1,21 @@
 import { EventFilters } from '@/hooks';
 import {
-  EventType,
+  
+  EventType, 
+ 
   TargetAudience,
-  EVENT_TYPE_LABELS,
-  EVENT_TYPE_COLORS,
+  EVENT_TYPE_LABELS, 
+ 
+  EVENT_TYPE_COLORS, 
+  EventTheme, 
+  EVENT_THEME_LABELS, 
+ 
   TARGET_AUDIENCE_LABELS,
   REGIONS,
   EVENT_TYPES_ALL,
+
 } from '@/types/event';
-import { Calendar, MapPin, Tag, RotateCcw, Search, X, Hash, Users, History } from 'lucide-react';
+import { Calendar, MapPin, Tag, RotateCcw, Search, X, Hash, BookOpen, Users, History } from 'lucide-react';
 import { Button } from '@/components/UI';
 import { FilterAccordion } from './FilterAccordion';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
@@ -20,6 +27,7 @@ interface FilterPanelProps {
   onUpdateFilters: (filters: Partial<EventFilters>) => void;
   onToggleRegion: (region: string) => void;
   onToggleType: (type: string) => void;
+  onToggleTheme: (theme: EventTheme) => void;
   onToggleAudience: (audience: string) => void;
   onResetFilters: () => void;
   stats: {
@@ -32,11 +40,14 @@ interface FilterPanelProps {
 const EVENT_TYPES: EventType[] = EVENT_TYPES_ALL;
 const AUDIENCES: TargetAudience[] = ['tout-public', 'jeunes', 'seniors', 'familles', 'scolaire', 'professionnels'];
 
+const EVENT_THEMES = Object.keys(EVENT_THEME_LABELS) as EventTheme[];
+
 export function FilterPanel({
   filters,
   onUpdateFilters,
   onToggleRegion,
   onToggleType,
+  onToggleTheme,
   onToggleAudience,
   onResetFilters,
 }: FilterPanelProps) {
@@ -45,6 +56,7 @@ export function FilterPanel({
     filters.postalCode ||
     filters.regions.length > 0 ||
     filters.types.length > 0 ||
+    filters.themes.length > 0 ||
     filters.audiences.length > 0 ||
     isDateFilterActive(filters.dateFilter, filters.dateFrom);
 
@@ -147,6 +159,33 @@ export function FilterPanel({
                 </label>
               );
             })}
+          </div>
+        </FilterAccordion>
+
+        {/* Filtre par thématique */}
+        <FilterAccordion
+          title="Thématiques"
+          icon={<BookOpen className="w-4 h-4" />}
+          defaultOpen={filters.themes.length > 0}
+          badge={filters.themes.length}
+        >
+          <div className="space-y-2">
+            {EVENT_THEMES.map((theme) => (
+              <label
+                key={theme}
+                className="flex items-center gap-3 cursor-pointer group"
+              >
+                <input
+                  type="checkbox"
+                  checked={filters.themes.includes(theme)}
+                  onChange={() => onToggleTheme(theme)}
+                  className="w-4 h-4 text-accent-pink border-primary/30 rounded focus:ring-accent-pink"
+                />
+                <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
+                  {EVENT_THEME_LABELS[theme]}
+                </span>
+              </label>
+            ))}
           </div>
         </FilterAccordion>
 

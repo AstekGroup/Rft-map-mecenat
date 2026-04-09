@@ -1,11 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, MapPin, ExternalLink, Mail, Globe, Video, Building, Accessibility, Tag } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MapPin, ExternalLink, Mail, Globe, Video, Building, Accessibility, Tag, BookOpen } from 'lucide-react';
 import { useEvents } from '@/hooks';
 import { 
   EVENT_TYPE_LABELS, 
   EVENT_FORMAT_LABELS, 
   TARGET_AUDIENCE_LABELS, 
-  MODALITY_LABELS 
+  MODALITY_LABELS,
+  EVENT_THEME_LABELS
 } from '@/types/event';
 import { Loader2 } from 'lucide-react';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
@@ -276,6 +277,32 @@ export function EventDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* Thématiques */}
+          {event.themes && event.themes.length > 0 && (
+            <div className="p-6 md:p-8 border-b border-primary/10 bg-secondary/5">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-secondary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-gobold text-sm text-primary/70 mb-2 lowercase">
+                    Thématiques
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {event.themes.map((theme) => (
+                      <span
+                        key={theme}
+                        className="text-sm font-medium text-primary bg-white border border-primary/10 px-3 py-1 rounded-full shadow-sm"
+                      >
+                        {EVENT_THEME_LABELS[theme]}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Description */}
           <div className="p-6 md:p-8 border-b border-primary/10">

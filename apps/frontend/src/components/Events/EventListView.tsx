@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Event, EVENT_TYPE_LABELS, EVENT_TYPE_COLORS } from '@/types/event';
+import { Event, EVENT_TYPE_LABELS, EVENT_TYPE_COLORS, EVENT_THEME_LABELS } from '@/types/event';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { Pagination } from '@/components/UI/Pagination';
-import { Calendar, Clock, Users, Accessibility, MapPin, Video } from 'lucide-react';
+import { Calendar, Clock, Users, Accessibility, MapPin, Video, BookOpen } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 24;
 
@@ -135,6 +135,15 @@ export function EventListView({ events }: EventListViewProps) {
                       <Users className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                       <span className="truncate">{event.organizer}</span>
                     </p>
+
+                    {event.themes && event.themes.length > 0 && (
+                      <p className="flex items-start gap-2">
+                        <BookOpen className="w-4 h-4 text-accent-pink flex-shrink-0 mt-0.5" />
+                        <span className="line-clamp-1 font-medium italic">
+                          {event.themes.map(t => EVENT_THEME_LABELS[t]).join(', ')}
+                        </span>
+                      </p>
+                    )}
 
                     {/* Modality indicator for online events */}
                     {event.modality === 'distanciel' && (

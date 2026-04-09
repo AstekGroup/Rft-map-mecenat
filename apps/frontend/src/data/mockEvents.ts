@@ -1,4 +1,4 @@
-import { Event, EventType, EventFormat, TargetAudience, EventsGeoJSON, GeoJSONEvent, EventModality, EVENT_TYPES_ALL } from '@/types/event';
+import { Event, EventType, EventFormat, TargetAudience, EventsGeoJSON, GeoJSONEvent, EventModality, EVENT_TYPES_ALL, EventTheme } from '@/types/event';
 
 // Coordonnées des principales villes françaises par région
 const CITIES: Record<string, { name: string; lat: number; lng: number; department: string; postalCode: string }[]> = {
@@ -150,6 +150,20 @@ const EVENT_IMAGES = [
   'https://images.unsplash.com/photo-1515023115689-589c33041d3c?w=800&h=400&fit=crop',
 ];
 
+const EVENT_THEMES: EventTheme[] = [
+  'sante-mentale',
+  'activite-physique',
+  'alimentation',
+  'addictions',
+  'maladies-chroniques',
+  'vaccination',
+  'depistage',
+  'sante-environnementale',
+  'numerique',
+  'soins-cibles',
+  'autre',
+];
+
 const EVENT_TITLES: Record<EventType, string[]> = {
   'atelier': [
     'Atelier Cuisine : Les légumineuses à l\'honneur',
@@ -274,6 +288,13 @@ function getRandomTargetAudiences(): TargetAudience[] {
   return shuffled.slice(0, count);
 }
 
+// Sélectionner plusieurs thématiques aléatoirement
+function getRandomThemes(): EventTheme[] {
+  const count = 1 + Math.floor(Math.random() * 2);
+  const shuffled = [...EVENT_THEMES].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
 // Générer un événement
 function generateEvent(region: string, city: typeof CITIES[string][number], _index: number): Event {
   const type = EVENT_TYPES[Math.floor(Math.random() * EVENT_TYPES.length)];
@@ -317,6 +338,7 @@ function generateEvent(region: string, city: typeof CITIES[string][number], _ind
     latitude: coords.lat,
     longitude: coords.lng,
     type,
+    themes: getRandomThemes(),
     organizer,
     organizerContact: Math.random() > 0.3 ? `contact@${organizer.toLowerCase().replace(/\s+/g, '-')}.fr` : undefined,
     registrationUrl: Math.random() > 0.4 ? 'https://semaine-vegetale.fr/participer' : undefined,

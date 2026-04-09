@@ -18,6 +18,7 @@ const mockEvent: Event = {
   latitude: 45.76,
   longitude: 4.83,
   type: 'atelier',
+  themes: ['autre'],
   organizer: 'Lab IA',
   isDuringWeek: true,
   modality: 'presentiel',

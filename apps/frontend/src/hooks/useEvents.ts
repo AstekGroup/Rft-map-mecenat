@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Event, EventType, TargetAudience, EventsGeoJSON, EVENT_TYPES_ALL } from '@/types/event';
+import { Event, EventType, EventTheme, TargetAudience, EventsGeoJSON, EVENT_TYPES_ALL } from '@/types/event';
 import { fetchEvents, eventsToGeoJSON } from '@/services/api';
 import type { DateFilterMode } from '@/utils/eventDateRange';
 import { eventIntersectsYmdRange } from '@/utils/eventDateRange';
@@ -13,6 +13,7 @@ export interface EventFilters {
   dateTo: string;
   regions: string[];
   types: EventType[];
+  themes: EventTheme[];
   audiences: TargetAudience[];
   postalCode: string;
   modality: 'all' | 'presentiel' | 'distanciel';
@@ -26,6 +27,7 @@ const initialFilters: EventFilters = {
   dateTo: '',
   regions: [],
   types: [],
+  themes: [],
   audiences: [],
   postalCode: '',
   modality: 'all',
@@ -106,6 +108,12 @@ export function useEvents() {
       // Filtre types
       if (filters.types.length > 0 && !filters.types.includes(event.type)) return false;
 
+      // Filtre thématiques
+      if (filters.themes.length > 0) {
+        const hasMatchingTheme = event.themes.some(theme => filters.themes.includes(theme));
+        if (!hasMatchingTheme) return false;
+      }
+
       // Filtre public cible
       if (filters.audiences.length > 0 && !filters.audiences.some(a => event.targetAudience.includes(a))) return false;
 
@@ -159,6 +167,15 @@ export function useEvents() {
     }));
   };
 
+  const toggleTheme = (theme: EventTheme) => {
+    setFilters(prev => ({
+      ...prev,
+      themes: prev.themes.includes(theme)
+        ? prev.themes.filter(t => t !== theme)
+        : [...prev.themes, theme],
+    }));
+  };
+
   const toggleAudience = (audience: TargetAudience) => {
     setFilters(prev => ({
       ...prev,
@@ -203,6 +220,7 @@ export function useEvents() {
     resetFilters,
     toggleRegion,
     toggleType,
+    toggleTheme,
     toggleAudience,
     stats,
     devMode,

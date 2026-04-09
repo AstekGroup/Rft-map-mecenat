@@ -16,6 +16,7 @@ const mockEvent: Event = {
   latitude: 48.8566,
   longitude: 2.3522,
   type: 'conference',
+  themes: ['autre'],
   organizer: 'Association Test',
   isDuringWeek: true,
   modality: 'presentiel',

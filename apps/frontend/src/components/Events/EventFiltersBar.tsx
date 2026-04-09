@@ -1,13 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
 import { EventFilters } from '@/hooks';
 import {
-  EventType,
+  
+  EventType, 
+ 
   TargetAudience,
-  EVENT_TYPE_LABELS,
-  EVENT_TYPE_COLORS,
+  EVENT_TYPE_LABELS, 
+ 
+  EVENT_TYPE_COLORS, 
+  EventTheme, 
+  EVENT_THEME_LABELS, 
+ 
   TARGET_AUDIENCE_LABELS,
   REGIONS,
   EVENT_TYPES_ALL,
+
 } from '@/types/event';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { DateCustomRangeInputs } from '@/components/Filters/DateCustomRangeInputs';
@@ -19,12 +26,15 @@ interface EventFiltersBarProps {
   onUpdateFilters: (filters: Partial<EventFilters>) => void;
   onToggleRegion: (region: string) => void;
   onToggleType: (type: string) => void;
+  onToggleTheme: (theme: EventTheme) => void;
   onToggleAudience: (audience: string) => void;
   onResetFilters: () => void;
 }
 
 const EVENT_TYPES: EventType[] = EVENT_TYPES_ALL;
 const AUDIENCES: TargetAudience[] = ['tout-public', 'jeunes', 'seniors', 'familles', 'scolaire', 'professionnels'];
+
+const EVENT_THEMES = Object.keys(EVENT_THEME_LABELS) as EventTheme[];
 
 interface FilterDropdownProps {
   label: string;
@@ -77,6 +87,7 @@ export function EventFiltersBar({
   onUpdateFilters,
   onToggleRegion,
   onToggleType,
+  onToggleTheme,
   onToggleAudience,
   onResetFilters,
 }: EventFiltersBarProps) {
@@ -85,6 +96,7 @@ export function EventFiltersBar({
     filters.postalCode ||
     filters.regions.length > 0 ||
     filters.types.length > 0 ||
+    filters.themes.length > 0 ||
     filters.audiences.length > 0 ||
     isDateFilterActive(filters.dateFilter, filters.dateFrom) ||
     filters.modality !== 'all';
@@ -125,6 +137,14 @@ export function EventFiltersBar({
       key: `type-${type}`,
       label: EVENT_TYPE_LABELS[type as EventType] || type,
       onRemove: () => onToggleType(type),
+    });
+  });
+
+  filters.themes.forEach((theme) => {
+    activeTags.push({
+      key: `theme-${theme}`,
+      label: EVENT_THEME_LABELS[theme as EventTheme] || theme,
+      onRemove: () => onToggleTheme(theme),
     });
   });
 
@@ -280,6 +300,31 @@ export function EventFiltersBar({
                 </label>
               );
             })}
+          </div>
+        </FilterDropdown>
+
+        {/* Thématiques filter */}
+        <FilterDropdown
+          label="Thématiques"
+          badge={filters.themes.length || undefined}
+        >
+          <div className="p-2 space-y-1 min-w-[250px]">
+            {EVENT_THEMES.map((theme) => (
+              <label
+                key={theme}
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-primary/5 transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  checked={filters.themes.includes(theme)}
+                  onChange={() => onToggleTheme(theme)}
+                  className="w-4 h-4 text-accent-pink border-primary/30 rounded focus:ring-accent-pink"
+                />
+                <span className={filters.themes.includes(theme) ? 'text-primary font-medium' : 'text-text-secondary'}>
+                  {EVENT_THEME_LABELS[theme]}
+                </span>
+              </label>
+            ))}
           </div>
         </FilterDropdown>
         

@@ -21,6 +21,7 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
     latitude: 48.8566,
     longitude: 2.3522,
     type: 'atelier',
+    themes: ['autre'],
     organizer: 'Org Test',
     isDuringWeek: true,
     modality: 'presentiel',

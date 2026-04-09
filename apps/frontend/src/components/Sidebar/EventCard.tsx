@@ -1,7 +1,7 @@
 import { memo } from 'react';
-import { Event, EVENT_TYPE_LABELS, EVENT_TYPE_COLORS } from '@/types/event';
+import { Event, EVENT_TYPE_LABELS, EVENT_TYPE_COLORS, EVENT_THEME_LABELS } from '@/types/event';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
-import { Calendar, Clock, MapPin, Globe } from 'lucide-react';
+import { Calendar, Clock, MapPin, BookOpen, Globe } from 'lucide-react';
 
 interface EventCardProps {
   event: Event;
@@ -85,6 +85,16 @@ function EventCardComponent({
               <MapPin className="w-3.5 h-3.5 text-primary flex-shrink-0" />
               <span className="truncate">{event.city}</span>
             </div>
+
+            {/* Thématiques */}
+            {event.themes && event.themes.length > 0 && (
+              <div className="flex items-center gap-1.5 text-xs text-text-secondary font-medium">
+                <BookOpen className="w-3.5 h-3.5 text-accent-pink flex-shrink-0" />
+                <span className="truncate italic">
+                  {event.themes.map(t => EVENT_THEME_LABELS[t]).join(', ')}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Badge semaine LGSV */}

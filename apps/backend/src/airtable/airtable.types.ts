@@ -44,8 +44,9 @@ export interface AirtableRecord {
     'Téléphone de l\'animateur'?: string;
     'Modération de l\'événement'?: string;
     'Visibilité sur la cartographie'?: string;
-    'Public'?: string[];
-    'Visuel de l\'événement'?: AirtableAttachment[];
+    Public?: string[];
+    Thématique?: string[];
+    "Visuel de l'événement"?: AirtableAttachment[];
     'Respect de la charte'?: boolean;
     'Réception kit communication'?: string;
     'Type de structure'?: string;

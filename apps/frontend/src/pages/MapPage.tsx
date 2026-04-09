@@ -24,6 +24,7 @@ export function MapPage() {
     resetFilters,
     toggleRegion,
     toggleType,
+    toggleTheme,
     toggleAudience,
     stats,
   } = useEvents();
@@ -151,6 +152,7 @@ export function MapPage() {
           onUpdateFilters={updateFilters}
           onToggleRegion={toggleRegion}
           onToggleType={(type) => toggleType(type as EventType)}
+          onToggleTheme={toggleTheme}
           onToggleAudience={(audience) => toggleAudience(audience as TargetAudience)}
           onResetFilters={resetFilters}
           selectedEvent={selectedEvent}
@@ -171,6 +173,7 @@ export function MapPage() {
             onUpdateFilters={updateFilters}
             onToggleRegion={toggleRegion}
             onToggleType={(type) => toggleType(type as EventType)}
+            onToggleTheme={toggleTheme}
           onToggleAudience={(audience) => toggleAudience(audience as TargetAudience)}
             onResetFilters={resetFilters}
             selectedEvent={selectedEvent}
