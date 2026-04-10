@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchEvents, fetchEventById, eventsToGeoJSON } from './api';
-import type { Event } from '@/types/event';
+import { fetchEvents, fetchEventById, fetchPartners, eventsToGeoJSON } from './api';
+import type { Event, Partner } from '@/types/event';
 
 const mockEvent: Event = {
   id: 'rec1',
@@ -22,6 +22,12 @@ const mockEvent: Event = {
   modality: 'presentiel',
   format: 'atelier',
   targetAudience: ['tout-public'],
+};
+
+const mockPartner: Partner = {
+  id: 'part1',
+  name: 'Partenaire Test',
+  logoUrl: 'https://test.com/logo.png',
 };
 
 describe('fetchEvents', () => {
@@ -69,6 +75,33 @@ describe('fetchEvents', () => {
     } as Response);
 
     await expect(fetchEvents()).rejects.toThrow('Erreur API: 500');
+  });
+});
+
+describe('fetchPartners', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn());
+  });
+
+  it('retourne les partenaires en cas de succès', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => [mockPartner],
+    } as Response);
+
+    const result = await fetchPartners();
+    expect(result).toEqual([mockPartner]);
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/api/events/partners'));
+  });
+
+  it('lève une erreur si la réponse n\'est pas ok', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error',
+    } as Response);
+
+    await expect(fetchPartners()).rejects.toThrow('Erreur API: 500');
   });
 });
 

@@ -7,7 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { EventsService } from './events.service';
-import type { Event } from '@make-map/types';
+import type { Event, Partner } from '@make-map/types';
 
 @Controller('api/events')
 export class EventsController {
@@ -25,6 +25,16 @@ export class EventsController {
     const isDevMode = devMode === 'true';
     this.logger.log(`GET /api/events (devMode: ${isDevMode})`);
     return this.eventsService.findAll(isDevMode);
+  }
+
+  /**
+   * GET /api/events/partners
+   * Retourne tous les partenaires.
+   */
+  @Get('partners')
+  async findAllPartners(): Promise<Partner[]> {
+    this.logger.log('GET /api/events/partners');
+    return this.eventsService.findAllPartners();
   }
 
   /**

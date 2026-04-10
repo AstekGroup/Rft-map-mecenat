@@ -1,7 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { Event } from '@make-map/types';
-import type { AirtableRecord, AirtableResponse } from './airtable.types';
+import type { Event, Partner } from '@make-map/types';
+import type {
+  AirtableRecord,
+  AirtableResponse,
+  AirtablePartnerRecord,
+} from './airtable.types';
 import {
   mapFormat,
   mapTargetAudience,
@@ -36,14 +40,19 @@ export class AirtableService {
       `Chargement des événements depuis Airtable (mode ${devMode ? 'dev' : 'production'})...`,
     );
 
-    // 1. Récupérer les enregistrements bruts
+    // 1. Récupérer les partenaires
+    const partnersMap = await this.fetchPartnersMap();
+
+    // 2. Récupérer les enregistrements bruts
     const records = await this.fetchRecords(devMode);
     this.logger.log(`${records.length} enregistrements récupérés depuis Airtable`);
 
-    // 2. Transformer sans géocodage
-    const partialEvents = records.map((r) => this.transformRecord(r));
+    // 3. Transformer sans géocodage
+    const partialEvents = records.map((r) =>
+      this.transformRecord(r, partnersMap),
+    );
 
-    // 3. Préparer le batch geocoding (seulement pour les événements présentiels)
+    // 4. Préparer le batch geocoding (seulement pour les événements présentiels)
     const itemsToGeocode = partialEvents
       .filter((e) => e.modality === 'presentiel' && (e.address || e.city))
       .map((e) => ({
@@ -55,11 +64,11 @@ export class AirtableService {
 
     this.logger.log(`Géocodage de ${itemsToGeocode.length} adresses...`);
 
-    // 4. Géocoder en batch
+    // 5. Géocoder en batch
     const geocodingResults =
       await this.geocodingService.batchGeocode(itemsToGeocode);
 
-    // 5. Fusionner les résultats
+    // 6. Fusionner les résultats
     const events: Event[] = partialEvents.map((event) => {
       const geo = geocodingResults.get(event.id);
       if (geo) {
@@ -79,6 +88,68 @@ export class AirtableService {
     );
 
     return events;
+  }
+
+  /**
+   * Récupère tous les partenaires depuis Airtable.
+   */
+  async fetchPartners(): Promise<Partner[]> {
+    const map = await this.fetchPartnersMap();
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  /**
+   * Récupère les partenaires et les retourne sous forme de Map (id -> Partner).
+   */
+  private async fetchPartnersMap(): Promise<Map<string, Partner>> {
+    const apiKey = this.configService.get<string>('AIRTABLE_API_KEY');
+    const baseId = this.configService.get<string>('AIRTABLE_BASE_ID');
+    const partnersTableId = this.configService.get<string>(
+      'AIRTABLE_PARTNERS_TABLE_ID',
+    );
+
+    if (!apiKey || !baseId || !partnersTableId) {
+      this.logger.warn(
+        'Configuration des partenaires manquante (AIRTABLE_PARTNERS_TABLE_ID). Aucun partenaire ne sera chargé.',
+      );
+      return new Map();
+    }
+
+    try {
+      const url = new URL(
+        `https://api.airtable.com/v0/${baseId}/${partnersTableId}`,
+      );
+      const response = await fetch(url.toString(), {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Erreur Airtable Partners: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const data = (await response.json()) as {
+        records: AirtablePartnerRecord[];
+      };
+      const partnersMap = new Map<string, Partner>();
+
+      for (const record of data.records) {
+        partnersMap.set(record.id, {
+          id: record.id,
+          name: record.fields.Nom,
+          logoUrl: extractImageUrl(record.fields.Logo),
+        });
+      }
+
+      this.logger.log(`${partnersMap.size} partenaires récupérés`);
+      return partnersMap;
+    } catch (error) {
+      this.logger.error(
+        `Erreur lors de la récupération des partenaires: ${error.message}`,
+      );
+      return new Map();
+    }
   }
 
   /**
@@ -145,7 +216,10 @@ export class AirtableService {
   /**
    * Transforme un enregistrement Airtable en Event (sans géocodage).
    */
-  private transformRecord(record: AirtableRecord): Event {
+  private transformRecord(
+    record: AirtableRecord,
+    partnersMap: Map<string, Partner>,
+  ): Event {
     const f = record.fields;
 
     const startDateTime = parseAirtableDateTime(
@@ -172,6 +246,11 @@ export class AirtableService {
     const postalCode = (f['Code postal du lieu'] || '').trim();
     const fallbackRegion =
       this.geocodingService.getRegionFromPostalCode(postalCode);
+
+    // Résolution des partenaires
+    const partners: Partner[] = (f.Communautés || [])
+      .map((id) => partnersMap.get(id))
+      .filter((p): p is Partner => !!p);
 
     return {
       id: record.id,
@@ -208,6 +287,7 @@ export class AirtableService {
       organizerWebsite: f['Site web de la structure'] || undefined,
       capacity: f["Capacité d'accueil de l'événement"] || undefined,
       registeredCount: undefined,
+      partners: partners.length > 0 ? partners : undefined,
     };
   }
 }

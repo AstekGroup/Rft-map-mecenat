@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { EventsController } from './events.controller';
 import { EventsService } from './events.service';
-import type { Event } from '@make-map/types';
+import type { Event, Partner } from '@make-map/types';
 
 const mockEvent: Event = {
   id: 'rec123',
@@ -26,6 +26,12 @@ const mockEvent: Event = {
   targetAudience: ['tout-public'],
 };
 
+const mockPartner: Partner = {
+  id: 'part1',
+  name: 'Partenaire Test',
+  logoUrl: 'https://test.com/logo.png',
+};
+
 describe('EventsController', () => {
   let controller: EventsController;
   let eventsService: jest.Mocked<EventsService>;
@@ -33,6 +39,7 @@ describe('EventsController', () => {
   beforeEach(async () => {
     eventsService = {
       findAll: jest.fn(),
+      findAllPartners: jest.fn(),
       findOne: jest.fn(),
     } as unknown as jest.Mocked<EventsService>;
 
@@ -65,6 +72,16 @@ describe('EventsController', () => {
 
       await controller.findAll('false');
       expect(eventsService.findAll).toHaveBeenCalledWith(false);
+    });
+  });
+
+  describe('findAllPartners', () => {
+    it('appelle findAllPartners du service', async () => {
+      eventsService.findAllPartners.mockResolvedValueOnce([mockPartner]);
+
+      const result = await controller.findAllPartners();
+      expect(eventsService.findAllPartners).toHaveBeenCalled();
+      expect(result).toEqual([mockPartner]);
     });
   });
 

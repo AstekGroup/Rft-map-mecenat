@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, MapPin, ExternalLink, Mail, Globe, Video, Building, Accessibility, Tag, BookOpen } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MapPin, ExternalLink, Mail, Globe, Video, Building, Accessibility, Tag, BookOpen, Handshake } from 'lucide-react';
 import { useEvents } from '@/hooks';
 import { 
   EVENT_TYPE_LABELS, 
@@ -155,10 +155,39 @@ export function EventDetailPage() {
               {event.title}
             </h1>
 
-            {/* Organizer */}
-            <p className="text-text-secondary">
-              Organisé par <span className="font-medium text-primary-dark">{event.organizer}</span>
-            </p>
+            {/* Organizer & Partners */}
+            <div className="flex flex-col gap-4">
+              <p className="text-text-secondary">
+                Organisé par <span className="font-medium text-primary-dark">{event.organizer}</span>
+              </p>
+
+              {event.partners && event.partners.length > 0 && (
+                <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-primary/5">
+                  <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1.5">
+                    <Handshake className="w-3.5 h-3.5" />
+                    Partenaires :
+                  </span>
+                  <div className="flex flex-wrap gap-4">
+                    {event.partners.map((partner) => (
+                      <div key={partner.id} className="flex items-center gap-2 group">
+                        {partner.logoUrl && (
+                          <div className="w-8 h-8 rounded bg-white shadow-sm border border-primary/5 p-1 flex items-center justify-center overflow-hidden">
+                            <img
+                              src={partner.logoUrl}
+                              alt={partner.name}
+                              className="max-w-full max-h-full object-contain"
+                            />
+                          </div>
+                        )}
+                        <span className="text-sm font-medium text-text-primary group-hover:text-primary transition-colors">
+                          {partner.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Date & Location side by side */}

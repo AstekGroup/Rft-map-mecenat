@@ -17,6 +17,8 @@ function App() {
     toggleRegion,
     toggleType,
     toggleTheme,
+    togglePartner,
+    availablePartners,
     toggleAudience,
     stats,
   } = useEvents();
@@ -83,6 +85,8 @@ function App() {
         onToggleRegion={toggleRegion}
         onToggleType={(type) => toggleType(type as EventType)}
         onToggleTheme={toggleTheme}
+        onTogglePartner={togglePartner}
+        availablePartners={availablePartners}
         onToggleAudience={(audience) => toggleAudience(audience as TargetAudience)}
         onResetFilters={resetFilters}
         selectedEvent={selectedEvent}

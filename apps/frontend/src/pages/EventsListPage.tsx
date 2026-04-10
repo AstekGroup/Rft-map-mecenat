@@ -19,6 +19,8 @@ export function EventsListPage() {
     toggleRegion,
     toggleType,
     toggleTheme,
+    togglePartner,
+    availablePartners,
     toggleAudience,
     stats,
   } = useEvents();
@@ -135,6 +137,8 @@ export function EventsListPage() {
         onToggleRegion={toggleRegion}
         onToggleType={(type) => toggleType(type as EventType)}
         onToggleTheme={toggleTheme}
+        onTogglePartner={togglePartner}
+        availablePartners={availablePartners}
         onToggleAudience={(audience) => toggleAudience(audience as TargetAudience)}
         onResetFilters={handleResetFilters}
       />

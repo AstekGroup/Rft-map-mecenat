@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Event, EventTheme } from '@/types/event';
+import { Event, EventTheme, Partner } from '@/types/event';
 import { EventFilters } from '@/hooks';
 import { EventCard } from './EventCard';
 import { FilterPanel } from '@/components/Filters/FilterPanel';
@@ -14,6 +14,8 @@ interface SidebarProps {
   onToggleRegion: (region: string) => void;
   onToggleType: (type: string) => void;
   onToggleTheme: (theme: EventTheme) => void;
+  onTogglePartner: (partnerId: string) => void;
+  availablePartners: Partner[];
   onToggleAudience: (audience: string) => void;
   onResetFilters: () => void;
   selectedEvent: Event | null;
@@ -35,6 +37,8 @@ export function Sidebar({
   onToggleRegion,
   onToggleType,
   onToggleTheme,
+  onTogglePartner,
+  availablePartners,
   onToggleAudience,
   onResetFilters,
   selectedEvent,
@@ -67,7 +71,18 @@ export function Sidebar({
     filters.regions.length > 0 ||
     filters.types.length > 0 ||
     filters.audiences.length > 0 ||
+    filters.partners.length > 0 ||
+    filters.themes.length > 0 ||
     isDateFilterActive(filters.dateFilter, filters.dateFrom);
+
+  const hasActiveFilters =
+    filters.search ||
+    filters.postalCode ||
+    filters.regions.length > 0 ||
+    filters.types.length > 0 ||
+    filters.themes.length > 0 ||
+    filters.partners.length > 0 ||
+    filters.dateFilter !== 'all';
 
   if (isCollapsed) {
     return (
@@ -237,6 +252,8 @@ export function Sidebar({
             onToggleRegion={onToggleRegion}
             onToggleType={onToggleType}
             onToggleTheme={onToggleTheme}
+            onTogglePartner={onTogglePartner}
+            availablePartners={availablePartners}
             onToggleAudience={onToggleAudience}
             onResetFilters={onResetFilters}
             stats={stats}

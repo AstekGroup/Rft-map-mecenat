@@ -14,12 +14,13 @@ import {
   TARGET_AUDIENCE_LABELS,
   REGIONS,
   EVENT_TYPES_ALL,
+  Partner,
 
 } from '@/types/event';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { DateCustomRangeInputs } from '@/components/Filters/DateCustomRangeInputs';
 import { formatFrDateRangeLabel, isDateFilterActive } from '@/utils/eventDateRange';
-import { ChevronDown, RotateCcw, X, Search, MapPin, Globe, History } from 'lucide-react';
+import { ChevronDown, RotateCcw, X, Search, MapPin, Globe, Handshake, History } from 'lucide-react';
 
 interface EventFiltersBarProps {
   filters: EventFilters;
@@ -27,6 +28,8 @@ interface EventFiltersBarProps {
   onToggleRegion: (region: string) => void;
   onToggleType: (type: string) => void;
   onToggleTheme: (theme: EventTheme) => void;
+  onTogglePartner: (partnerId: string) => void;
+  availablePartners: Partner[];
   onToggleAudience: (audience: string) => void;
   onResetFilters: () => void;
 }
@@ -88,6 +91,8 @@ export function EventFiltersBar({
   onToggleRegion,
   onToggleType,
   onToggleTheme,
+  onTogglePartner,
+  availablePartners,
   onToggleAudience,
   onResetFilters,
 }: EventFiltersBarProps) {
@@ -97,6 +102,7 @@ export function EventFiltersBar({
     filters.regions.length > 0 ||
     filters.types.length > 0 ||
     filters.themes.length > 0 ||
+    filters.partners.length > 0 ||
     filters.audiences.length > 0 ||
     isDateFilterActive(filters.dateFilter, filters.dateFrom) ||
     filters.modality !== 'all';
@@ -145,6 +151,15 @@ export function EventFiltersBar({
       key: `theme-${theme}`,
       label: EVENT_THEME_LABELS[theme as EventTheme] || theme,
       onRemove: () => onToggleTheme(theme),
+    });
+  });
+
+  filters.partners.forEach((partnerId) => {
+    const partner = availablePartners.find(p => p.id === partnerId);
+    activeTags.push({
+      key: `partner-${partnerId}`,
+      label: partner?.name || partnerId,
+      onRemove: () => onTogglePartner(partnerId),
     });
   });
 
@@ -267,6 +282,44 @@ export function EventFiltersBar({
             )}
           </div>
         </FilterDropdown>
+
+        {/* Partner filter */}
+        {availablePartners.length > 0 && (
+          <FilterDropdown
+            label="Partenaires"
+            badge={filters.partners.length || undefined}
+          >
+            <div className="flex items-center gap-2 px-3 py-1 mb-1 border-b border-primary/5 text-xs font-semibold text-text-secondary uppercase tracking-wider bg-surface-light/30">
+              <Handshake className="w-3.5 h-3.5" />
+              <span>Nos partenaires</span>
+            </div>
+            <div className="p-2 space-y-1 min-w-[200px]">
+              {availablePartners.map((partner) => (
+                <label
+                  key={partner.id}
+                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-primary/5 transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={filters.partners.includes(partner.id)}
+                    onChange={() => onTogglePartner(partner.id)}
+                    className="w-4 h-4 text-accent-pink border-primary/30 rounded focus:ring-accent-pink"
+                  />
+                  {partner.logoUrl && (
+                    <img 
+                      src={partner.logoUrl} 
+                      alt={partner.name} 
+                      className="w-5 h-5 object-contain rounded-sm shadow-sm bg-white" 
+                    />
+                  )}
+                  <span className={filters.partners.includes(partner.id) ? 'text-primary font-medium' : 'text-text-secondary'}>
+                    {partner.name}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </FilterDropdown>
+        )}
         
         {/* Type filter with icons */}
         <FilterDropdown

@@ -1,7 +1,8 @@
 import { memo } from 'react';
 import { Event, EVENT_TYPE_LABELS, EVENT_TYPE_COLORS, EVENT_THEME_LABELS } from '@/types/event';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
-import { Calendar, Clock, MapPin, BookOpen, Globe } from 'lucide-react';
+import { Calendar, Clock, MapPin, BookOpen, Handshake, Globe } from 'lucide-react';
+import { Badge } from '@/components/UI';
 
 interface EventCardProps {
   event: Event;
@@ -55,13 +56,37 @@ function EventCardComponent({
 
         {/* Contenu */}
         <div className="flex-1 min-w-0">
-          {/* Tag catégorie */}
-          <span
-            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold mb-1 bg-primary/10 text-primary-dark"
-          >
-            <Icon className="w-2.5 h-2.5" />
-            {EVENT_TYPE_LABELS[event.type]}
-          </span>
+          <div className="flex items-center justify-between mb-2">
+            <Badge type={event.type} size="sm" />
+            {event.partners && event.partners.length > 0 && (
+              <div className="flex -space-x-2 overflow-hidden">
+                {event.partners.slice(0, 3).map((partner) => (
+                  partner.logoUrl ? (
+                    <img
+                      key={partner.id}
+                      className="inline-block h-5 w-5 rounded-full ring-2 ring-white bg-white object-contain"
+                      src={partner.logoUrl}
+                      alt={partner.name}
+                      title={partner.name}
+                    />
+                  ) : (
+                    <div 
+                      key={partner.id}
+                      className="inline-block h-5 w-5 rounded-full ring-2 ring-white bg-primary/10 flex items-center justify-center"
+                      title={partner.name}
+                    >
+                      <Handshake className="w-3 h-3 text-primary" />
+                    </div>
+                  )
+                ))}
+                {event.partners.length > 3 && (
+                  <div className="inline-block h-5 w-5 rounded-full ring-2 ring-white bg-surface-beige flex items-center justify-center text-[8px] font-bold text-primary">
+                    +{event.partners.length - 3}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           <h4 className="font-poppins font-semibold text-text-primary text-sm leading-tight line-clamp-2">
             {event.title}

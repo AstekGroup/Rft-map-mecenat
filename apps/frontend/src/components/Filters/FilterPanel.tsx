@@ -13,9 +13,10 @@ import {
   TARGET_AUDIENCE_LABELS,
   REGIONS,
   EVENT_TYPES_ALL,
+  Partner,
 
 } from '@/types/event';
-import { Calendar, MapPin, Tag, RotateCcw, Search, X, Hash, BookOpen, Users, History } from 'lucide-react';
+import { Calendar, MapPin, Tag, RotateCcw, Search, X, Hash, BookOpen, Handshake, Users, History } from 'lucide-react';
 import { Button } from '@/components/UI';
 import { FilterAccordion } from './FilterAccordion';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
@@ -28,6 +29,8 @@ interface FilterPanelProps {
   onToggleRegion: (region: string) => void;
   onToggleType: (type: string) => void;
   onToggleTheme: (theme: EventTheme) => void;
+  onTogglePartner: (partnerId: string) => void;
+  availablePartners: Partner[];
   onToggleAudience: (audience: string) => void;
   onResetFilters: () => void;
   stats: {
@@ -48,6 +51,8 @@ export function FilterPanel({
   onToggleRegion,
   onToggleType,
   onToggleTheme,
+  onTogglePartner,
+  availablePartners,
   onToggleAudience,
   onResetFilters,
 }: FilterPanelProps) {
@@ -57,6 +62,7 @@ export function FilterPanel({
     filters.regions.length > 0 ||
     filters.types.length > 0 ||
     filters.themes.length > 0 ||
+    filters.partners.length > 0 ||
     filters.audiences.length > 0 ||
     isDateFilterActive(filters.dateFilter, filters.dateFrom);
 
@@ -124,6 +130,42 @@ export function FilterPanel({
             )}
           </div>
         </FilterAccordion>
+
+        {/* Filtre par partenaire */}
+        {availablePartners.length > 0 && (
+          <FilterAccordion
+            title="Partenaires"
+            icon={<Handshake className="w-4 h-4" />}
+            defaultOpen={filters.partners.length > 0}
+            badge={filters.partners.length}
+          >
+            <div className="space-y-2">
+              {availablePartners.map((partner) => (
+                <label
+                  key={partner.id}
+                  className="flex items-center gap-3 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    checked={filters.partners.includes(partner.id)}
+                    onChange={() => onTogglePartner(partner.id)}
+                    className="w-4 h-4 text-accent-pink border-primary/30 rounded focus:ring-accent-pink"
+                  />
+                  {partner.logoUrl && (
+                    <img 
+                      src={partner.logoUrl} 
+                      alt={partner.name} 
+                      className="w-6 h-6 object-contain rounded-sm shadow-sm bg-white" 
+                    />
+                  )}
+                  <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
+                    {partner.name}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </FilterAccordion>
+        )}
 
         {/* Filtre par type avec pictos */}
         <FilterAccordion

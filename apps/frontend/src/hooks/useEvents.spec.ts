@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useEvents } from './useEvents';
 import * as api from '@/services/api';
-import type { Event } from '@/types/event';
+import type { Event, Partner } from '@/types/event';
 
 vi.mock('@/services/api');
 
@@ -31,15 +31,24 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
   };
 }
 
+const mockPartner: Partner = {
+  id: 'part1',
+  name: 'Partenaire Test',
+  logoUrl: 'https://test.com/logo.png',
+};
+
 describe('useEvents', () => {
   beforeEach(() => {
     vi.mocked(api.fetchEvents).mockResolvedValue([]);
+    vi.mocked(api.fetchPartners).mockResolvedValue([]);
     vi.mocked(api.eventsToGeoJSON).mockReturnValue({ type: 'FeatureCollection', features: [] });
   });
 
-  it('charge les événements au montage', async () => {
+  it('charge les événements et partenaires au montage', async () => {
     const events = [makeEvent()];
+    const partners = [mockPartner];
     vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
+    vi.mocked(api.fetchPartners).mockResolvedValueOnce(partners);
 
     const { result } = renderHook(() => useEvents());
 
@@ -50,7 +59,9 @@ describe('useEvents', () => {
     });
 
     expect(api.fetchEvents).toHaveBeenCalledWith(false);
+    expect(api.fetchPartners).toHaveBeenCalled();
     expect(result.current.allEvents).toEqual(events);
+    expect(result.current.availablePartners).toEqual(partners);
   });
 
   it('gère les erreurs de chargement', async () => {
@@ -83,6 +94,24 @@ describe('useEvents', () => {
 
       expect(result.current.events).toHaveLength(1);
       expect(result.current.events[0].title).toBe('Atelier Python');
+    });
+
+    it('filtre par partenaire via togglePartner', async () => {
+      const events = [
+        makeEvent({ id: 'a', partners: [{ id: 'part1', name: 'P1' }] }),
+        makeEvent({ id: 'b', partners: [{ id: 'part2', name: 'P2' }] }),
+      ];
+      vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
+
+      const { result } = renderHook(() => useEvents());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      act(() => {
+        result.current.togglePartner('part1');
+      });
+
+      expect(result.current.events).toHaveLength(1);
+      expect(result.current.events[0].id).toBe('a');
     });
 
     it('filtre par recherche textuelle (ville)', async () => {
@@ -311,8 +340,9 @@ describe('useEvents', () => {
   });
 
   describe('devMode', () => {
-    it('toggleDevMode change l\'état et recharge les événements', async () => {
+    it('toggleDevMode change l\'état et recharge les données', async () => {
       vi.mocked(api.fetchEvents).mockResolvedValue([]);
+      vi.mocked(api.fetchPartners).mockResolvedValue([]);
 
       const { result } = renderHook(() => useEvents());
       await waitFor(() => expect(result.current.loading).toBe(false));
@@ -322,6 +352,7 @@ describe('useEvents', () => {
       await waitFor(() => expect(result.current.loading).toBe(false));
 
       expect(api.fetchEvents).toHaveBeenCalledWith(true);
+      expect(api.fetchPartners).toHaveBeenCalled();
     });
   });
 });

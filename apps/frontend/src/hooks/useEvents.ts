@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Event, EventType, EventTheme, TargetAudience, EventsGeoJSON, EVENT_TYPES_ALL } from '@/types/event';
-import { fetchEvents, eventsToGeoJSON } from '@/services/api';
+import { Event, EventType, EventTheme, TargetAudience, EventsGeoJSON, Partner, EVENT_TYPES_ALL } from '@/types/event';
+import { fetchEvents, fetchPartners, eventsToGeoJSON } from '@/services/api';
 import type { DateFilterMode } from '@/utils/eventDateRange';
 import { eventIntersectsYmdRange } from '@/utils/eventDateRange';
 
@@ -14,6 +14,7 @@ export interface EventFilters {
   regions: string[];
   types: EventType[];
   themes: EventTheme[];
+  partners: string[]; // Partner IDs
   audiences: TargetAudience[];
   postalCode: string;
   modality: 'all' | 'presentiel' | 'distanciel';
@@ -28,6 +29,7 @@ const initialFilters: EventFilters = {
   regions: [],
   types: [],
   themes: [],
+  partners: [],
   audiences: [],
   postalCode: '',
   modality: 'all',
@@ -36,28 +38,36 @@ const initialFilters: EventFilters = {
 
 export function useEvents() {
   const [events, setEvents] = useState<Event[]>([]);
+  const [availablePartners, setAvailablePartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [filters, setFilters] = useState<EventFilters>(initialFilters);
   const [devMode, setDevMode] = useState(false);
 
-  // Charger les événements depuis Airtable (ou fallback mock)
+  // Charger les données depuis le backend
   useEffect(() => {
-    const loadEvents = async () => {
+    const loadData = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await fetchEvents(devMode);
-        setEvents(data);
+        
+        // Charger événements et partenaires en parallèle
+        const [eventsData, partnersData] = await Promise.all([
+          fetchEvents(devMode),
+          fetchPartners()
+        ]);
+        
+        setEvents(eventsData);
+        setAvailablePartners(partnersData);
       } catch (err) {
         console.error('[useEvents] Erreur lors du chargement:', err);
-        setError(err instanceof Error ? err : new Error('Erreur lors du chargement des événements'));
+        setError(err instanceof Error ? err : new Error('Erreur lors du chargement des données'));
       } finally {
         setLoading(false);
       }
     };
 
-    loadEvents();
+    loadData();
   }, [devMode]);
 
   // Date du jour (sans heures) pour le filtre des événements passés
@@ -112,6 +122,13 @@ export function useEvents() {
       if (filters.themes.length > 0) {
         const hasMatchingTheme = event.themes.some(theme => filters.themes.includes(theme));
         if (!hasMatchingTheme) return false;
+      }
+
+      // Filtre partenaires
+      if (filters.partners.length > 0) {
+        if (!event.partners || event.partners.length === 0) return false;
+        const hasMatchingPartner = event.partners.some(partner => filters.partners.includes(partner.id));
+        if (!hasMatchingPartner) return false;
       }
 
       // Filtre public cible
@@ -176,6 +193,15 @@ export function useEvents() {
     }));
   };
 
+  const togglePartner = (partnerId: string) => {
+    setFilters(prev => ({
+      ...prev,
+      partners: prev.partners.includes(partnerId)
+        ? prev.partners.filter(p => p !== partnerId)
+        : [...prev.partners, partnerId],
+    }));
+  };
+
   const toggleAudience = (audience: TargetAudience) => {
     setFilters(prev => ({
       ...prev,
@@ -221,6 +247,8 @@ export function useEvents() {
     toggleRegion,
     toggleType,
     toggleTheme,
+    togglePartner,
+    availablePartners,
     toggleAudience,
     stats,
     devMode,

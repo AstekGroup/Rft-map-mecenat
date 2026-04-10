@@ -49,6 +49,12 @@ export type EventTheme =
   | 'soins-cibles'
   | 'autre';
 
+export interface Partner {
+  id: string;
+  name: string;
+  logoUrl?: string;
+}
+
 export interface Event {
   id: string;
   title: string;
@@ -81,6 +87,7 @@ export interface Event {
   organizerWebsite?: string;
   capacity?: number;
   registeredCount?: number;
+  partners?: Partner[];
 }
 
 export interface GeoJSONEvent {
