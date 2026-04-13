@@ -29,7 +29,6 @@ services:
       dockerfile: apps/frontend/Dockerfile
       args:
         VITE_API_URL: ""
-        VITE_MAPTILER_KEY: ${VITE_MAPTILER_KEY}
     restart: unless-stopped
     expose:
       - "3080"
@@ -48,6 +47,7 @@ services:
       - AIRTABLE_API_KEY=${AIRTABLE_API_KEY}
       - AIRTABLE_BASE_ID=${AIRTABLE_BASE_ID}
       - AIRTABLE_TABLE_ID=${AIRTABLE_TABLE_ID}
+      - AIRTABLE_PARTNERS_TABLE_ID=${AIRTABLE_PARTNERS_TABLE_ID}
       - PORT=8080
       - NODE_ENV=production
       - CORS_ORIGIN=${CORS_ORIGIN:-*}

@@ -35,7 +35,7 @@ if command -v envmap &> /dev/null && [ -f ".envmap.yaml" ]; then
     AIRTABLE_API_KEY=$(envmap get --env prod AIRTABLE_API_KEY --raw 2>/dev/null | tr -d '\001' || echo "")
     AIRTABLE_BASE_ID=$(envmap get --env prod AIRTABLE_BASE_ID --raw 2>/dev/null | tr -d '\001' || echo "")
     AIRTABLE_TABLE_ID=$(envmap get --env prod AIRTABLE_TABLE_ID --raw 2>/dev/null | tr -d '\001' || echo "")
-    VITE_MAPTILER_KEY=$(envmap get --env prod VITE_MAPTILER_KEY --raw 2>/dev/null | tr -d '\001' || echo "")
+    AIRTABLE_PARTNERS_TABLE_ID=$(envmap get --env prod AIRTABLE_PARTNERS_TABLE_ID --raw 2>/dev/null | tr -d '\001' || echo "")
     DOMAIN=$(envmap get --env prod DOMAIN --raw 2>/dev/null | tr -d '\001' || echo "localhost")
 fi
 
@@ -101,7 +101,7 @@ $SSH_CMD "cat > ${REMOTE_DIR}/deploy/.env.prod << 'ENVEOF'
 AIRTABLE_API_KEY=${AIRTABLE_API_KEY}
 AIRTABLE_BASE_ID=${AIRTABLE_BASE_ID}
 AIRTABLE_TABLE_ID=${AIRTABLE_TABLE_ID}
-VITE_MAPTILER_KEY=${VITE_MAPTILER_KEY}
+AIRTABLE_PARTNERS_TABLE_ID=${AIRTABLE_PARTNERS_TABLE_ID}
 DOMAIN=${DOMAIN:-localhost}
 CORS_ORIGIN=*
 ENVEOF"

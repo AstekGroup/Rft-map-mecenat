@@ -10,9 +10,9 @@ envs:
       - AIRTABLE_API_KEY
       - AIRTABLE_BASE_ID
       - AIRTABLE_TABLE_ID
+      - AIRTABLE_PARTNERS_TABLE_ID
       # Frontend
       - VITE_API_URL
-      - VITE_MAPTILER_KEY
       # Scaleway
       - SCW_ACCESS_KEY
       - SCW_SECRET_KEY
