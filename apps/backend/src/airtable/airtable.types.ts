@@ -54,7 +54,7 @@ export interface AirtableRecord {
     'Comment avez-vous connu La Semaine de l\'IA pour Tous ?'?: string[];
     'Avez-vous quelque chose à ajouter ?'?: string;
     'Inscription NL'?: string[];
-    Communautés?: string[]; // IDs des partenaires liés
+    Partenaires?: string[]; // IDs des partenaires liés
   };
   createdTime?: string;
 }

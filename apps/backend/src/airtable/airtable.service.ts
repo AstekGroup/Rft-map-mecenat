@@ -248,7 +248,7 @@ export class AirtableService {
       this.geocodingService.getRegionFromPostalCode(postalCode);
 
     // Résolution des partenaires
-    const partners: Partner[] = (f.Communautés || [])
+    const partners: Partner[] = (f.Partenaires || [])
       .map((id) => partnersMap.get(id))
       .filter((p): p is Partner => !!p);
 
