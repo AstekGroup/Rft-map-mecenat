@@ -123,94 +123,89 @@ const CITIES: Record<string, { name: string; lat: number; lng: number; departmen
 
 const EVENT_TYPES: EventType[] = [...EVENT_TYPES_ALL];
 
-const EVENT_FORMATS: EventFormat[] = ['debat', 'atelier', 'prise-en-main', 'conference', 'visite', 'cafe-ia', 'cine-debat', 'formation', 'autre'];
+const EVENT_FORMATS: EventFormat[] = ['atelier', 'degustation', 'conference', 'visite', 'marche', 'repas', 'autre'];
 
-const TARGET_AUDIENCES: TargetAudience[] = ['tout-public', 'jeunes', 'seniors', 'qpv', 'scolaire', 'handicap', 'salaries', 'adherents'];
+const TARGET_AUDIENCES: TargetAudience[] = ['tout-public', 'jeunes', 'seniors', 'familles', 'scolaire', 'professionnels'];
 
 const VENUE_NAMES = [
-  'Salle des fêtes',
+  'Marché municipal',
   'Médiathèque',
-  'Centre culturel',
-  'Maison de quartier',
-  'Espace numérique',
-  'Bibliothèque municipale',
-  'Fablab',
+  'Ferme pédagogique',
+  'Jardin partagé',
+  'Restaurant local',
+  'Mairie',
+  'Place du village',
   'Tiers-lieu',
   'Salle polyvalente',
-  'Maison des associations',
+  'Cuisine associative',
 ];
 
 const EVENT_IMAGES = [
-  'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&h=400&fit=crop',
-  'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=400&fit=crop',
-  'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=400&fit=crop',
-  'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&h=400&fit=crop',
-  'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=400&fit=crop',
-  'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&h=400&fit=crop',
-  'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop',
-  'https://images.unsplash.com/photo-1593376893114-1aed528d80cf?w=800&h=400&fit=crop',
+  'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&h=400&fit=crop',
+  'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&h=400&fit=crop',
+  'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&h=400&fit=crop',
+  {/* more images if needed */}
+  'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800&h=400&fit=crop',
+  'https://images.unsplash.com/photo-1543353071-873f17a7a088?w=800&h=400&fit=crop',
+  'https://images.unsplash.com/photo-1515023115689-589c33041d3c?w=800&h=400&fit=crop',
 ];
 
 const EVENT_TITLES: Record<EventType, string[]> = {
-  'cafe-ia': [
-    'Café IA : Découverte de l\'intelligence artificielle',
-    'Café IA : ChatGPT et vous',
-    'Café IA : L\'IA au quotidien',
-    'Café IA : Démystifier l\'IA',
-    'Café IA : Questions-réponses sur l\'IA',
-  ],
   'atelier': [
-    'Atelier pratique : Premiers pas avec l\'IA',
-    'Atelier créatif : Créer des images avec l\'IA',
-    'Atelier numérique : L\'IA pour les seniors',
-    'Atelier découverte : Les assistants vocaux',
-    'Atelier pratique : Rédiger avec l\'IA',
+    'Atelier Cuisine : Les légumineuses à l\'honneur',
+    'Cours de cuisine végétale rapide',
+    'Atelier : Faire ses propres steaks végétaux',
+    'Cuisine de saison et locale',
+    'Atelier : Les bases de la cuisine végétale',
+  ],
+  'degustation': [
+    'Dégustation : Les fromages végétaux',
+    'Découverte de la charcuterie végétale',
+    'Dégustation de vins bios et plats végétaux',
+    'Brunch 100% végétal',
+    'Goûter végétal pour les enfants',
   ],
   'conference': [
-    'Conférence : Les enjeux éthiques de l\'IA',
-    'Conférence : L\'IA et l\'emploi de demain',
-    'Conférence : Comprendre le machine learning',
-    'Conférence : L\'IA dans la santé',
-    'Conférence : Sécurité et IA',
+    'Conférence : Pourquoi passer au végétal ?',
+    'L\'impact environnemental de notre alimentation',
+    'Santé et protéines végétales : le vrai du faux',
+    'Conférence : L\'agriculture paysanne et le végétal',
+    'Table ronde : Le futur de notre alimentation',
   ],
   'visite': [
-    'Visite guidée : Un labo d\'IA',
-    'Portes ouvertes : Fablab et IA',
-    'Visite : Découverte d\'un tiers-lieu numérique',
+    'Visite : Découverte d\'un potager partagé',
+    'Portes ouvertes : Ferme maraîchère bio',
+    'Visite guidée : Un jardin en permaculture',
+    'Découverte d\'une coopérative agricole',
+    'Visite : Les coulisses d\'un restaurant végétal',
   ],
-  'cine-debat': [
-    'Ciné-débat : L\'IA au cinéma',
-    'Exposition : L\'histoire de l\'IA',
-    'Festival : Créations et IA',
+  'marche': [
+    'Marché des producteurs locaux',
+    'Fête de la courge et des légumes d\'antan',
+    'Marché 100% végétal et artisanal',
+    'Fête des jardins urbains',
+    'Bourse aux graines et plants',
   ],
   'autre': [
-    'Exposition : L\'histoire de l\'IA',
-    'Table ronde : Parlons IA ensemble',
-    'Démonstration : Les robots du quotidien',
-    'Jeu : Quiz sur l\'intelligence artificielle',
-    'Jeu : Escape game numérique IA',
-    'Jeu : Qui a peur de l\'IA ?',
-    'Jeu interactif : IA ou humain ?',
-    'Jeu de piste : Découvrir l\'IA en s\'amusant',
+    'Projection : Documentaire sur l\'agroécologie',
+    'Quiz : Testez vos connaissances sur le végétal',
+    'Pique-nique partagé au parc',
+    'Escape Game : Sauvez les semences anciennes',
+    'Atelier rempotage et jardinage',
   ],
 };
 
 const ORGANIZERS = [
-  'Association Médiation Numérique',
-  'Médiathèque municipale',
-  'Centre social et culturel',
-  'Maison de quartier',
-  'Espace public numérique',
-  'Association d\'éducation populaire',
-  'Fablab local',
-  'Tiers-lieu numérique',
-  'Bibliothèque universitaire',
-  'Maison des associations',
-  'Club informatique',
-  'Association seniors connectés',
-  'Centre de formation',
-  'Coopérative numérique',
-  'Pôle emploi',
+  'Association Végétarienne locale',
+  'AMAP du quartier',
+  'Coopérative alimentaire',
+  'Mairie - Service Environnement',
+  'Association de quartier',
+  'Cuisiniers solidaires',
+  'Jardiniers de France',
+  'Ferme des Horizons',
+  'Restaurant Le Végétal',
+  'Collectif Alimentation Durable',
 ];
 
 // Générer un ID unique
@@ -224,7 +219,7 @@ function generateDate(isDuringWeek: boolean): { date: string; time: string } {
   let month: number;
   
   if (isDuringWeek) {
-    // Pendant la Semaine de l'IA (18-24 mai 2026)
+    // Pendant La Grande Semaine Végétale (18-24 mai 2026)
     day = 18 + Math.floor(Math.random() * 7);
     month = 5;
   } else {
@@ -274,7 +269,7 @@ function generateEndDateTime(date: string, time: string): { endDate: string; end
 
 // Sélectionner plusieurs audiences cibles aléatoirement
 function getRandomTargetAudiences(): TargetAudience[] {
-  const count = 1 + Math.floor(Math.random() * 3);
+  const count = 1 + Math.floor(Math.random() * 2);
   const shuffled = [...TARGET_AUDIENCES].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
 }
@@ -285,20 +280,20 @@ function generateEvent(region: string, city: typeof CITIES[string][number], _ind
   const titles = EVENT_TITLES[type];
   const title = titles[Math.floor(Math.random() * titles.length)];
   const organizer = ORGANIZERS[Math.floor(Math.random() * ORGANIZERS.length)];
-  const isDuringWeek = Math.random() > 0.3; // 70% pendant la semaine IA
+  const isDuringWeek = Math.random() > 0.3; // 70% pendant la semaine LGSV
   const { date, time } = generateDate(isDuringWeek);
   const coords = addVariation(city.lat, city.lng);
-  const modality: EventModality = Math.random() > 0.15 ? 'presentiel' : 'distanciel'; // 85% présentiel
+  const modality: EventModality = Math.random() > 0.05 ? 'presentiel' : 'distanciel'; // 95% présentiel (plus logique pour du végétal)
   const { endDate, endTime } = generateEndDateTime(date, time);
-  const capacity = [20, 30, 50, 100, 150][Math.floor(Math.random() * 5)];
+  const capacity = [10, 15, 20, 30, 50][Math.floor(Math.random() * 5)];
   
   // Correspondance type -> format
   const typeToFormat: Record<EventType, EventFormat> = {
-    'cafe-ia': 'cafe-ia',
     'atelier': 'atelier',
+    'degustation': 'degustation',
     'conference': 'conference',
     'visite': 'visite',
-    'cine-debat': 'cine-debat',
+    'marche': 'marche',
     'autre': 'autre',
   };
   
@@ -309,12 +304,12 @@ function generateEvent(region: string, city: typeof CITIES[string][number], _ind
   return {
     id: generateId(),
     title: `${title} - ${city.name}`,
-    description: `Rejoignez-nous pour cet événement de sensibilisation à l'intelligence artificielle organisé par ${organizer}. Une occasion unique de découvrir, comprendre et expérimenter l'IA dans un cadre convivial et accessible à tous.`,
+    description: `Découvrez cet événement organisé par ${organizer} dans le cadre de La Grande Semaine Végétale. Une occasion de partager un moment convivial autour d'une alimentation saine, gourmande et durable.`,
     date,
     time,
     endDate,
     endTime,
-    address: modality === 'presentiel' ? `${Math.floor(Math.random() * 100) + 1} rue de la République` : '',
+    address: modality === 'presentiel' ? `${Math.floor(Math.random() * 100) + 1} rue Verte` : '',
     city: city.name,
     region,
     department: city.department,
@@ -324,14 +319,13 @@ function generateEvent(region: string, city: typeof CITIES[string][number], _ind
     type,
     organizer,
     organizerContact: Math.random() > 0.3 ? `contact@${organizer.toLowerCase().replace(/\s+/g, '-')}.fr` : undefined,
-    registrationUrl: Math.random() > 0.4 ? 'https://semaine-ia.fr/inscription' : undefined,
+    registrationUrl: Math.random() > 0.4 ? 'https://semaine-vegetale.fr/participer' : undefined,
     isDuringWeek,
-    // Nouveaux champs
     modality,
-    imageUrl: Math.random() > 0.3 ? EVENT_IMAGES[Math.floor(Math.random() * EVENT_IMAGES.length)] : undefined,
+    imageUrl: Math.random() > 0.2 ? EVENT_IMAGES[Math.floor(Math.random() * EVENT_IMAGES.length)] : undefined,
     venueName: modality === 'presentiel' ? VENUE_NAMES[Math.floor(Math.random() * VENUE_NAMES.length)] : undefined,
     accessibilityInfo: Math.random() > 0.6 ? 'Accessible PMR' : undefined,
-    videoConferenceUrl: modality === 'distanciel' ? 'https://meet.semaine-ia.fr/event' : undefined,
+    videoConferenceUrl: modality === 'distanciel' ? 'https://zoom.us/j/event-vegetal' : undefined,
     format,
     targetAudience: getRandomTargetAudiences(),
     contactEmail: Math.random() > 0.3 ? `contact@${organizer.toLowerCase().replace(/\s+/g, '-')}.fr` : undefined,
@@ -358,7 +352,6 @@ export function generateMockEvents(count: number = 1500): Event[] {
     }
   }
   
-  // Shuffle events for more natural distribution
   return events.sort(() => Math.random() - 0.5);
 }
 

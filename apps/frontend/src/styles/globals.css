@@ -1,6 +1,9 @@
 /* MapLibre GL JS styles - must be first */
 @import 'maplibre-gl/dist/maplibre-gl.css';
 
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,18 +11,18 @@
 /* Base styles */
 @layer base {
   html {
-    font-family: 'Palanquin', sans-serif;
+    font-family: 'Inter', sans-serif;
     scroll-behavior: smooth;
   }
   
   body {
-    @apply bg-surface-beige-light text-text-primary;
+    @apply bg-surface-offwhite text-text-primary;
     min-height: 100vh;
     overflow-y: auto;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Rubik', sans-serif;
+    font-family: 'Poppins', sans-serif;
   }
 }
 
@@ -27,7 +30,7 @@
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: #003081 #ffeed1;
+    scrollbar-color: #3BAE5D #F2EDE4;
   }
   
   .scrollbar-thin::-webkit-scrollbar {
@@ -35,17 +38,17 @@
   }
   
   .scrollbar-thin::-webkit-scrollbar-track {
-    background: #ffeed1;
+    background: #F2EDE4;
     border-radius: 3px;
   }
   
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: #003081;
+    background: #3BAE5D;
     border-radius: 3px;
   }
   
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: #004099;
+    background: #1F7A3E;
   }
 }
 
@@ -85,14 +88,14 @@
 
 /* Cluster marker styles */
 .cluster-marker {
-  @apply flex items-center justify-center rounded-full bg-accent-coral text-white font-rubik font-semibold shadow-cluster;
+  @apply flex items-center justify-center rounded-full bg-primary text-white font-poppins font-semibold shadow-cluster;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .cluster-marker:hover {
   transform: scale(1.1);
-  box-shadow: 0 4px 15px rgba(245, 100, 118, 0.5);
+  box-shadow: 0 4px 15px rgba(59, 174, 93, 0.5);
 }
 
 /* Event marker styles */
@@ -137,15 +140,15 @@
 
 /* Button base styles */
 .btn-primary {
-  @apply bg-accent-coral text-white font-palanquin font-bold px-6 py-3 rounded-button;
-  @apply hover:bg-accent-coral-dark hover:scale-105 active:scale-100;
+  @apply bg-primary text-white font-inter font-bold px-6 py-3 rounded-button;
+  @apply hover:bg-primary-dark hover:scale-105 active:scale-100;
   @apply transition-all duration-200 ease-out;
-  @apply focus:outline-none focus:ring-2 focus:ring-accent-coral focus:ring-offset-2;
+  @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
 }
 
 .btn-secondary {
-  @apply bg-primary text-white font-palanquin font-semibold px-4 py-2 rounded-button;
-  @apply hover:bg-primary-light hover:scale-105 active:scale-100;
+  @apply bg-surface-white text-primary font-inter font-semibold px-4 py-2 rounded-button border border-primary;
+  @apply hover:bg-surface-beige hover:scale-105 active:scale-100;
   @apply transition-all duration-200 ease-out;
   @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
 }
@@ -155,16 +158,16 @@
   @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
 }
 
-.badge-coral {
-  @apply bg-accent-coral/10 text-accent-coral;
-}
-
 .badge-primary {
   @apply bg-primary/10 text-primary;
 }
 
-.badge-magenta {
-  @apply bg-accent-magenta/10 text-accent-magenta;
+.badge-yellow {
+  @apply bg-accent-yellow/10 text-accent-yellow;
+}
+
+.badge-red {
+  @apply bg-accent-red/10 text-accent-red;
 }
 
 /* Mobile drawer animation */

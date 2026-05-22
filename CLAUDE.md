@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is an MVP POC for "Semaine de l'IA pour Tous" - an interactive map application displaying 1500+ AI awareness events across France. The project is a **monorepo** with a React frontend, a NestJS backend, and shared types.
+This is an MVP POC for **"La Grande Semaine Végétale"** - an interactive map application displaying events promoting plant-based food across France. The project is a **monorepo** with a React frontend, a NestJS backend, and shared types.
 
-**Client**: La Mednum / Semaine de l'IA pour Tous
-**Event dates**: May 18-24, 2026
-**Status**: Monorepo with backend API proxy for Airtable
+**Project**: La Grande Semaine Végétale
+**Event dates**: May 2026
+**Status**: Adapted from "Semaine de l'IA" to LGSV branding
 
 ## Monorepo Structure
 
@@ -159,3 +159,17 @@ import { Event } from '@/types/event';  // Re-exports from @make-map/types
 - All French text/labels should remain in French
 - Event dates reference May 2026 event week
 - Backend is READ-ONLY on Airtable (only GET operations)
+## Design System (LGSV)
+
+Custom design system matching `resources/lgsv-design.yml`:
+
+**Colors**: 
+- `primary`: #3BAE5D (green_main)
+- `primary-dark`: #1F7A3E (green_dark)
+- `primary-light`: #A7D7B5 (green_light)
+- `surface-beige`: #F2EDE4
+- `text-primary`: #2E2E2E
+
+**Typography**: 
+- Titles: Poppins
+- Body: Inter

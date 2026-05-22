@@ -1,5 +1,5 @@
 /**
- * Utilitaires de mapping entre les valeurs Airtable et les types internes.
+ * Utilitaires de mapping entre les valeurs Airtable et les types internes (La Grande Semaine Végétale).
  */
 
 import type {
@@ -20,18 +20,16 @@ interface FormatMapping {
 }
 
 const FORMAT_MAP: Record<string, FormatMapping> = {
-  'Conférence / Table-ronde / Débat': { format: 'conference', type: 'conference' },
-  'Atelier / Café IA': { format: 'cafe-ia', type: 'cafe-ia' },
-  'Formation / Sensibilisation': { format: 'formation', type: 'atelier' },
-  'Jeu / Hackathon': { format: 'autre', type: 'autre' },
+  'Atelier Cuisine': { format: 'atelier', type: 'atelier' },
+  'Dégustation': { format: 'degustation', type: 'degustation' },
+  'Conférence / Débat': { format: 'conference', type: 'conference' },
+  'Visite de ferme / Jardin': { format: 'visite', type: 'visite' },
+  'Marché / Fête locale': { format: 'marche', type: 'marche' },
+  'Repas partagé': { format: 'repas', type: 'autre' },
   'Atelier': { format: 'atelier', type: 'atelier' },
-  'Café IA': { format: 'cafe-ia', type: 'cafe-ia' },
   'Conférence': { format: 'conference', type: 'conference' },
-  'Débat': { format: 'debat', type: 'conference' },
-  'Formation': { format: 'formation', type: 'atelier' },
-  'Visite guidée / Portes ouvertes': { format: 'visite', type: 'visite' },
-  'Ciné-débat / Exposition / Festival': { format: 'cine-debat', type: 'cine-debat' },
-  "Prise en main d'outil": { format: 'prise-en-main', type: 'atelier' },
+  'Marché': { format: 'marche', type: 'marche' },
+  'Visite': { format: 'visite', type: 'visite' },
 };
 
 export function mapFormat(airtableFormat: string | undefined): FormatMapping {
@@ -41,11 +39,14 @@ export function mapFormat(airtableFormat: string | undefined): FormatMapping {
   if (exact) return exact;
 
   const lower = airtableFormat.toLowerCase();
-  for (const [key, value] of Object.entries(FORMAT_MAP)) {
-    if (lower.includes(key.toLowerCase()) || key.toLowerCase().includes(lower)) {
-      return value;
-    }
-  }
+  
+  // Fuzzy matching pour faciliter la transition
+  if (lower.includes('cuisine') || lower.includes('atelier')) return { format: 'atelier', type: 'atelier' };
+  if (lower.includes('degustation') || lower.includes('dégustation')) return { format: 'degustation', type: 'degustation' };
+  if (lower.includes('conf') || lower.includes('débat') || lower.includes('debat')) return { format: 'conference', type: 'conference' };
+  if (lower.includes('ferme') || lower.includes('jardin') || lower.includes('visite')) return { format: 'visite', type: 'visite' };
+  if (lower.includes('marché') || lower.includes('marche') || lower.includes('fête')) return { format: 'marche', type: 'marche' };
+  if (lower.includes('repas')) return { format: 'repas', type: 'autre' };
 
   return { format: 'autre', type: 'autre' };
 }
@@ -56,14 +57,14 @@ export function mapFormat(airtableFormat: string | undefined): FormatMapping {
 
 const AUDIENCE_MAP: Record<string, TargetAudience> = {
   'Tout public': 'tout-public',
+  'Jeunes (15-25 ans)': 'jeunes',
   'Jeunes': 'jeunes',
   'Seniors': 'seniors',
+  'Familles': 'familles',
+  'Scolaire': 'scolaire',
   'Ecoliers / Etudiants': 'scolaire',
   'Écoliers / Étudiants': 'scolaire',
-  'Personnes habitants dans des quartiers prioritaires de la ville': 'qpv',
-  "Personnes porteuses d'un handicap": 'handicap',
-  "Salariés d'une entreprise": 'salaries',
-  "Adhérents d'une structure": 'adherents',
+  'Professionnels': 'professionnels',
 };
 
 export function mapTargetAudience(
@@ -77,21 +78,17 @@ export function mapTargetAudience(
       if (exact) return exact;
 
       const lower = p.toLowerCase();
-      if (lower.includes('tout public')) return 'tout-public' as TargetAudience;
-      if (lower.includes('jeune')) return 'jeunes' as TargetAudience;
-      if (lower.includes('senior')) return 'seniors' as TargetAudience;
+      if (lower.includes('tout public')) return 'tout-public';
+      if (lower.includes('jeune')) return 'jeunes';
+      if (lower.includes('senior')) return 'seniors';
+      if (lower.includes('famille')) return 'familles';
       if (
         lower.includes('colier') ||
         lower.includes('tudiant') ||
         lower.includes('scolaire')
       )
-        return 'scolaire' as TargetAudience;
-      if (lower.includes('quartier') || lower.includes('qpv'))
-        return 'qpv' as TargetAudience;
-      if (lower.includes('handicap')) return 'handicap' as TargetAudience;
-      if (lower.includes('salari')) return 'salaries' as TargetAudience;
-      if (lower.includes('adhérent') || lower.includes('adherent'))
-        return 'adherents' as TargetAudience;
+        return 'scolaire';
+      if (lower.includes('pro')) return 'professionnels';
 
       return null;
     })

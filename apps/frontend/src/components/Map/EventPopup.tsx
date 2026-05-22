@@ -16,7 +16,7 @@ export function EventPopup({ event, onClose, onViewDetails }: EventPopupProps) {
   });
   
   return (
-    <div className="bg-white rounded-card shadow-popup w-80 max-w-[90vw] animate-fade-in overflow-hidden">
+    <div className="bg-white rounded-card shadow-popup w-80 max-w-[90vw] animate-fade-in overflow-hidden font-inter">
       {/* Header */}
       <div className="bg-primary p-4 text-white">
         <div className="flex items-start justify-between gap-2">
@@ -34,7 +34,7 @@ export function EventPopup({ event, onClose, onViewDetails }: EventPopupProps) {
                 </span>
               )}
             </div>
-            <h3 className="font-rubik font-semibold text-base mt-2 leading-tight">
+            <h3 className="font-poppins font-semibold text-base mt-2 leading-tight">
               {event.title}
             </h3>
           </div>
@@ -54,25 +54,25 @@ export function EventPopup({ event, onClose, onViewDetails }: EventPopupProps) {
       <div className="p-4 space-y-2.5">
         {/* Date, heure - sur une seule ligne */}
         <div className="flex items-center gap-2 text-sm text-text-secondary flex-wrap">
-          <Calendar className="w-4 h-4 text-accent-coral flex-shrink-0" />
+          <Calendar className="w-4 h-4 text-primary flex-shrink-0" />
           <span className="capitalize">{formattedDate}</span>
           <span className="text-primary/30">|</span>
-          <Clock className="w-4 h-4 text-accent-coral flex-shrink-0" />
+          <Clock className="w-4 h-4 text-primary flex-shrink-0" />
           <span>{event.time}{event.endTime ? ` - ${event.endTime}` : ''}</span>
         </div>
         
-        {/* Badge semaine IA */}
+        {/* Badge semaine LGSV */}
         {event.isDuringWeek && (
-          <div className="inline-flex items-center gap-1.5 bg-accent-coral/10 text-accent-coral px-2.5 py-1 rounded-full text-xs font-medium">
-            <span className="w-2 h-2 bg-accent-coral rounded-full animate-pulse-soft" />
-            Pendant la Semaine de l'IA
+          <div className="inline-flex items-center gap-1.5 bg-primary/10 text-primary-dark px-2.5 py-1 rounded-full text-xs font-medium">
+            <span className="w-2 h-2 bg-primary rounded-full animate-pulse-soft" />
+            La Grande Semaine Végétale
           </div>
         )}
         
         {/* Lieu */}
         {event.modality === 'presentiel' && (
           <div className="flex items-start gap-2 text-sm">
-            <MapPin className="w-4 h-4 text-accent-coral mt-0.5 flex-shrink-0" />
+            <MapPin className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
             <div className="text-text-secondary">
               {event.venueName && <p className="font-medium text-text-primary">{event.venueName}</p>}
               <p>{event.address}</p>
@@ -84,14 +84,14 @@ export function EventPopup({ event, onClose, onViewDetails }: EventPopupProps) {
         {/* Lien visio pour distanciel */}
         {event.modality === 'distanciel' && event.videoConferenceUrl && (
           <div className="flex items-center gap-2 text-sm">
-            <Video className="w-4 h-4 text-accent-coral" />
+            <Video className="w-4 h-4 text-primary" />
             <span className="text-text-secondary">Événement en ligne</span>
           </div>
         )}
         
         {/* Organisateur */}
         <div className="flex items-center gap-2 text-sm">
-          <User className="w-4 h-4 text-accent-coral" />
+          <User className="w-4 h-4 text-primary" />
           <span className="text-text-secondary">{event.organizer}</span>
         </div>
         
@@ -104,25 +104,16 @@ export function EventPopup({ event, onClose, onViewDetails }: EventPopupProps) {
         <div className="flex gap-2 pt-1">
           <button
             onClick={() => onViewDetails?.(event.id)}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-surface-beige hover:bg-surface-beige/80 text-primary font-medium rounded-lg text-sm transition-colors"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-surface-beige hover:bg-primary/10 text-primary-dark font-medium rounded-button text-sm transition-colors border border-primary/20"
           >
             <Eye className="w-4 h-4" />
-            Voir les détails
+            Détails
           </button>
           
-          {event.organizerContact ? (
+          {event.organizerContact || event.contactEmail ? (
             <a
-              href={`mailto:${event.organizerContact}`}
-              className="flex items-center justify-center gap-1.5 py-2 px-3 bg-primary/10 hover:bg-primary/20 text-primary font-medium rounded-lg text-sm transition-colors"
-              title="Contacter l'organisateur"
-            >
-              <Mail className="w-4 h-4" />
-              Contact
-            </a>
-          ) : event.contactEmail ? (
-            <a
-              href={`mailto:${event.contactEmail}`}
-              className="flex items-center justify-center gap-1.5 py-2 px-3 bg-primary/10 hover:bg-primary/20 text-primary font-medium rounded-lg text-sm transition-colors"
+              href={`mailto:${event.organizerContact || event.contactEmail}`}
+              className="flex items-center justify-center gap-1.5 py-2 px-3 bg-primary/10 hover:bg-primary/20 text-primary-dark font-medium rounded-button text-sm transition-colors border border-primary/20"
               title="Contacter l'organisateur"
             >
               <Mail className="w-4 h-4" />

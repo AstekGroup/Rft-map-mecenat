@@ -30,7 +30,7 @@ interface FilterPanelProps {
 }
 
 const EVENT_TYPES: EventType[] = EVENT_TYPES_ALL;
-const AUDIENCES: TargetAudience[] = ['tout-public', 'jeunes', 'seniors', 'qpv', 'scolaire', 'handicap', 'salaries', 'adherents'];
+const AUDIENCES: TargetAudience[] = ['tout-public', 'jeunes', 'seniors', 'familles', 'scolaire', 'professionnels'];
 
 export function FilterPanel({
   filters,
@@ -49,7 +49,7 @@ export function FilterPanel({
     isDateFilterActive(filters.dateFilter, filters.dateFrom);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full font-inter">
       {/* Recherche intégrée */}
       <div className="p-4 border-b border-primary/10">
         <div className="relative">
@@ -77,16 +77,16 @@ export function FilterPanel({
       <div className="flex-1 overflow-y-auto scrollbar-thin">
         {/* Filtre par date */}
         <FilterAccordion
-          title="Date"
+          title="Période"
           icon={<Calendar className="w-4 h-4" />}
           defaultOpen={isDateFilterActive(filters.dateFilter, filters.dateFrom)}
         >
           <div className="space-y-2">
             {[
-              { value: 'all', label: 'Tous les événements' },
-              { value: 'during-week', label: 'Pendant la Semaine de l\'IA (18-24 mai)' },
+              { value: 'all', label: 'Toutes les dates' },
+              { value: 'during-week', label: 'La Grande Semaine Végétale' },
               { value: 'other', label: 'Autres dates' },
-              { value: 'custom', label: 'Plage au calendrier (jour ou période)' },
+              { value: 'custom', label: 'Plage au calendrier' },
             ].map((option) => (
               <label
                 key={option.value}
@@ -100,7 +100,7 @@ export function FilterPanel({
                   onChange={() =>
                     onUpdateFilters({ dateFilter: option.value as EventFilters['dateFilter'] })
                   }
-                  className="w-4 h-4 text-accent-coral border-primary/30 focus:ring-accent-coral"
+                  className="w-4 h-4 text-primary border-primary/30 focus:ring-primary"
                 />
                 <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
                   {option.label}
@@ -122,7 +122,7 @@ export function FilterPanel({
         >
           <div className="space-y-2">
             {EVENT_TYPES.map((type) => {
-              const Icon = TYPE_ICONS[type];
+              const Icon = TYPE_ICONS[type] || Globe;
               const color = EVENT_TYPE_COLORS[type];
               return (
                 <label
@@ -133,7 +133,7 @@ export function FilterPanel({
                     type="checkbox"
                     checked={filters.types.includes(type)}
                     onChange={() => onToggleType(type)}
-                    className="w-4 h-4 text-accent-coral border-primary/30 rounded focus:ring-accent-coral"
+                    className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
                   />
                   <div
                     className="w-6 h-6 rounded-md flex items-center justify-center"
@@ -167,7 +167,7 @@ export function FilterPanel({
                   type="checkbox"
                   checked={filters.audiences.includes(audience)}
                   onChange={() => onToggleAudience(audience)}
-                  className="w-4 h-4 text-accent-coral border-primary/30 rounded focus:ring-accent-coral"
+                  className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
                 />
                 <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
                   {TARGET_AUDIENCE_LABELS[audience]}
@@ -230,7 +230,7 @@ export function FilterPanel({
                     type="checkbox"
                     checked={filters.regions.includes(region)}
                     onChange={() => onToggleRegion(region)}
-                    className="w-4 h-4 text-accent-coral border-primary/30 rounded focus:ring-accent-coral"
+                    className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
                   />
                   <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
                     {region}
@@ -252,7 +252,7 @@ export function FilterPanel({
                       type="checkbox"
                       checked={filters.regions.includes(region)}
                       onChange={() => onToggleRegion(region)}
-                      className="w-4 h-4 text-accent-coral border-primary/30 rounded focus:ring-accent-coral"
+                      className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
                     />
                     <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
                       {region}
@@ -273,7 +273,7 @@ export function FilterPanel({
             aria-checked={filters.showPastEvents}
             onClick={() => onUpdateFilters({ showPastEvents: !filters.showPastEvents })}
             className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 ${
-              filters.showPastEvents ? 'bg-accent-coral' : 'bg-primary/20'
+              filters.showPastEvents ? 'bg-primary' : 'bg-primary/20'
             }`}
           >
             <span
@@ -298,7 +298,7 @@ export function FilterPanel({
             variant="outline"
             size="sm"
             onClick={onResetFilters}
-            className="w-full"
+            className="w-full text-accent-red border-accent-red hover:bg-accent-red/5"
           >
             <RotateCcw className="w-4 h-4 mr-2" />
             Réinitialiser les filtres

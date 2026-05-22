@@ -1,0 +1,244 @@
+project:
+  name: "La Grande Semaine Végétale"
+  type: "Event / Food / Sustainability"
+  description: "Promotion d’une alimentation végétale accessible"
+  tone:
+    - pédagogique
+    - accessible
+    - écologique
+    - engageant
+
+branding:
+  keywords:
+    - nature
+    - végétal
+    - alimentation
+    - durabilité
+    - convivialité
+
+colors:
+  primary:
+    green_main:
+      hex: "#3BAE5D"
+      rgb: "59,174,93"
+      usage:
+        - buttons
+        - CTAs
+        - links
+        - highlights
+
+  secondary:
+    green_dark:
+      hex: "#1F7A3E"
+      usage:
+        - headings
+        - hover states
+        - contrast blocks
+
+    green_light:
+      hex: "#A7D7B5"
+      usage:
+        - backgrounds
+        - cards
+        - soft highlights
+
+  neutral:
+    white:
+      hex: "#FFFFFF"
+      usage:
+        - main background
+
+    off_white:
+      hex: "#F7F7F2"
+      usage:
+        - sections background
+
+    beige:
+      hex: "#F2EDE4"
+      usage:
+        - natural blocks
+        - secondary backgrounds
+
+    dark_text:
+      hex: "#2E2E2E"
+      usage:
+        - body text
+
+    grey_light:
+      hex: "#D9D9D9"
+      usage:
+        - borders
+        - dividers
+
+  accent:
+    yellow_soft:
+      hex: "#F4C542"
+      usage:
+        - highlights
+        - food elements
+
+    red_soft:
+      hex: "#E46A5D"
+      usage:
+        - alerts
+        - accents
+
+color_rules:
+  - "70% neutral (white/beige)"
+  - "20% green palette"
+  - "10% accents"
+
+typography:
+  primary_font:
+    name: "Inter"
+    type: "sans-serif"
+    source: "Google Fonts"
+    fallback:
+      - Arial
+      - Helvetica
+      - sans-serif
+
+  secondary_font:
+    name: "Poppins"
+    type: "sans-serif"
+    source: "Google Fonts"
+
+  scale:
+    h1:
+      size: "48px"
+      weight: 700
+      line_height: 1.2
+
+    h2:
+      size: "36px"
+      weight: 600
+
+    h3:
+      size: "28px"
+      weight: 600
+
+    body:
+      size: "16px"
+      weight: 400
+      line_height: 1.6
+
+    small:
+      size: "14px"
+      weight: 400
+
+  rules:
+    - "Sans-serif uniquement"
+    - "Titres en bold"
+    - "Lisibilité prioritaire"
+
+components:
+
+  button:
+    border_radius: "999px"
+    padding: "10px 20px"
+    font_weight: 600
+
+    variants:
+      primary:
+        background: "#3BAE5D"
+        color: "#FFFFFF"
+
+      secondary:
+        background: "#FFFFFF"
+        border: "2px solid #3BAE5D"
+        color: "#3BAE5D"
+
+      hover:
+        background: "#1F7A3E"
+
+  card:
+    background: "#FFFFFF"
+    border_radius: "16px"
+    shadow: "0 4px 12px rgba(0,0,0,0.08)"
+    padding: "20px"
+
+  section:
+    padding: "60px 20px"
+    max_width: "1200px"
+
+  input:
+    border: "1px solid #D9D9D9"
+    border_radius: "8px"
+    padding: "10px"
+
+imagery:
+  style:
+    - natural lighting
+    - food photography
+    - plant-based meals
+
+  tone:
+    - warm
+    - authentic
+    - inviting
+
+  rules:
+    - "no artificial stock photos"
+    - "highlight textures"
+    - "real life situations"
+
+icons:
+  style: "outline + flat"
+  stroke: "2px"
+  radius: "rounded"
+  color: "#3BAE5D"
+
+  themes:
+    - food
+    - ecology
+    - community
+
+layout:
+  grid:
+    columns: 12
+    max_width: "1200px"
+    gutter: "24px"
+
+  spacing:
+    xs: "4px"
+    sm: "8px"
+    md: "16px"
+    lg: "32px"
+    xl: "64px"
+
+  rules:
+    - "use whitespace"
+    - "avoid clutter"
+    - "clear sections"
+
+ux:
+  principles:
+    - simplicity
+    - accessibility
+    - education
+
+  guidelines:
+    - "clear CTA"
+    - "progressive content"
+    - "mobile-first"
+
+  accessibility:
+    contrast: "WCAG AA"
+    min_font_size: "16px"
+
+ai_summary:
+  style: "eco-friendly minimal modern"
+  dominant_color: "green"
+  typography: "clean sans-serif"
+  ui: "rounded, soft"
+  mood: "natural, inclusive"
+
+  do:
+    - use whitespace
+    - use green as dominant color
+    - keep design simple
+
+  dont:
+    - avoid dark heavy UI
+    - avoid aggressive colors
+    - avoid clutter

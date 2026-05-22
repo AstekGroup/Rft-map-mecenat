@@ -71,10 +71,10 @@ export function EventsListPage() {
 
   if (loading) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-surface-beige">
+      <div className="h-screen w-screen flex items-center justify-center bg-surface-offwhite font-inter">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 text-accent-coral mx-auto animate-spin" />
-          <p className="mt-4 font-rubik font-semibold text-primary text-lg">
+          <Loader2 className="w-12 h-12 text-primary mx-auto animate-spin" />
+          <p className="mt-4 font-poppins font-semibold text-text-primary text-lg">
             Chargement des événements...
           </p>
         </div>
@@ -84,9 +84,9 @@ export function EventsListPage() {
 
   if (error) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-surface-beige">
+      <div className="h-screen w-screen flex items-center justify-center bg-surface-offwhite font-inter">
         <div className="text-center max-w-md p-8">
-          <p className="text-text-secondary mb-6">{error.message}</p>
+          <p className="text-text-primary mb-6">{error.message}</p>
           <button onClick={() => window.location.reload()} className="btn-primary">
             Réessayer
           </button>
@@ -96,7 +96,7 @@ export function EventsListPage() {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-surface-beige overflow-hidden">
+    <div className="h-screen w-screen flex flex-col bg-surface-offwhite overflow-hidden font-inter">
       {/* Header unifié */}
       <div className="bg-primary text-white px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -108,7 +108,7 @@ export function EventsListPage() {
             <Home className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="font-rubik font-semibold text-lg">{pageTitle}</h1>
+            <h1 className="font-poppins font-semibold text-lg">{pageTitle}</h1>
             <p className="text-sm text-white/70">
               {stats.filtered} événements trouvés
             </p>
@@ -119,8 +119,7 @@ export function EventsListPage() {
         {!isOnlineMode && (
           <button
             onClick={() => navigate('/carte')}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
-            style={{ backgroundColor: '#f66376', color: 'white' }}
+            className="flex items-center gap-2 px-4 py-2 rounded-button text-sm font-semibold transition-all bg-accent-yellow text-text-primary hover:bg-yellow-500 shadow-md"
           >
             <Map className="w-4 h-4" />
             Voir sur la carte

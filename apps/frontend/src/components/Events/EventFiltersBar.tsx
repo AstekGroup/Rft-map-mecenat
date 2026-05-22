@@ -24,7 +24,7 @@ interface EventFiltersBarProps {
 }
 
 const EVENT_TYPES: EventType[] = EVENT_TYPES_ALL;
-const AUDIENCES: TargetAudience[] = ['tout-public', 'jeunes', 'seniors', 'qpv', 'scolaire', 'handicap', 'salaries', 'adherents'];
+const AUDIENCES: TargetAudience[] = ['tout-public', 'jeunes', 'seniors', 'familles', 'scolaire', 'professionnels'];
 
 interface FilterDropdownProps {
   label: string;
@@ -109,7 +109,7 @@ export function EventFiltersBar({
     });
   } else if (filters.dateFilter === 'during-week' || filters.dateFilter === 'other') {
     const dateLabels: Record<string, string> = {
-      'during-week': 'Semaine de l\'IA',
+      'during-week': 'La Grande Semaine Végétale',
       other: 'Autres dates',
     };
     activeTags.push({
@@ -164,7 +164,7 @@ export function EventFiltersBar({
             value={filters.search}
             onChange={(e) => onUpdateFilters({ search: e.target.value })}
             placeholder="Rechercher par titre, description, ville..."
-            className="w-full pl-10 pr-10 py-2.5 bg-white border border-primary/20 rounded-xl text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+            className="w-full pl-10 pr-10 py-2.5 bg-white border border-primary/20 rounded-xl text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-inter"
           />
           {filters.search && (
             <button
@@ -209,7 +209,7 @@ export function EventFiltersBar({
         {hasActiveFilters && (
           <button
             onClick={onResetFilters}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-accent-magenta hover:bg-accent-magenta/10 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-accent-red hover:bg-accent-red/10 rounded-lg transition-colors"
           >
             <RotateCcw className="w-4 h-4" />
             Réinitialiser
@@ -224,7 +224,7 @@ export function EventFiltersBar({
           <div className="p-2 space-y-1">
             {[
               { value: 'all', label: 'Toutes les dates' },
-              { value: 'during-week', label: 'Semaine de l\'IA (18-24 mai)' },
+              { value: 'during-week', label: 'La Grande Semaine Végétale' },
               { value: 'other', label: 'Autres dates' },
               { value: 'custom', label: 'Plage au calendrier' },
             ].map((option) => (
@@ -255,7 +255,7 @@ export function EventFiltersBar({
         >
           <div className="p-2 space-y-1">
             {EVENT_TYPES.map((type) => {
-              const Icon = TYPE_ICONS[type];
+              const Icon = TYPE_ICONS[type] || Globe;
               const color = EVENT_TYPE_COLORS[type];
               return (
                 <label
@@ -266,7 +266,7 @@ export function EventFiltersBar({
                     type="checkbox"
                     checked={filters.types.includes(type)}
                     onChange={() => onToggleType(type)}
-                    className="w-4 h-4 text-accent-coral border-primary/30 rounded focus:ring-accent-coral"
+                    className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
                   />
                   <span
                     className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
@@ -298,7 +298,7 @@ export function EventFiltersBar({
                   type="checkbox"
                   checked={filters.audiences.includes(audience)}
                   onChange={() => onToggleAudience(audience)}
-                  className="w-4 h-4 text-accent-coral border-primary/30 rounded focus:ring-accent-coral"
+                  className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
                 />
                 <span className={filters.audiences.includes(audience) ? 'text-primary font-medium' : 'text-text-secondary'}>
                   {TARGET_AUDIENCE_LABELS[audience]}
@@ -308,7 +308,7 @@ export function EventFiltersBar({
           </div>
         </FilterDropdown>
 
-        {/* Postal code filter (uniquement si présentiel ou tous) */}
+        {/* Postal code filter */}
         {filters.modality !== 'distanciel' && (
           <div className="relative">
             <input
@@ -336,7 +336,7 @@ export function EventFiltersBar({
           </div>
         )}
         
-        {/* Region filter (uniquement si présentiel ou tous) */}
+        {/* Region filter */}
         {filters.modality !== 'distanciel' && (
           <FilterDropdown
             label="Région"
@@ -352,7 +352,7 @@ export function EventFiltersBar({
                     type="checkbox"
                     checked={filters.regions.includes(region)}
                     onChange={() => onToggleRegion(region)}
-                    className="w-4 h-4 text-accent-coral border-primary/30 rounded focus:ring-accent-coral"
+                    className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
                   />
                   <span className={filters.regions.includes(region) ? 'text-primary font-medium' : 'text-text-secondary'}>
                     {region}
@@ -370,7 +370,7 @@ export function EventFiltersBar({
                       type="checkbox"
                       checked={filters.regions.includes(region)}
                       onChange={() => onToggleRegion(region)}
-                      className="w-4 h-4 text-accent-coral border-primary/30 rounded focus:ring-accent-coral"
+                      className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
                     />
                     <span className={filters.regions.includes(region) ? 'text-primary font-medium' : 'text-text-secondary'}>
                       {region}
@@ -398,7 +398,7 @@ export function EventFiltersBar({
 
       {/* Active filter tags */}
       {activeTags.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 font-inter">
           {activeTags.map((tag) => (
             <span
               key={tag.key}
@@ -416,7 +416,7 @@ export function EventFiltersBar({
           ))}
           <button
             onClick={onResetFilters}
-            className="text-xs text-accent-magenta hover:underline font-medium"
+            className="text-xs text-accent-red hover:underline font-medium"
           >
             Tout effacer
           </button>

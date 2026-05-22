@@ -84,13 +84,12 @@ export function EventListView({ events }: EventListViewProps) {
                     {/* Tags overlay on image */}
                     <div className="absolute top-1.5 left-1.5 flex flex-wrap gap-1">
                       {event.isDuringWeek && (
-                        <span className="inline-flex items-center gap-0.5 bg-accent-coral text-white px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
-                          Semaine IA
+                        <span className="inline-flex items-center gap-0.5 bg-primary text-white px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
+                          LGSV 2026
                         </span>
                       )}
                       <span
-                        className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
-                        style={{ backgroundColor: '#ffeed0', color: '#003082' }}
+                        className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-surface-beige text-primary-dark"
                       >
                         <Icon className="w-2.5 h-2.5" />
                         {EVENT_TYPE_LABELS[event.type]}
@@ -105,8 +104,8 @@ export function EventListView({ events }: EventListViewProps) {
                     <Icon className="w-6 h-6" style={{ color: typeColor }} />
                     <div className="absolute top-1.5 left-1.5 flex flex-wrap gap-1">
                       {event.isDuringWeek && (
-                        <span className="inline-flex items-center gap-0.5 bg-accent-coral text-white px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
-                          Semaine IA
+                        <span className="inline-flex items-center gap-0.5 bg-primary text-white px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
+                          LGSV 2026
                         </span>
                       )}
                     </div>
@@ -115,39 +114,39 @@ export function EventListView({ events }: EventListViewProps) {
                 
                 {/* Content */}
                 <div className="p-3 flex-1 flex flex-col">
-                  <h3 className="font-rubik font-semibold text-primary text-sm line-clamp-2 mb-2 group-hover:text-accent-magenta transition-colors">
+                  <h3 className="font-poppins font-semibold text-text-primary text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors">
                     {event.title}
                   </h3>
                   
                   <div className="space-y-1 text-xs text-text-secondary mt-auto">
                     <p className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-accent-coral flex-shrink-0" />
+                      <Calendar className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                       <span>
                         {new Date(event.date).toLocaleDateString('fr-FR', {
                           day: 'numeric',
                           month: 'long',
                         })}
                       </span>
-                      <Clock className="w-3.5 h-3.5 text-accent-coral flex-shrink-0 ml-auto" />
+                      <Clock className="w-3.5 h-3.5 text-primary flex-shrink-0 ml-auto" />
                       <span>{event.time}</span>
                     </p>
                     
                     <p className="flex items-center gap-1.5">
-                      <Users className="w-3.5 h-3.5 text-accent-coral flex-shrink-0" />
+                      <Users className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                       <span className="truncate">{event.organizer}</span>
                     </p>
 
                     {/* Modality indicator for online events */}
                     {event.modality === 'distanciel' && (
                       <p className="flex items-center gap-1.5">
-                        <Video className="w-3.5 h-3.5 text-accent-magenta flex-shrink-0" />
-                        <span className="text-accent-magenta font-medium">En ligne</span>
+                        <Video className="w-3.5 h-3.5 text-accent-red flex-shrink-0" />
+                        <span className="text-accent-red font-medium">En ligne</span>
                       </p>
                     )}
                     
                     {/* Accessibility */}
                     {event.accessibilityInfo && (
-                      <p className="flex items-center gap-1.5 text-accent-coral">
+                      <p className="flex items-center gap-1.5 text-primary">
                         <Accessibility className="w-3.5 h-3.5 flex-shrink-0" />
                         <span className="truncate">{event.accessibilityInfo}</span>
                       </p>

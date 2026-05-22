@@ -9,9 +9,9 @@ vi.mock('@/services/api');
 function makeEvent(overrides: Partial<Event> = {}): Event {
   return {
     id: 'rec1',
-    title: 'Atelier IA',
+    title: 'Atelier Cuisine',
     description: 'Description',
-    date: '2026-05-20',
+    date: '2035-06-03',
     time: '14:00',
     address: '1 rue Test',
     city: 'Paris',
@@ -158,8 +158,8 @@ describe('useEvents', () => {
 
     it('filtre par plage calendrier (un jour)', async () => {
       const events = [
-        makeEvent({ id: 'a', date: '2026-05-10' }),
-        makeEvent({ id: 'b', date: '2026-05-20' }),
+        makeEvent({ id: 'a', date: '2035-05-10' }),
+        makeEvent({ id: 'b', date: '2035-05-20' }),
       ];
       vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
 
@@ -169,7 +169,7 @@ describe('useEvents', () => {
       act(() => {
         result.current.updateFilters({
           dateFilter: 'custom',
-          dateFrom: '2026-05-20',
+          dateFrom: '2035-05-20',
           dateTo: '',
         });
       });
@@ -180,9 +180,9 @@ describe('useEvents', () => {
 
     it('filtre par plage calendrier (intervalle)', async () => {
       const events = [
-        makeEvent({ id: 'a', date: '2026-05-10' }),
-        makeEvent({ id: 'b', date: '2026-05-18', endDate: '2026-05-19' }),
-        makeEvent({ id: 'c', date: '2026-06-01' }),
+        makeEvent({ id: 'a', date: '2035-05-10' }),
+        makeEvent({ id: 'b', date: '2035-05-18', endDate: '2035-05-19' }),
+        makeEvent({ id: 'c', date: '2035-06-01' }),
       ];
       vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
 
@@ -192,8 +192,8 @@ describe('useEvents', () => {
       act(() => {
         result.current.updateFilters({
           dateFilter: 'custom',
-          dateFrom: '2026-05-15',
-          dateTo: '2026-05-25',
+          dateFrom: '2035-05-15',
+          dateTo: '2035-05-25',
         });
       });
 

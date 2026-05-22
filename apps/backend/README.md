@@ -1,4 +1,4 @@
-# Backend API - Semaine de l'IA pour Tous
+# Backend API - La Grande Semaine Végétale
 
 Backend NestJS servant de proxy sécurisé pour l'API Airtable. Gère la transformation des données, le géocodage et le cache.
 

@@ -1,8 +1,8 @@
-# Make Map - Semaine de l'IA pour Tous
+# Make Map - La Grande Semaine Végétale
 
-Carte interactive pour visualiser les 1500+ événements de la [Semaine de l'IA pour Tous](https://semaine-ia.fr) (18-24 mai 2026) à travers la France.
+Carte interactive pour visualiser les événements de **La Grande Semaine Végétale** à travers la France.
 
-**Client** : La Mednum | **Stack** : React + NestJS + MapLibre GL JS | **Monorepo** : pnpm + TurboRepo
+**Projet** : Promotion d'une alimentation végétale accessible | **Stack** : React + NestJS + MapLibre GL JS | **Monorepo** : pnpm + TurboRepo
 
 ## Structure du projet
 
@@ -123,13 +123,7 @@ Format ouvert [agents.md](https://agents.md/) : un **`AGENTS.md` par zone** du m
 
 ## Ressources
 
-- [Analyse du site semaine-ia.fr](resources/analyse-semaine-ia-fr.md)
-- [Analyse des frameworks carte](resources/analyse-frameworks-carte-interactive.md)
-
-## Liens
-
-- Site officiel : https://semaine-ia.fr
-- Organisateur : [La Mednum](https://lamednum.coop)
+- [Design System LGSV](resources/lgsv-design.yml)
 
 ---
 

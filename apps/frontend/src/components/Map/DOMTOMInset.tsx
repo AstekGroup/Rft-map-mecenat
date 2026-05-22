@@ -117,7 +117,7 @@ function TerritoryMap({ territory, geojson, mapStyleUrl, onEventClick, onTerrito
       <div className="absolute top-1 left-1 z-10 bg-white/90 backdrop-blur-sm rounded px-1.5 py-0.5 text-[9px] font-medium text-primary leading-tight">
         {territory.shortName}
         {eventCount > 0 && (
-          <span className="ml-0.5 text-accent-coral">({eventCount})</span>
+          <span className="ml-0.5 text-primary">({eventCount})</span>
         )}
       </div>
       

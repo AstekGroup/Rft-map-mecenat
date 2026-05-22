@@ -1,36 +1,24 @@
-# Project Vibe Configuration
+# Project Vibe & Strategy - La Grande Semaine Végétale
 
-## Project Type
-**POC** (Proof of Concept)
+## Vision & Purpose
+Promouvoir une alimentation végétale accessible, gourmande et durable à travers une série d'événements nationaux.
 
-## Project Name
-MVP Carte Interactive - Semaine de l'IA pour Tous
+## MVP Carte Interactive - La Grande Semaine Végétale
+**Objectif** : Permettre aux citoyens de trouver facilement des événements près de chez eux.
 
-## Description
-Application React standalone pour afficher 1500 événements sur une carte de France interactive. Le design reprend la charte graphique du site semaine-ia.fr (couleurs, typographie Rubik/Palanquin) tout en proposant une UX moderne et performante.
+Application React standalone pour afficher les événements sur une carte de France interactive. Le design reprend la charte graphique LGSV (Palette de verts, typographie Poppins/Inter) tout en proposant une UX moderne et performante.
 
-## Context
-- **Client** : La Mednum / Semaine de l'IA pour Tous
-- **Event dates** : 18-24 mai 2026
-- **Target** : 1500 événements à afficher sur une carte interactive
-- **Source site** : https://semaine-ia.fr
-
-## Stack technique
-- **Monorepo** : pnpm workspaces + TurboRepo
-- **Frontend** : React 18 + Vite
-- **Backend** : NestJS 11
-- **Map** : MapLibre GL JS + react-map-gl
-- **Clustering** : Supercluster
-- **Styling** : Tailwind CSS
+- **Client** : La Grande Semaine Végétale
+- **Type** : POC / MVP
 - **Data source** : API Airtable (via backend proxy)
-- **Géocodage** : api-adresse.data.gouv.fr (côté serveur)
-- **Types partagés** : @make-map/types
+- **Hébergement** : Scaleway DEV1-S
 
-## Requirements
-- **DEVPLAN** : Oui (POC)
-- **ADR** : Non (POC simple)
-- **Documentation** : README.md
+## Tech Stack Strategy
+- **Frontend** : React + Vite + MapLibre GL JS + Supercluster + Tailwind CSS
+- **Backend** : NestJS + Cache-manager + Geocoding (API Adresse)
+- **Deployment** : Docker + Docker Compose + Caddy (Reverse Proxy + HTTPS)
 
-## Created
-- **Date** : 9 janvier 2026
-- **Author** : ILAB Innovation Team
+## Branding Guidelines (LGSV)
+- **Ton** : Pédagogique, accessible, écologique, engageant.
+- **Couleurs** : Vert Principal (#3BAE5D), Vert Foncé (#1F7A3E), Beige (#F2EDE4).
+- **Typography** : Poppins (Titres), Inter (Corps).

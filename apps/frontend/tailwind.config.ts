@@ -8,46 +8,46 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Couleurs du design system Semaine IA
+        // Couleurs du design system La Grande Semaine Végétale
         primary: {
-          DEFAULT: '#003081',
-          dark: '#002060',
-          light: '#004099',
+          DEFAULT: '#3BAE5D', // green_main
+          dark: '#1F7A3E',    // green_dark
+          light: '#A7D7B5',   // green_light
         },
         accent: {
-          coral: '#f56476',
-          'coral-dark': '#e04a5c',
-          magenta: '#cc3366',
+          yellow: '#F4C542',
+          red: '#E46A5D',
         },
         surface: {
-          beige: '#ffeed1',
-          'beige-light': '#fff8eb',
+          beige: '#F2EDE4',
+          offwhite: '#F7F7F2',
           white: '#ffffff',
         },
         text: {
-          primary: '#003081',
+          primary: '#2E2E2E',
           secondary: '#69727d',
           light: '#ffffff',
+          green: '#1F7A3E',
         }
       },
       fontFamily: {
-        rubik: ['Rubik', 'sans-serif'],
-        palanquin: ['Palanquin', 'sans-serif'],
+        inter: ['Inter', 'sans-serif'],
+        poppins: ['Poppins', 'sans-serif'],
       },
       fontSize: {
-        'hero': ['3.75rem', { lineHeight: '1', fontWeight: '600' }],
-        'title': ['2.5rem', { lineHeight: '1', fontWeight: '600' }],
-        'subtitle': ['1.25rem', { lineHeight: '1.5', fontWeight: '600' }],
+        'hero': ['3rem', { lineHeight: '1.2', fontWeight: '700' }],
+        'title': ['2.25rem', { lineHeight: '1.2', fontWeight: '600' }],
+        'subtitle': ['1.75rem', { lineHeight: '1.4', fontWeight: '600' }],
       },
       borderRadius: {
-        'button': '5px',
-        'card': '12px',
+        'button': '999px', // Rounded pill shape from LGSV design
+        'card': '16px',
         'cluster': '50%',
       },
       boxShadow: {
-        'card': '0 4px 6px -1px rgba(0, 48, 129, 0.1), 0 2px 4px -2px rgba(0, 48, 129, 0.1)',
-        'popup': '0 10px 25px -5px rgba(0, 48, 129, 0.2), 0 8px 10px -6px rgba(0, 48, 129, 0.1)',
-        'cluster': '0 2px 10px rgba(245, 100, 118, 0.4)',
+        'card': '0 4px 12px rgba(0, 0, 0, 0.08)',
+        'popup': '0 10px 25px -5px rgba(31, 122, 62, 0.2)',
+        'cluster': '0 2px 10px rgba(59, 174, 93, 0.4)',
       },
       animation: {
         'pulse-soft': 'pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',

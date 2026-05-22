@@ -9,27 +9,27 @@ interface BadgeProps {
 export function Badge({ type, size = 'md', variant = 'default' }: BadgeProps) {
   const color = EVENT_TYPE_COLORS[type];
   const label = EVENT_TYPE_LABELS[type];
-  
+
   const sizes = {
     sm: 'px-2 py-0.5 text-xs',
     md: 'px-2.5 py-1 text-sm',
   };
-  
-  // Style highlight : bleu marine sur fond jaune coquille d'oeuf
+
+  // Style highlight : Vert foncé sur fond beige
   if (variant === 'highlight') {
     return (
       <span
         className={`inline-flex items-center rounded-full font-semibold ${sizes[size]}`}
         style={{
-          backgroundColor: '#ffeed0',
-          color: '#003082',
+          backgroundColor: '#F2EDE4',
+          color: '#1F7A3E',
         }}
       >
         {label}
       </span>
     );
   }
-  
+
   return (
     <span
       className={`inline-flex items-center rounded-full font-medium ${sizes[size]}`}

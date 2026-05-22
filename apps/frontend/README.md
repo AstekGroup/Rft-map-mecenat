@@ -1,21 +1,21 @@
-# Carte Interactive - Semaine de l'IA pour Tous
+# Carte Interactive - La Grande Semaine Végétale
 
-Application React standalone pour afficher les événements de la Semaine de l'IA pour Tous sur une carte interactive de France.
+Application React pour afficher les événements de **La Grande Semaine Végétale** sur une carte interactive de France.
 
 **Assistants IA** : [AGENTS.md](./AGENTS.md) dans ce dossier (détail local) ; index global [AGENTS.md](../../AGENTS.md). Cette app consomme le backend NestJS, pas Airtable en direct.
 
 ## Aperçu
 
-Cette application permet de visualiser et filtrer 1500 événements de sensibilisation à l'intelligence artificielle organisés sur tout le territoire français.
+Cette application permet de visualiser et filtrer les événements (ateliers cuisine, dégustations, conférences, fermes ouvertes) organisés pour promouvoir une alimentation végétale accessible.
 
 ### Fonctionnalités
 
-- 🗺️ **Carte interactive** avec MapLibre GL JS (WebGL)
-- 📍 **Clustering intelligent** avec Supercluster (gère 500k+ points)
+- 🗺️ **Carte interactive** avec MapLibre GL JS
+- 📍 **Clustering intelligent** avec Supercluster
 - 🔍 **Recherche** par ville, organisateur, région
-- 📅 **Filtres** par date (pendant/hors Semaine IA), type d'événement, région
+- 📅 **Filtres** par type d'événement, public, modalité
 - 📱 **Responsive** (desktop + mobile)
-- 🎨 **Design** respectant la charte graphique semaine-ia.fr
+- 🎨 **Design System LGSV** (Palette de verts, Inter/Poppins)
 
 ## Stack technique
 
@@ -75,19 +75,19 @@ src/
 
 ## Design System
 
-Couleurs reprises de semaine-ia.fr :
+Couleurs selon [lgsv-design.yml](../../resources/lgsv-design.yml) :
 
 | Couleur | Hex | Usage |
 |---------|-----|-------|
-| Bleu foncé | `#003081` | Fond principal, header |
-| Rose coral | `#f56476` | Boutons, clusters, accents |
-| Magenta | `#cc3366` | Liens, hover |
-| Beige | `#ffeed1` | Fond secondaire |
+| Vert Principal | `#3BAE5D` | Boutons, CTAs, accents |
+| Vert Foncé | `#1F7A3E` | Titres, hovers |
+| Vert Clair | `#A7D7B5` | Fonds, cartes |
+| Beige | `#F2EDE4` | Fonds secondaires |
+| Texte Sombre | `#2E2E2E` | Corps de texte |
 
 Typographie :
-- **Titres** : Rubik (Google Fonts)
-- **Corps** : Palanquin (Google Fonts)
-
+- **Primaire** : Inter
+- **Secondaire** : Poppins
 ## Configuration API Airtable
 
 L'application se connecte à une base Airtable pour récupérer les événements. En l'absence de configuration, elle utilise les données mockées (fallback automatique).
@@ -143,14 +143,12 @@ L'application est optimisée pour gérer un grand nombre d'événements :
 - **Virtualisation** : Seuls les événements visibles sont rendus
 - **Lazy loading** : Chargement progressif des données
 - **Memoization** : Cache des calculs de clusters
-
 ## Liens
 
-- Site principal : https://semaine-ia.fr
-- Documentation API : À compléter
-- LinkedIn La Mednum : https://www.linkedin.com/company/mednum/
-
+- Organisateur : La Grande Semaine Végétale
+- Documentation : [AGENTS.md](../../AGENTS.md)
+- Site principal : https://lagrandesemainevegetale.fr/
 ---
 
-**Semaine de l'IA pour Tous** - Du 18 au 24 mai 2026  
-Organisé par [La Mednum](https://lamednum.coop)
+**La Grande Semaine Végétale**  
+Promouvoir une alimentation végétale pour tous.

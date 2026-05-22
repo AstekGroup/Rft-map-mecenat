@@ -19,19 +19,19 @@ export function FilterAccordion({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border-b border-primary/10 last:border-b-0">
+    <div className="border-b border-primary/10 last:border-b-0 font-inter">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between py-3 px-4 hover:bg-primary/5 transition-colors"
         aria-expanded={isOpen}
       >
         <div className="flex items-center gap-2">
-          {icon && <span className="text-accent-coral">{icon}</span>}
-          <span className="font-rubik font-semibold text-primary text-sm">
+          {icon && <span className="text-primary">{icon}</span>}
+          <span className="font-poppins font-semibold text-primary-dark text-sm">
             {title}
           </span>
           {badge !== undefined && badge > 0 && (
-            <span className="bg-accent-coral text-white text-xs font-medium px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+            <span className="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm">
               {badge}
             </span>
           )}

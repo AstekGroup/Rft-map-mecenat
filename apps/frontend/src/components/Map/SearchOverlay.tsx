@@ -164,7 +164,7 @@ export function SearchOverlay({ onFlyTo, onSearchFilter }: SearchOverlayProps) {
   }, [onSearchFilter]);
 
   return (
-    <div ref={containerRef} className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-[90%] max-w-lg">
+    <div ref={containerRef} className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-[90%] max-w-lg font-inter">
       {/* Barre de recherche */}
       <div className="relative flex items-center">
         <div className="relative flex-1">
@@ -176,7 +176,7 @@ export function SearchOverlay({ onFlyTo, onSearchFilter }: SearchOverlayProps) {
             onChange={(e) => handleInputChange(e.target.value)}
             onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
             placeholder="Rechercher une ville, un code postal, un lieu..."
-            className="w-full pl-11 pr-10 py-3.5 bg-white border-0 rounded-l-2xl shadow-popup text-sm text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:ring-2 focus:ring-accent-coral/50 transition-all font-palanquin"
+            className="w-full pl-11 pr-10 py-3.5 bg-white border-0 rounded-l-2xl shadow-popup text-sm text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-inter"
           />
           {query && (
             <button
@@ -193,7 +193,7 @@ export function SearchOverlay({ onFlyTo, onSearchFilter }: SearchOverlayProps) {
         <button
           onClick={handleGeolocate}
           disabled={isGeolocating}
-          className="flex items-center gap-2 px-4 py-3.5 bg-accent-coral hover:bg-accent-magenta text-white rounded-r-2xl shadow-popup transition-all font-rubik font-semibold text-sm whitespace-nowrap disabled:opacity-60"
+          className="flex items-center gap-2 px-4 py-3.5 bg-primary hover:bg-primary-dark text-white rounded-r-2xl shadow-popup transition-all font-poppins font-semibold text-sm whitespace-nowrap disabled:opacity-60"
           title="Me localiser"
         >
           {isGeolocating ? (
@@ -221,7 +221,7 @@ export function SearchOverlay({ onFlyTo, onSearchFilter }: SearchOverlayProps) {
               onClick={() => handleSelectSuggestion(s)}
               className="w-full flex items-start gap-3 px-4 py-3 hover:bg-surface-beige transition-colors text-left border-b border-primary/5 last:border-0"
             >
-              <MapPin className="w-4 h-4 text-accent-coral mt-0.5 flex-shrink-0" />
+              <MapPin className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-sm font-medium text-text-primary truncate">{s.label}</p>
                 <p className="text-xs text-text-secondary">{s.context}</p>

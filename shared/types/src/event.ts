@@ -1,42 +1,38 @@
-/** Types d’événement affichés en tag / filtres (alignés Semaine de l’IA — plus de « Jeu »). */
+/** Types d’événement affichés en tag / filtres (La Grande Semaine Végétale). */
 export type EventType =
-  | 'cafe-ia'
   | 'atelier'
+  | 'degustation'
   | 'conference'
   | 'visite'
-  | 'cine-debat'
+  | 'marche'
   | 'autre';
 
 /** Ordre des cases à cocher filtres et clés de `stats.byType`. */
 export const EVENT_TYPES_ALL: EventType[] = [
-  'cafe-ia',
   'atelier',
+  'degustation',
   'conference',
   'visite',
-  'cine-debat',
+  'marche',
   'autre',
 ];
 
 export type EventFormat = 
-  | 'debat' 
   | 'atelier' 
-  | 'prise-en-main' 
+  | 'degustation' 
   | 'conference' 
   | 'visite' 
-  | 'cafe-ia' 
-  | 'cine-debat' 
-  | 'formation'
+  | 'marche' 
+  | 'repas'
   | 'autre';
 
 export type TargetAudience = 
   | 'tout-public' 
   | 'jeunes' 
   | 'seniors' 
-  | 'qpv' 
+  | 'familles' 
   | 'scolaire' 
-  | 'handicap' 
-  | 'salaries' 
-  | 'adherents';
+  | 'professionnels';
 
 export type EventModality = 'presentiel' | 'distanciel';
 
@@ -113,44 +109,40 @@ export function isCluster(feature: MapFeature): feature is ClusterFeature {
 }
 
 export const EVENT_TYPE_LABELS: Record<EventType, string> = {
-  'cafe-ia': 'Café IA / Atelier',
-  'atelier': 'Formation',
-  'conference': 'Conférence',
-  'visite': 'Visite guidée / Portes ouvertes',
-  'cine-debat': 'Ciné-débat / Exposition / Festival',
+  'atelier': 'Atelier Cuisine',
+  'degustation': 'Dégustation',
+  'conference': 'Conférence / Débat',
+  'visite': 'Visite de ferme / Jardin',
+  'marche': 'Marché / Fête locale',
   'autre': 'Autre',
 };
 
 export const EVENT_TYPE_COLORS: Record<EventType, string> = {
-  'cafe-ia': '#f56476',
-  'atelier': '#003081',
-  'conference': '#cc3366',
-  'visite': '#0d9488',
-  'cine-debat': '#9333ea',
-  'autre': '#69727d',
+  'atelier': '#3BAE5D',      // green_main
+  'degustation': '#F4C542',  // yellow_soft
+  'conference': '#1F7A3E',   // green_dark
+  'visite': '#A7D7B5',       // green_light
+  'marche': '#E46A5D',       // red_soft
+  'autre': '#D9D9D9',        // grey_light
 };
 
 export const EVENT_FORMAT_LABELS: Record<EventFormat, string> = {
-  'debat': 'Débat',
-  'atelier': 'Formation',
-  'prise-en-main': 'Prise en main d\'outil',
-  'conference': 'Conférence/Table-ronde',
-  'visite': 'Visite guidée / Portes ouvertes',
-  'cafe-ia': 'Café IA / Atelier',
-  'cine-debat': 'Ciné-débat / Exposition / Festival',
-  'formation': 'Formation',
+  'atelier': 'Atelier Cuisine',
+  'degustation': 'Dégustation',
+  'conference': 'Conférence / Table-ronde',
+  'visite': 'Visite de ferme / Jardin',
+  'marche': 'Marché / Fête locale',
+  'repas': 'Repas partagé',
   'autre': 'Autre',
 };
 
 export const TARGET_AUDIENCE_LABELS: Record<TargetAudience, string> = {
   'tout-public': 'Tout public',
-  'jeunes': 'Jeunes',
+  'jeunes': 'Jeunes (15-25 ans)',
   'seniors': 'Seniors',
-  'qpv': 'Habitants de QPV',
+  'familles': 'Familles',
   'scolaire': 'Scolaire',
-  'handicap': 'Personnes porteuses d\'un handicap',
-  'salaries': 'Salariés d\'une entreprise',
-  'adherents': 'Adhérents d\'une structure',
+  'professionnels': 'Professionnels',
 };
 
 export const MODALITY_LABELS: Record<EventModality, string> = {

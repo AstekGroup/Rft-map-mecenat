@@ -2,7 +2,7 @@
   "name": "make-map",
   "version": "0.2.0",
   "private": true,
-  "description": "Carte interactive - Semaine de l'IA pour Tous",
+  "description": "Carte interactive - La Grande Semaine Végétale",
   "scripts": {
     "dev": "turbo run dev --filter=@make-map/frontend --filter=@make-map/backend",
     "dev:all": "turbo run dev",

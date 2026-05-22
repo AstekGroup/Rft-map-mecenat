@@ -15,7 +15,7 @@ import {
 import { GeocodingService } from '../geocoding/geocoding.service';
 
 // Seule valeur qui autorise l'affichage sur la cartographie
-const MODERATION_VISIBLE = 'Evénement validé et à mettre sur la carto ';
+const MODERATION_VISIBLE = 'Accepté';
 
 @Injectable()
 export class AirtableService {

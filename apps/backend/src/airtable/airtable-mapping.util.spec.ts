@@ -28,12 +28,12 @@ describe('mapFormat', () => {
   });
 
   it('fait une correspondance floue (fuzzy)', () => {
-    const result = mapFormat('Café IA');
-    expect(result).toEqual({ format: 'cafe-ia', type: 'cafe-ia' });
+    const result = mapFormat('Atelier Cuisine / Dégustation');
+    expect(result).toEqual({ format: 'atelier', type: 'atelier' });
   });
 
-  it('mappe Formation / Sensibilisation correctement', () => {
-    expect(mapFormat('Formation / Sensibilisation')).toEqual({ format: 'formation', type: 'atelier' });
+  it('mappe Marché correctement', () => {
+    expect(mapFormat('Marché')).toEqual({ format: 'marche', type: 'marche' });
   });
 
   it('mappe Jeu / Hackathon vers autre (plus de type jeu)', () => {
@@ -47,10 +47,10 @@ describe('mapFormat', () => {
     });
   });
 
-  it('mappe Ciné-débat / Exposition / Festival vers type cine-debat', () => {
+  it('mappe Ciné-débat / Exposition / Festival vers type conference', () => {
     expect(mapFormat('Ciné-débat / Exposition / Festival')).toEqual({
-      format: 'cine-debat',
-      type: 'cine-debat',
+      format: 'conference',
+      type: 'conference',
     });
   });
 });
@@ -82,8 +82,8 @@ describe('mapTargetAudience', () => {
     expect(mapTargetAudience(['Inconnu XYZ'])).toEqual(['tout-public']);
   });
 
-  it('mappe les personnes en situation de handicap', () => {
-    expect(mapTargetAudience(["Personnes porteuses d'un handicap"])).toEqual(['handicap']);
+  it('mappe les familles', () => {
+    expect(mapTargetAudience(["Familles"])).toEqual(['familles']);
   });
 });
 

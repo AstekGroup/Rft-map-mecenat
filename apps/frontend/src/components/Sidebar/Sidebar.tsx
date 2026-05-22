@@ -72,7 +72,7 @@ export function Sidebar({
       <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center">
         <button
           onClick={() => setIsCollapsed(false)}
-          className="bg-primary text-white p-3 rounded-r-lg shadow-popup hover:bg-primary-light transition-colors"
+          className="bg-primary text-white p-3 rounded-r-lg shadow-popup hover:bg-primary-dark transition-colors"
           aria-label="Ouvrir le panneau latéral"
         >
           <ChevronRight className="w-5 h-5" />
@@ -89,12 +89,12 @@ export function Sidebar({
         onClick={() => setIsCollapsed(true)}
       />
       
-      <div className="absolute left-0 top-0 bottom-0 w-full sm:w-96 sm:max-w-[85vw] bg-surface-beige-light shadow-popup z-20 flex flex-col animate-slide-up">
+      <div className="absolute left-0 top-0 bottom-0 w-full sm:w-96 sm:max-w-[85vw] bg-surface-offwhite shadow-popup z-20 flex flex-col animate-slide-up font-inter border-r border-primary/10">
       {/* Header */}
       <div className="p-4 bg-primary text-white">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="font-rubik font-semibold text-lg">Assister à nos événements</h2>
+            <h2 className="font-poppins font-semibold text-lg">Événements nationaux</h2>
           </div>
           <button
             onClick={() => setIsCollapsed(true)}
@@ -129,7 +129,7 @@ export function Sidebar({
             <Filter className="w-4 h-4" />
             Filtres
             {filtersActiveBadge && (
-              <span className="w-2 h-2 bg-accent-coral rounded-full" />
+              <span className="w-2 h-2 bg-accent-yellow rounded-full" />
             )}
           </button>
         </div>
@@ -148,10 +148,10 @@ export function Sidebar({
             ) : visibleEvents !== null ? (
               <>
                 {/* Section : visibles sur la carte */}
-                <div className="rounded-xl border-2 border-accent-coral/30 bg-accent-coral/5 overflow-hidden">
-                  <div className="px-3 py-2 bg-accent-coral/10 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-accent-coral animate-pulse" />
-                    <span className="text-xs font-semibold text-accent-coral uppercase tracking-wide">
+                <div className="rounded-xl border-2 border-primary/30 bg-primary/5 overflow-hidden">
+                  <div className="px-3 py-2 bg-primary/10 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                    <span className="text-xs font-semibold text-primary-dark uppercase tracking-wide">
                       Visibles sur la carte ({visibleEvents.length})
                     </span>
                   </div>
@@ -245,12 +245,12 @@ export function Sidebar({
       <div className="p-4 bg-white border-t border-primary/10">
         <div className="flex items-center justify-between text-sm">
           <span className="text-text-secondary">
-            <span className="font-semibold text-accent-coral">{stats.duringWeek}</span> pendant la Semaine de l'IA
+            <span className="font-semibold text-primary">{stats.duringWeek}</span> pour La Grande Semaine Végétale
           </span>
           {filtersActiveBadge && (
             <button
               onClick={onResetFilters}
-              className="text-accent-magenta hover:underline font-medium"
+              className="text-accent-red hover:underline font-medium"
             >
               Réinitialiser
             </button>

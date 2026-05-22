@@ -19,10 +19,10 @@ export function EventDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface-beige flex items-center justify-center">
+      <div className="min-h-screen bg-surface-offwhite flex items-center justify-center font-inter">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 text-accent-coral mx-auto animate-spin" />
-          <p className="mt-4 font-rubik font-semibold text-primary text-lg">
+          <Loader2 className="w-12 h-12 text-primary mx-auto animate-spin" />
+          <p className="mt-4 font-poppins font-semibold text-text-primary text-lg">
             Chargement de l'événement...
           </p>
         </div>
@@ -32,9 +32,9 @@ export function EventDetailPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-surface-beige flex items-center justify-center">
+      <div className="min-h-screen bg-surface-offwhite flex items-center justify-center font-inter">
         <div className="text-center max-w-md p-8">
-          <p className="text-text-secondary mb-6">{error.message}</p>
+          <p className="text-text-primary mb-6">{error.message}</p>
           <button onClick={() => window.location.reload()} className="btn-primary">
             Réessayer
           </button>
@@ -45,9 +45,9 @@ export function EventDetailPage() {
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-surface-beige flex items-center justify-center">
+      <div className="min-h-screen bg-surface-offwhite flex items-center justify-center font-inter">
         <div className="text-center max-w-md p-8">
-          <h2 className="font-rubik font-semibold text-primary text-xl mb-4">
+          <h2 className="font-poppins font-semibold text-text-primary text-xl mb-4">
             Événement non trouvé
           </h2>
           <p className="text-text-secondary mb-6">
@@ -77,12 +77,12 @@ export function EventDetailPage() {
       })
     : null;
 
-  const Icon = TYPE_ICONS[event.type];
+  const Icon = TYPE_ICONS[event.type] || Globe;
 
   const isComplete = event.capacity && event.registeredCount && event.registeredCount >= event.capacity;
 
   return (
-    <div className="min-h-screen bg-surface-beige overflow-y-auto">
+    <div className="min-h-screen bg-surface-offwhite overflow-y-auto font-inter">
       {/* Hero Image */}
       {event.imageUrl ? (
         <div className="relative h-64 md:h-80 bg-primary">
@@ -94,7 +94,7 @@ export function EventDetailPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent" />
           <button
             onClick={() => navigate(-1)}
-            className="absolute top-4 left-4 inline-flex items-center gap-2 bg-white/90 text-primary px-3 py-2 rounded-lg text-sm font-medium hover:bg-white transition-colors"
+            className="absolute top-4 left-4 inline-flex items-center gap-2 bg-white/90 text-primary-dark px-3 py-2 rounded-lg text-sm font-medium hover:bg-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Retour
@@ -122,13 +122,12 @@ export function EventDetailPage() {
             {/* Badges */}
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <span
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold"
-                style={{ backgroundColor: '#ffeed0', color: '#003082' }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-surface-beige text-primary-dark"
               >
                 <Icon className="w-4 h-4" />
                 {EVENT_TYPE_LABELS[event.type]}
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-primary/10 text-primary">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-primary/10 text-primary-dark">
                 {event.modality === 'distanciel' ? (
                   <Video className="w-4 h-4" />
                 ) : (
@@ -137,9 +136,9 @@ export function EventDetailPage() {
                 {MODALITY_LABELS[event.modality]}
               </span>
               {event.isDuringWeek && (
-                <span className="inline-flex items-center gap-1.5 bg-accent-coral/10 text-accent-coral px-3 py-1.5 rounded-full text-sm font-medium">
-                  <span className="w-2 h-2 bg-accent-coral rounded-full animate-pulse" />
-                  Pendant la Semaine de l'IA
+                <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary-dark px-3 py-1.5 rounded-full text-sm font-medium">
+                  <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                  La Grande Semaine Végétale
                 </span>
               )}
               {isComplete && (
@@ -151,29 +150,29 @@ export function EventDetailPage() {
             </div>
 
             {/* Title */}
-            <h1 className="font-rubik text-2xl md:text-3xl font-bold text-primary mb-2">
+            <h1 className="font-poppins text-2xl md:text-3xl font-bold text-text-primary mb-2">
               {event.title}
             </h1>
 
             {/* Organizer */}
             <p className="text-text-secondary">
-              Organisé par <span className="font-medium text-primary">{event.organizer}</span>
+              Organisé par <span className="font-medium text-primary-dark">{event.organizer}</span>
             </p>
           </div>
 
           {/* Date & Location side by side */}
-          <div className="p-6 md:p-8 border-b border-primary/10 bg-surface-beige/30">
+          <div className="p-6 md:p-8 border-b border-primary/10 bg-surface-beige/20">
             <div className="grid md:grid-cols-2 gap-6">
               {/* Date & Time */}
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-accent-coral/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Calendar className="w-5 h-5 text-accent-coral" />
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Calendar className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-rubik font-semibold text-sm text-primary/70 uppercase tracking-wide mb-1">
+                  <h3 className="font-poppins font-semibold text-sm text-primary/70 uppercase tracking-wide mb-1">
                     Date et horaires
                   </h3>
-                  <p className="font-medium text-primary capitalize">{formattedDate}</p>
+                  <p className="font-medium text-text-primary capitalize">{formattedDate}</p>
                   {formattedEndDate && formattedEndDate !== formattedDate && (
                     <p className="text-text-secondary text-sm capitalize">au {formattedEndDate}</p>
                   )}
@@ -188,15 +187,15 @@ export function EventDetailPage() {
               {/* Location / Online */}
               {event.modality === 'presentiel' ? (
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-accent-coral/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-5 h-5 text-accent-coral" />
+                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-rubik font-semibold text-sm text-primary/70 uppercase tracking-wide mb-1">
+                    <h3 className="font-poppins font-semibold text-sm text-primary/70 uppercase tracking-wide mb-1">
                       Lieu
                     </h3>
                     {event.venueName && (
-                      <p className="font-medium text-primary">{event.venueName}</p>
+                      <p className="font-medium text-text-primary">{event.venueName}</p>
                     )}
                     <p className="text-text-secondary">{event.address}</p>
                     <p className="text-text-secondary font-medium">
@@ -206,20 +205,20 @@ export function EventDetailPage() {
                 </div>
               ) : (
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-accent-magenta/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Video className="w-5 h-5 text-accent-magenta" />
+                  <div className="w-10 h-10 bg-accent-red/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Video className="w-5 h-5 text-accent-red" />
                   </div>
                   <div>
-                    <h3 className="font-rubik font-semibold text-sm text-primary/70 uppercase tracking-wide mb-1">
+                    <h3 className="font-poppins font-semibold text-sm text-primary/70 uppercase tracking-wide mb-1">
                       Accès
                     </h3>
-                    <p className="font-medium text-primary">Événement en ligne</p>
+                    <p className="font-medium text-text-primary">Événement en ligne</p>
                     {event.videoConferenceUrl && (
                       <a
                         href={event.videoConferenceUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-accent-magenta hover:underline flex items-center gap-1 mt-1"
+                        className="text-accent-red hover:underline flex items-center gap-1 mt-1 font-medium"
                       >
                         <Globe className="w-4 h-4" />
                         Accéder à l'événement
@@ -233,16 +232,16 @@ export function EventDetailPage() {
 
           {/* Accessibility */}
           {event.accessibilityInfo && (
-            <div className="p-6 md:p-8 border-b border-primary/10 bg-accent-coral/5">
+            <div className="p-6 md:p-8 border-b border-primary/10 bg-primary/5">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-accent-coral/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Accessibility className="w-5 h-5 text-accent-coral" />
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Accessibility className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-rubik font-semibold text-sm text-primary/70 uppercase tracking-wide mb-1">
+                  <h3 className="font-poppins font-semibold text-sm text-primary/70 uppercase tracking-wide mb-1">
                     Accessibilité
                   </h3>
-                  <p className="text-primary">{event.accessibilityInfo}</p>
+                  <p className="text-text-primary">{event.accessibilityInfo}</p>
                 </div>
               </div>
             </div>
@@ -252,24 +251,24 @@ export function EventDetailPage() {
           <div className="p-6 md:p-8 border-b border-primary/10 grid md:grid-cols-2 gap-6">
             {/* Format */}
             <div>
-              <h3 className="font-rubik font-semibold text-sm text-primary/70 uppercase tracking-wide mb-2">
+              <h3 className="font-poppins font-semibold text-sm text-primary/70 uppercase tracking-wide mb-2">
                 Format
               </h3>
-              <p className="text-primary font-medium">
+              <p className="text-text-primary font-medium">
                 {EVENT_FORMAT_LABELS[event.format]}
               </p>
             </div>
 
             {/* Public cible */}
             <div>
-              <h3 className="font-rubik font-semibold text-sm text-primary/70 uppercase tracking-wide mb-2">
+              <h3 className="font-poppins font-semibold text-sm text-primary/70 uppercase tracking-wide mb-2">
                 Public cible
               </h3>
               <div className="flex flex-wrap gap-1">
                 {event.targetAudience.map((audience) => (
                   <span
                     key={audience}
-                    className="text-sm bg-primary/5 text-primary px-2 py-1 rounded"
+                    className="text-sm bg-primary/5 text-primary-dark px-2.5 py-1 rounded-full border border-primary/10"
                   >
                     {TARGET_AUDIENCE_LABELS[audience]}
                   </span>
@@ -280,26 +279,26 @@ export function EventDetailPage() {
 
           {/* Description */}
           <div className="p-6 md:p-8 border-b border-primary/10">
-            <h2 className="font-rubik font-semibold text-lg text-primary mb-3">
-              Description
+            <h2 className="font-poppins font-semibold text-lg text-text-primary mb-3">
+              À propos de l'événement
             </h2>
-            <p className="text-text-secondary whitespace-pre-line">
+            <p className="text-text-secondary whitespace-pre-line leading-relaxed">
               {event.description}
             </p>
           </div>
 
           {/* Contact */}
           <div className="p-6 md:p-8 border-b border-primary/10">
-            <h2 className="font-rubik font-semibold text-lg text-primary mb-4">
+            <h2 className="font-poppins font-semibold text-lg text-text-primary mb-4">
               Contact
             </h2>
             <div className="space-y-3">
               {event.contactEmail && (
                 <a
                   href={`mailto:${event.contactEmail}`}
-                  className="flex items-center gap-3 text-text-secondary hover:text-primary transition-colors"
+                  className="flex items-center gap-3 text-text-secondary hover:text-primary-dark transition-colors font-medium"
                 >
-                  <Mail className="w-5 h-5 text-accent-coral" />
+                  <Mail className="w-5 h-5 text-primary" />
                   {event.contactEmail}
                 </a>
               )}
@@ -308,9 +307,9 @@ export function EventDetailPage() {
                   href={event.organizerWebsite}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-text-secondary hover:text-primary transition-colors"
+                  className="flex items-center gap-3 text-text-secondary hover:text-primary-dark transition-colors font-medium"
                 >
-                  <Globe className="w-5 h-5 text-accent-coral" />
+                  <Globe className="w-5 h-5 text-primary" />
                   Site web de l'organisateur
                 </a>
               )}
@@ -318,10 +317,10 @@ export function EventDetailPage() {
           </div>
 
           {/* Actions */}
-          <div className="p-6 md:p-8 bg-surface-beige/30">
+          <div className="p-6 md:p-8 bg-surface-beige/20">
             <div className="flex flex-col sm:flex-row gap-4">
               {isComplete ? (
-                <div className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-red-50 text-red-600 rounded-lg font-bold text-sm uppercase">
+                <div className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-red-50 text-red-600 rounded-button font-bold text-sm uppercase">
                   <Tag className="w-5 h-5" />
                   Événement complet
                 </div>
@@ -330,7 +329,7 @@ export function EventDetailPage() {
                   href={event.registrationUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-primary flex-1 flex items-center justify-center gap-2"
+                  className="btn-primary flex-1 flex items-center justify-center gap-2 shadow-lg"
                 >
                   <ExternalLink className="w-5 h-5" />
                   S'inscrire à l'événement
@@ -339,7 +338,7 @@ export function EventDetailPage() {
               {event.organizerContact && (
                 <a
                   href={`mailto:${event.organizerContact}`}
-                  className="btn-secondary flex items-center justify-center gap-2"
+                  className="btn-secondary flex-1 flex items-center justify-center gap-2"
                 >
                   <Mail className="w-5 h-5" />
                   Contacter l'organisateur
