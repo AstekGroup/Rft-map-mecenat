@@ -30,11 +30,10 @@ export type EventFormat =
 
 export type TargetAudience = 
   | 'tout-public' 
-  | 'jeunes' 
-  | 'seniors' 
-  | 'familles' 
-  | 'scolaire' 
-  | 'professionnels';
+  | 'familles-enfants' 
+  | 'salaries-entreprise' 
+  | 'professionnels' 
+  | 'scolaires';
 
 export type EventModality = 'presentiel' | 'distanciel';
 
@@ -158,11 +157,10 @@ export const EVENT_FORMAT_LABELS: Record<EventFormat, string> = {
 
 export const TARGET_AUDIENCE_LABELS: Record<TargetAudience, string> = {
   'tout-public': 'Tout public',
-  'jeunes': 'Jeunes (15-25 ans)',
-  'seniors': 'Seniors',
-  'familles': 'Familles',
-  'scolaire': 'Scolaire',
+  'familles-enfants': 'Famille / enfants',
+  'salaries-entreprise': "Salariés d'une entreprise",
   'professionnels': 'Professionnels',
+  'scolaires': 'Scolaires',
 };
 
 export const MODALITY_LABELS: Record<EventModality, string> = {

@@ -83,9 +83,9 @@ describe('mapTargetAudience', () => {
     expect(mapTargetAudience(['Tout public'])).toEqual(['tout-public']);
   });
 
-  it('mappe plusieurs publics', () => {
-    const result = mapTargetAudience(['Jeunes', 'Seniors']);
-    expect(result).toEqual(['jeunes', 'seniors']);
+  it('mappe plusieurs publics valides', () => {
+    const result = mapTargetAudience(['Scolaire', 'Professionnels']);
+    expect(result).toEqual(['scolaires', 'professionnels']);
   });
 
   it('retourne tout-public si tableau vide', () => {
@@ -96,17 +96,22 @@ describe('mapTargetAudience', () => {
     expect(mapTargetAudience(undefined)).toEqual(['tout-public']);
   });
 
-  it('fait une correspondance floue pour scolaire', () => {
+  it('fait une correspondance floue pour scolaires', () => {
     const result = mapTargetAudience(['Écoliers / Étudiants']);
-    expect(result).toEqual(['scolaire']);
+    expect(result).toEqual(['scolaires']);
   });
 
-  it('retourne tout-public si aucun mappage trouvé', () => {
-    expect(mapTargetAudience(['Inconnu XYZ'])).toEqual(['tout-public']);
+  it('retourne tout-public si aucun mappage trouvé (ex: anciens types)', () => {
+    expect(mapTargetAudience(['Inconnu XYZ', 'Jeunes', 'Seniors'])).toEqual(['tout-public']);
   });
 
-  it('mappe les familles', () => {
-    expect(mapTargetAudience(["Familles"])).toEqual(['familles']);
+  it('mappe les familles et enfants', () => {
+    expect(mapTargetAudience(["Familles"])).toEqual(['familles-enfants']);
+    expect(mapTargetAudience(["Enfants"])).toEqual(['familles-enfants']);
+  });
+
+  it('mappe les salariés', () => {
+    expect(mapTargetAudience(["Salariés d'une entreprise"])).toEqual(['salaries-entreprise']);
   });
 });
 

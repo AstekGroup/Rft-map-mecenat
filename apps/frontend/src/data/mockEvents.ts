@@ -125,7 +125,7 @@ const EVENT_TYPES: EventType[] = [...EVENT_TYPES_ALL];
 
 const EVENT_FORMATS: EventFormat[] = ['atelier-cuisine', 'degustation', 'visite-jardin', 'atelier-pedagogique', 'conference', 'festival', 'autre'];
 
-const TARGET_AUDIENCES: TargetAudience[] = ['tout-public', 'jeunes', 'seniors', 'familles', 'scolaire', 'professionnels'];
+const TARGET_AUDIENCES: TargetAudience[] = ['tout-public', 'familles-enfants', 'salaries-entreprise', 'professionnels', 'scolaires'];
 
 const VENUE_NAMES = [
   'Marché municipal',

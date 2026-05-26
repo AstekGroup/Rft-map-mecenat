@@ -41,7 +41,7 @@ interface FilterPanelProps {
 }
 
 const EVENT_TYPES: EventType[] = EVENT_TYPES_ALL;
-const AUDIENCES: TargetAudience[] = ['tout-public', 'jeunes', 'seniors', 'familles', 'scolaire', 'professionnels'];
+const AUDIENCES: TargetAudience[] = ['tout-public', 'familles-enfants', 'salaries-entreprise', 'professionnels', 'scolaires'];
 
 const EVENT_THEMES = Object.keys(EVENT_THEME_LABELS) as EventTheme[];
 

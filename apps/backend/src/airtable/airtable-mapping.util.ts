@@ -84,14 +84,14 @@ export function mapFormat(airtableFormat: string | undefined): FormatMapping {
 
 const AUDIENCE_MAP: Record<string, TargetAudience> = {
   'Tout public': 'tout-public',
-  'Jeunes (15-25 ans)': 'jeunes',
-  'Jeunes': 'jeunes',
-  'Seniors': 'seniors',
-  'Familles': 'familles',
-  'Scolaire': 'scolaire',
-  'Ecoliers / Etudiants': 'scolaire',
-  'Écoliers / Étudiants': 'scolaire',
+  'Familles': 'familles-enfants',
+  'Famille / enfants': 'familles-enfants',
+  'Scolaire': 'scolaires',
+  'Ecoliers / Etudiants': 'scolaires',
+  'Écoliers / Étudiants': 'scolaires',
   'Professionnels': 'professionnels',
+  "Salariés d'une entreprise": 'salaries-entreprise',
+  'Salariés': 'salaries-entreprise',
 };
 
 export function mapTargetAudience(
@@ -106,15 +106,14 @@ export function mapTargetAudience(
 
       const lower = p.toLowerCase();
       if (lower.includes('tout public')) return 'tout-public';
-      if (lower.includes('jeune')) return 'jeunes';
-      if (lower.includes('senior')) return 'seniors';
-      if (lower.includes('famille')) return 'familles';
+      if (lower.includes('famille') || lower.includes('enfant')) return 'familles-enfants';
       if (
         lower.includes('colier') ||
         lower.includes('tudiant') ||
         lower.includes('scolaire')
       )
-        return 'scolaire';
+        return 'scolaires';
+      if (lower.includes('salari') || lower.includes('entreprise')) return 'salaries-entreprise';
       if (lower.includes('pro')) return 'professionnels';
 
       return null;
