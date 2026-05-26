@@ -11,12 +11,12 @@ import {
 
 describe('mapFormat', () => {
   it('retourne la correspondance exacte', () => {
-    const result = mapFormat('Conférence / Table-ronde / Débat');
+    const result = mapFormat('Conférence/webinaire/table-ronde');
     expect(result).toEqual({ format: 'conference', type: 'conference' });
   });
 
-  it('retourne la correspondance exacte pour Atelier', () => {
-    expect(mapFormat('Atelier')).toEqual({ format: 'atelier', type: 'atelier' });
+  it('retourne la correspondance exacte pour Atelier de cuisine', () => {
+    expect(mapFormat('Atelier de cuisine')).toEqual({ format: 'atelier-cuisine', type: 'atelier-cuisine' });
   });
 
   it('retourne autre/autre pour une valeur inconnue', () => {
@@ -27,30 +27,19 @@ describe('mapFormat', () => {
     expect(mapFormat(undefined)).toEqual({ format: 'autre', type: 'autre' });
   });
 
-  it('fait une correspondance floue (fuzzy)', () => {
-    const result = mapFormat('Atelier Cuisine / Dégustation');
-    expect(result).toEqual({ format: 'atelier', type: 'atelier' });
+  it('ne fait plus de correspondance floue (fuzzy) pour les anciens types', () => {
+    const result = mapFormat('Atelier Cuisine');
+    expect(result).toEqual({ format: 'autre', type: 'autre' });
   });
 
-  it('mappe Marché correctement', () => {
-    expect(mapFormat('Marché')).toEqual({ format: 'marche', type: 'marche' });
+  it('mappe Festival correctement', () => {
+    expect(mapFormat('Festival')).toEqual({ format: 'festival', type: 'festival' });
   });
 
-  it('mappe Jeu / Hackathon vers autre (plus de type jeu)', () => {
-    expect(mapFormat('Jeu / Hackathon')).toEqual({ format: 'autre', type: 'autre' });
-  });
-
-  it('mappe Visite guidée / Portes ouvertes vers type visite', () => {
-    expect(mapFormat('Visite guidée / Portes ouvertes')).toEqual({
-      format: 'visite',
-      type: 'visite',
-    });
-  });
-
-  it('mappe Ciné-débat / Exposition / Festival vers type conference', () => {
-    expect(mapFormat('Ciné-débat / Exposition / Festival')).toEqual({
-      format: 'conference',
-      type: 'conference',
+  it('mappe Visite de jardin / potager ou cueillette vers type visite-jardin', () => {
+    expect(mapFormat('Visite de jardin / potager ou cueillette')).toEqual({
+      format: 'visite-jardin',
+      type: 'visite-jardin',
     });
   });
 });

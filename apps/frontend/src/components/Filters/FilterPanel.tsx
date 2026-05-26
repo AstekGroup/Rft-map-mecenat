@@ -16,7 +16,7 @@ import {
   Partner,
 
 } from '@/types/event';
-import { Calendar, MapPin, Tag, RotateCcw, Search, X, Hash, BookOpen, Handshake, Users, History } from 'lucide-react';
+import { Calendar, MapPin, Tag, RotateCcw, Search, X, Hash, BookOpen, Handshake, Users, History, Globe } from 'lucide-react';
 import { Button } from '@/components/UI';
 import { FilterAccordion } from './FilterAccordion';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';

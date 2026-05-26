@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Event, EVENT_TYPE_LABELS, EVENT_TYPE_COLORS, EVENT_THEME_LABELS } from '@/types/event';
+import { Event, EVENT_TYPE_COLORS, EVENT_THEME_LABELS } from '@/types/event';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { Calendar, Clock, MapPin, BookOpen, Handshake, Globe } from 'lucide-react';
 import { Badge } from '@/components/UI';

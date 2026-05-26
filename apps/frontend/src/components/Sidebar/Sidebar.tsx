@@ -75,15 +75,6 @@ export function Sidebar({
     filters.themes.length > 0 ||
     isDateFilterActive(filters.dateFilter, filters.dateFrom);
 
-  const hasActiveFilters =
-    filters.search ||
-    filters.postalCode ||
-    filters.regions.length > 0 ||
-    filters.types.length > 0 ||
-    filters.themes.length > 0 ||
-    filters.partners.length > 0 ||
-    filters.dateFilter !== 'all';
-
   if (isCollapsed) {
     return (
       <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center">

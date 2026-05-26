@@ -73,16 +73,13 @@ interface FormatMapping {
 }
 
 const FORMAT_MAP: Record<string, FormatMapping> = {
-  'Atelier Cuisine': { format: 'atelier', type: 'atelier' },
-  'Dégustation': { format: 'degustation', type: 'degustation' },
-  'Conférence / Débat': { format: 'conference', type: 'conference' },
-  'Visite de ferme / Jardin': { format: 'visite', type: 'visite' },
-  'Marché / Fête locale': { format: 'marche', type: 'marche' },
-  'Repas partagé': { format: 'repas', type: 'autre' },
-  'Atelier': { format: 'atelier', type: 'atelier' },
-  'Conférence': { format: 'conference', type: 'conference' },
-  'Marché': { format: 'marche', type: 'marche' },
-  'Visite': { format: 'visite', type: 'visite' },
+  'Atelier de cuisine': { format: 'atelier-cuisine', type: 'atelier-cuisine' },
+  'Dégustation ou menu végétal': { format: 'degustation', type: 'degustation' },
+  'Visite de jardin / potager ou cueillette': { format: 'visite-jardin', type: 'visite-jardin' },
+  'Atelier pédagogique ou formation': { format: 'atelier-pedagogique', type: 'atelier-pedagogique' },
+  'Conférence/webinaire/table-ronde': { format: 'conference', type: 'conference' },
+  'Festival': { format: 'festival', type: 'festival' },
+  'Autres': { format: 'autre', type: 'autre' },
 };
 
 export function mapFormat(airtableFormat: string | undefined): FormatMapping {
@@ -90,16 +87,6 @@ export function mapFormat(airtableFormat: string | undefined): FormatMapping {
 
   const exact = FORMAT_MAP[airtableFormat];
   if (exact) return exact;
-
-  const lower = airtableFormat.toLowerCase();
-  
-  // Fuzzy matching pour faciliter la transition
-  if (lower.includes('cuisine') || lower.includes('atelier')) return { format: 'atelier', type: 'atelier' };
-  if (lower.includes('degustation') || lower.includes('dégustation')) return { format: 'degustation', type: 'degustation' };
-  if (lower.includes('conf') || lower.includes('débat') || lower.includes('debat')) return { format: 'conference', type: 'conference' };
-  if (lower.includes('ferme') || lower.includes('jardin') || lower.includes('visite')) return { format: 'visite', type: 'visite' };
-  if (lower.includes('marché') || lower.includes('marche') || lower.includes('fête')) return { format: 'marche', type: 'marche' };
-  if (lower.includes('repas')) return { format: 'repas', type: 'autre' };
 
   return { format: 'autre', type: 'autre' };
 }

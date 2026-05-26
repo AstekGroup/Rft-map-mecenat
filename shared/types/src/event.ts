@@ -1,29 +1,31 @@
 /** Types d’événement affichés en tag / filtres (La Grande Semaine Végétale). */
 export type EventType =
-  | 'atelier'
+  | 'atelier-cuisine'
   | 'degustation'
+  | 'visite-jardin'
+  | 'atelier-pedagogique'
   | 'conference'
-  | 'visite'
-  | 'marche'
+  | 'festival'
   | 'autre';
 
 /** Ordre des cases à cocher filtres et clés de `stats.byType`. */
 export const EVENT_TYPES_ALL: EventType[] = [
-  'atelier',
+  'atelier-cuisine',
   'degustation',
+  'visite-jardin',
+  'atelier-pedagogique',
   'conference',
-  'visite',
-  'marche',
+  'festival',
   'autre',
 ];
 
 export type EventFormat = 
-  | 'atelier' 
+  | 'atelier-cuisine' 
   | 'degustation' 
+  | 'visite-jardin' 
+  | 'atelier-pedagogique' 
   | 'conference' 
-  | 'visite' 
-  | 'marche' 
-  | 'repas'
+  | 'festival'
   | 'autre';
 
 export type TargetAudience = 
@@ -130,31 +132,33 @@ export function isCluster(feature: MapFeature): feature is ClusterFeature {
 }
 
 export const EVENT_TYPE_LABELS: Record<EventType, string> = {
-  'atelier': 'Atelier Cuisine',
-  'degustation': 'Dégustation',
-  'conference': 'Conférence / Débat',
-  'visite': 'Visite de ferme / Jardin',
-  'marche': 'Marché / Fête locale',
-  'autre': 'Autre',
+  'atelier-cuisine': 'Atelier de cuisine',
+  'degustation': 'Dégustation ou menu végétal',
+  'visite-jardin': 'Visite de jardin / potager ou cueillette',
+  'atelier-pedagogique': 'Atelier pédagogique ou formation',
+  'conference': 'Conférence/webinaire/table-ronde',
+  'festival': 'Festival',
+  'autre': 'Autres',
 };
 
 export const EVENT_TYPE_COLORS: Record<EventType, string> = {
-  'atelier': '#3BAE5D',      // green_main
-  'degustation': '#F4C542',  // yellow_soft
-  'conference': '#1F7A3E',   // green_dark
-  'visite': '#A7D7B5',       // green_light
-  'marche': '#E46A5D',       // red_soft
-  'autre': '#D9D9D9',        // grey_light
+  'atelier-cuisine': '#3BAE5D',      // green_main
+  'degustation': '#F4C542',          // yellow_soft
+  'visite-jardin': '#A7D7B5',        // green_light
+  'atelier-pedagogique': '#1F7A3E',  // green_dark
+  'conference': '#E46A5D',           // red_soft
+  'festival': '#FF8C00',             // orange
+  'autre': '#D9D9D9',                // grey_light
 };
 
 export const EVENT_FORMAT_LABELS: Record<EventFormat, string> = {
-  'atelier': 'Atelier Cuisine',
-  'degustation': 'Dégustation',
-  'conference': 'Conférence / Table-ronde',
-  'visite': 'Visite de ferme / Jardin',
-  'marche': 'Marché / Fête locale',
-  'repas': 'Repas partagé',
-  'autre': 'Autre',
+  'atelier-cuisine': 'Atelier de cuisine',
+  'degustation': 'Dégustation ou menu végétal',
+  'visite-jardin': 'Visite de jardin / potager ou cueillette',
+  'atelier-pedagogique': 'Atelier pédagogique ou formation',
+  'conference': 'Conférence/webinaire/table-ronde',
+  'festival': 'Festival',
+  'autre': 'Autres',
 };
 
 export const TARGET_AUDIENCE_LABELS: Record<TargetAudience, string> = {

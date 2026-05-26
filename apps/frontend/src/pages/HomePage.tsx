@@ -71,14 +71,6 @@ export function HomePage() {
     [allEvents]
   );
 
-  const distancielEvents = useMemo(() =>
-    allEvents
-      .filter(e => e.modality === 'distanciel')
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .slice(0, 6),
-    [allEvents]
-  );
-
   return (
     <div className="min-h-screen bg-surface-offwhite overflow-y-auto font-inter">
       {/* Hero Section */}

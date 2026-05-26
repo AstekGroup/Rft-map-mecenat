@@ -20,12 +20,12 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
     postalCode: '75001',
     latitude: 48.8566,
     longitude: 2.3522,
-    type: 'atelier',
+    type: 'atelier-cuisine',
     themes: ['autre'],
     organizer: 'Org Test',
     isDuringWeek: true,
     modality: 'presentiel',
-    format: 'atelier',
+    format: 'atelier-cuisine',
     targetAudience: ['tout-public'],
     ...overrides,
   };
@@ -267,7 +267,7 @@ describe('useEvents', () => {
 
     it('filtre par type via toggleType', async () => {
       const events = [
-        makeEvent({ id: 'a', type: 'atelier' }),
+        makeEvent({ id: 'a', type: 'atelier-cuisine' }),
         makeEvent({ id: 'b', type: 'conference' }),
       ];
       vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
@@ -322,9 +322,9 @@ describe('useEvents', () => {
   describe('stats', () => {
     it('calcule les stats totales et filtrées', async () => {
       const events = [
-        makeEvent({ id: 'a', type: 'atelier', isDuringWeek: true }),
+        makeEvent({ id: 'a', type: 'atelier-cuisine', isDuringWeek: true }),
         makeEvent({ id: 'b', type: 'conference', isDuringWeek: false }),
-        makeEvent({ id: 'c', type: 'atelier', isDuringWeek: true }),
+        makeEvent({ id: 'c', type: 'atelier-cuisine', isDuringWeek: true }),
       ];
       vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
 
@@ -334,7 +334,7 @@ describe('useEvents', () => {
       expect(result.current.stats.total).toBe(3);
       expect(result.current.stats.filtered).toBe(3);
       expect(result.current.stats.duringWeek).toBe(2);
-      expect(result.current.stats.byType['atelier']).toBe(2);
+      expect(result.current.stats.byType['atelier-cuisine']).toBe(2);
       expect(result.current.stats.byType['conference']).toBe(1);
     });
   });

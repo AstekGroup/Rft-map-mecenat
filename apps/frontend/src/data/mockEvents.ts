@@ -123,7 +123,7 @@ const CITIES: Record<string, { name: string; lat: number; lng: number; departmen
 
 const EVENT_TYPES: EventType[] = [...EVENT_TYPES_ALL];
 
-const EVENT_FORMATS: EventFormat[] = ['atelier', 'degustation', 'conference', 'visite', 'marche', 'repas', 'autre'];
+const EVENT_FORMATS: EventFormat[] = ['atelier-cuisine', 'degustation', 'visite-jardin', 'atelier-pedagogique', 'conference', 'festival', 'autre'];
 
 const TARGET_AUDIENCES: TargetAudience[] = ['tout-public', 'jeunes', 'seniors', 'familles', 'scolaire', 'professionnels'];
 
@@ -144,7 +144,7 @@ const EVENT_IMAGES = [
   'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&h=400&fit=crop',
   'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&h=400&fit=crop',
   'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&h=400&fit=crop',
-  {/* more images if needed */}
+  // more images if needed
   'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800&h=400&fit=crop',
   'https://images.unsplash.com/photo-1543353071-873f17a7a088?w=800&h=400&fit=crop',
   'https://images.unsplash.com/photo-1515023115689-589c33041d3c?w=800&h=400&fit=crop',
@@ -165,7 +165,7 @@ const EVENT_THEMES: EventTheme[] = [
 ];
 
 const EVENT_TITLES: Record<EventType, string[]> = {
-  'atelier': [
+  'atelier-cuisine': [
     'Atelier Cuisine : Les légumineuses à l\'honneur',
     'Cours de cuisine végétale rapide',
     'Atelier : Faire ses propres steaks végétaux',
@@ -179,26 +179,33 @@ const EVENT_TITLES: Record<EventType, string[]> = {
     'Brunch 100% végétal',
     'Goûter végétal pour les enfants',
   ],
-  'conference': [
-    'Conférence : Pourquoi passer au végétal ?',
-    'L\'impact environnemental de notre alimentation',
-    'Santé et protéines végétales : le vrai du faux',
-    'Conférence : L\'agriculture paysanne et le végétal',
-    'Table ronde : Le futur de notre alimentation',
-  ],
-  'visite': [
+  'visite-jardin': [
     'Visite : Découverte d\'un potager partagé',
     'Portes ouvertes : Ferme maraîchère bio',
     'Visite guidée : Un jardin en permaculture',
-    'Découverte d\'une coopérative agricole',
-    'Visite : Les coulisses d\'un restaurant végétal',
+    'Découverte d\'une cueillette à la ferme',
+    'Visite : Les coulisses d\'un potager urbain',
   ],
-  'marche': [
-    'Marché des producteurs locaux',
-    'Fête de la courge et des légumes d\'antan',
-    'Marché 100% végétal et artisanal',
-    'Fête des jardins urbains',
-    'Bourse aux graines et plants',
+  'atelier-pedagogique': [
+    'Atelier : Découvrir la nutrition végétale',
+    'Formation : Cuisiner pour toute la famille',
+    'Atelier pédagogique : Le cycle des plantes',
+    'Cours : Équilibre nutritionnel sans viande',
+    'Atelier : Comprendre les étiquettes alimentaires',
+  ],
+  'conference': [
+    'Conférence : Pourquoi passer au végétal ?',
+    'Webinaire : L\'impact environnemental de notre alimentation',
+    'Santé et protéines végétales : le vrai du faux',
+    'Table ronde : Le futur de notre alimentation',
+    'Conférence : L\'alimentation durable pour tous',
+  ],
+  'festival': [
+    'Festival de la cuisine végétale',
+    'Grande fête du potager local',
+    'Salon des alternatives durables',
+    'Festival : Terre et Saveurs',
+    'Fête des semences anciennes',
   ],
   'autre': [
     'Projection : Documentaire sur l\'agroécologie',
@@ -310,11 +317,12 @@ function generateEvent(region: string, city: typeof CITIES[string][number], _ind
   
   // Correspondance type -> format
   const typeToFormat: Record<EventType, EventFormat> = {
-    'atelier': 'atelier',
+    'atelier-cuisine': 'atelier-cuisine',
     'degustation': 'degustation',
+    'visite-jardin': 'visite-jardin',
+    'atelier-pedagogique': 'atelier-pedagogique',
     'conference': 'conference',
-    'visite': 'visite',
-    'marche': 'marche',
+    'festival': 'festival',
     'autre': 'autre',
   };
   
