@@ -39,16 +39,11 @@ export type TargetAudience =
 export type EventModality = 'presentiel' | 'distanciel';
 
 export type EventTheme =
-  | 'sante-mentale'
-  | 'activite-physique'
-  | 'alimentation'
-  | 'addictions'
-  | 'maladies-chroniques'
-  | 'vaccination'
-  | 'depistage'
-  | 'sante-environnementale'
-  | 'numerique'
-  | 'soins-cibles'
+  | 'cuisine-vegetale'
+  | 'sante-nutrition'
+  | 'biodiversite'
+  | 'agriculture'
+  | 'climat-environnement'
   | 'autre';
 
 export interface Partner {
@@ -176,16 +171,11 @@ export const MODALITY_LABELS: Record<EventModality, string> = {
 };
 
 export const EVENT_THEME_LABELS: Record<EventTheme, string> = {
-  'sante-mentale': 'Santé mentale et bien-être (stress, sommeil, émotions…)',
-  'activite-physique': 'Activité physique et sport santé',
-  'alimentation': 'Alimentation et nutrition',
-  'addictions': 'Addictions (tabac, alcool, drogues…)',
-  'maladies-chroniques': 'Maladies chroniques (diabète, maladies cardiovasculaires…)',
-  'vaccination': 'Vaccination et prévention infectieuse',
-  'depistage': 'Dépistage et bilans santé',
-  'sante-environnementale': 'Santé environnementale',
-  'numerique': 'Risques liés au numérique',
-  'soins-cibles': 'Soins ciblés (bucco-dentaire, yeux, peau…)',
+  'cuisine-vegetale': 'Cuisine végétale',
+  'sante-nutrition': 'Santé & nutrition',
+  'biodiversite': 'Biodiversité',
+  'agriculture': 'Agriculture',
+  'climat-environnement': 'Climat & environnement',
   'autre': 'Autres',
 };
 

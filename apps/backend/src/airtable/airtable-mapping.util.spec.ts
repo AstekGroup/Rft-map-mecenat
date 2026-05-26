@@ -1,4 +1,5 @@
 import {
+  mapThemes,
   mapFormat,
   mapTargetAudience,
   mapModality,
@@ -8,6 +9,39 @@ import {
   buildOrganizerContact,
   buildAccessibilityInfo,
 } from './airtable-mapping.util';
+
+describe('mapThemes', () => {
+  it('mappe les thèmes exacts', () => {
+    const result = mapThemes(['Cuisine végétale', 'Agriculture']);
+    expect(result).toEqual(['cuisine-vegetale', 'agriculture']);
+  });
+
+  it('fait une correspondance floue (heuristique)', () => {
+    expect(mapThemes(['Découverte culinaire', 'Agroécologie'])).toEqual([
+      'cuisine-vegetale',
+      'agriculture',
+    ]);
+    expect(mapThemes(['Nutrition santé', 'Climat'])).toEqual([
+      'sante-nutrition',
+      'climat-environnement',
+    ]);
+    expect(mapThemes(['Biodiversité locale'])).toEqual(['biodiversite']);
+  });
+
+  it('retourne "autre" pour des thèmes inconnus', () => {
+    expect(mapThemes(['Thème mystère'])).toEqual(['autre']);
+  });
+
+  it('retourne ["autre"] si undefined ou vide', () => {
+    expect(mapThemes(undefined)).toEqual(['autre']);
+    expect(mapThemes([])).toEqual(['autre']);
+  });
+
+  it('supprime les doublons', () => {
+    const result = mapThemes(['Cuisine végétale', 'Cuisine']);
+    expect(result).toEqual(['cuisine-vegetale']);
+  });
+});
 
 describe('mapFormat', () => {
   it('retourne la correspondance exacte', () => {

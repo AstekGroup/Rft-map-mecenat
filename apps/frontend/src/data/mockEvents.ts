@@ -151,16 +151,11 @@ const EVENT_IMAGES = [
 ];
 
 const EVENT_THEMES: EventTheme[] = [
-  'sante-mentale',
-  'activite-physique',
-  'alimentation',
-  'addictions',
-  'maladies-chroniques',
-  'vaccination',
-  'depistage',
-  'sante-environnementale',
-  'numerique',
-  'soins-cibles',
+  'cuisine-vegetale',
+  'sante-nutrition',
+  'biodiversite',
+  'agriculture',
+  'climat-environnement',
   'autre',
 ];
 
