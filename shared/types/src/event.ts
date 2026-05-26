@@ -84,6 +84,8 @@ export interface Event {
   capacity?: number;
   registeredCount?: number;
   partners?: Partner[];
+  price?: number;
+  isFree: boolean;
 }
 
 export interface GeoJSONEvent {

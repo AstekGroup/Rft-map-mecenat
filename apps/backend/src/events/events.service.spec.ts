@@ -22,6 +22,7 @@ const mockEvent: Event = {
   modality: 'presentiel',
   format: 'conference',
   targetAudience: ['tout-public'],
+  isFree: true,
 };
 
 const mockPartner: Partner = {

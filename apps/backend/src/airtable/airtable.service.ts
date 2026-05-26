@@ -288,6 +288,8 @@ export class AirtableService {
       capacity: f["Capacité d'accueil de l'événement"] || undefined,
       registeredCount: undefined,
       partners: partners.length > 0 ? partners : undefined,
+      isFree: f['Tarif'] === 'Gratuit' || !f['Montant'],
+      price: f['Montant'] || undefined,
     };
   }
 }

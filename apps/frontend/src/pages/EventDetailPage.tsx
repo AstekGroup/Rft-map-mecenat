@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, MapPin, ExternalLink, Mail, Globe, Video, Building, Accessibility, Tag, BookOpen, Handshake } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MapPin, ExternalLink, Mail, Globe, Video, Building, Accessibility, Tag, BookOpen, Handshake, Euro } from 'lucide-react';
 import { useEvents } from '@/hooks';
 import { 
   EVENT_TYPE_LABELS, 
@@ -192,7 +192,7 @@ export function EventDetailPage() {
 
           {/* Date & Location side by side */}
           <div className="p-6 md:p-8 border-b border-primary/10 bg-surface-beige/20">
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Date & Time */}
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -211,6 +211,25 @@ export function EventDetailPage() {
                     {event.time}
                     {event.endTime && ` - ${event.endTime}`}
                   </p>
+                </div>
+              </div>
+
+              {/* Tariff */}
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Euro className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-poppins font-semibold text-sm text-primary/70 uppercase tracking-wide mb-1">
+                    Tarif
+                  </h3>
+                  {event.isFree ? (
+                    <p className="font-bold text-green-600">Gratuit</p>
+                  ) : (
+                    <p className="font-bold text-text-primary">
+                      {event.price ? `${event.price} €` : 'Payant (consulter l\'organisateur)'}
+                    </p>
+                  )}
                 </div>
               </div>
 

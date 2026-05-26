@@ -324,6 +324,9 @@ function generateEvent(region: string, city: typeof CITIES[string][number], _ind
   const format = Math.random() > 0.5 
     ? typeToFormat[type] 
     : EVENT_FORMATS[Math.floor(Math.random() * EVENT_FORMATS.length)];
+
+  const isFree = Math.random() > 0.3; // 70% gratuit
+  const price = !isFree ? [5, 10, 15, 20, 30][Math.floor(Math.random() * 5)] : undefined;
   
   return {
     id: generateId(),
@@ -357,6 +360,8 @@ function generateEvent(region: string, city: typeof CITIES[string][number], _ind
     organizerWebsite: Math.random() > 0.5 ? `https://${organizer.toLowerCase().replace(/\s+/g, '-')}.fr` : undefined,
     capacity,
     registeredCount: Math.floor(Math.random() * capacity * 0.8),
+    isFree,
+    price,
   };
 }
 
