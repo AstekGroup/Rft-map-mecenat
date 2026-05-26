@@ -80,6 +80,7 @@ export interface Event {
   format: EventFormat;
   targetAudience: TargetAudience[];
   contactEmail?: string;
+  contactPhone?: string;
   organizerWebsite?: string;
   capacity?: number;
   registeredCount?: number;

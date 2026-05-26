@@ -357,6 +357,7 @@ function generateEvent(region: string, city: typeof CITIES[string][number], _ind
     format,
     targetAudience: getRandomTargetAudiences(),
     contactEmail: Math.random() > 0.3 ? `contact@${organizer.toLowerCase().replace(/\s+/g, '-')}.fr` : undefined,
+    contactPhone: Math.random() > 0.4 ? '06 12 34 56 78' : undefined,
     organizerWebsite: Math.random() > 0.5 ? `https://${organizer.toLowerCase().replace(/\s+/g, '-')}.fr` : undefined,
     capacity,
     registeredCount: Math.floor(Math.random() * capacity * 0.8),

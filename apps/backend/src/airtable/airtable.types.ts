@@ -42,6 +42,7 @@ export interface AirtableRecord {
     'Nom de l\'animateur'?: string;
     'E-mail de l\'animateur'?: string;
     'Téléphone de l\'animateur'?: string;
+    'Téléphone inscription'?: string;
     'Modération de l\'événement'?: string;
     'Visibilité sur la cartographie'?: string;
     Public?: string[];

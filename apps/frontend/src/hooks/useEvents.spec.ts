@@ -27,6 +27,7 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
     modality: 'presentiel',
     format: 'atelier-cuisine',
     targetAudience: ['tout-public'],
+    isFree: true,
     ...overrides,
   };
 }

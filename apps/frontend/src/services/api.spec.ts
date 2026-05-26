@@ -22,6 +22,7 @@ const mockEvent: Event = {
   modality: 'presentiel',
   format: 'atelier-cuisine',
   targetAudience: ['tout-public'],
+  isFree: true,
 };
 
 const mockPartner: Partner = {

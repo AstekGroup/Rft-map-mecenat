@@ -284,6 +284,7 @@ export class AirtableService {
         f['Email contact événement'] ||
         f["E-mail de l'animateur"] ||
         undefined,
+      contactPhone: f['Téléphone inscription'] || undefined,
       organizerWebsite: f['Site web de la structure'] || undefined,
       capacity: f["Capacité d'accueil de l'événement"] || undefined,
       registeredCount: undefined,

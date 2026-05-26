@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, MapPin, ExternalLink, Mail, Globe, Video, Building, Accessibility, Tag, BookOpen, Handshake, Euro } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MapPin, ExternalLink, Mail, Globe, Video, Building, Accessibility, Tag, BookOpen, Handshake, Euro, Phone, Info } from 'lucide-react';
 import { useEvents } from '@/hooks';
 import { 
   EVENT_TYPE_LABELS, 
@@ -192,7 +192,7 @@ export function EventDetailPage() {
 
           {/* Date & Location side by side */}
           <div className="p-6 md:p-8 border-b border-primary/10 bg-surface-beige/20">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 gap-6">
               {/* Date & Time */}
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -211,25 +211,6 @@ export function EventDetailPage() {
                     {event.time}
                     {event.endTime && ` - ${event.endTime}`}
                   </p>
-                </div>
-              </div>
-
-              {/* Tariff */}
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Euro className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-poppins font-semibold text-sm text-primary/70 uppercase tracking-wide mb-1">
-                    Tarif
-                  </h3>
-                  {event.isFree ? (
-                    <p className="font-bold text-green-600">Gratuit</p>
-                  ) : (
-                    <p className="font-bold text-text-primary">
-                      {event.price ? `${event.price} €` : 'Payant (consulter l\'organisateur)'}
-                    </p>
-                  )}
                 </div>
               </div>
 
@@ -361,6 +342,86 @@ export function EventDetailPage() {
               {event.description}
             </p>
           </div>
+          
+            {/* Condition d'accès */}
+          <div className="p-6 md:p-8 border-b border-primary/10 bg-primary/5">
+            <h2 className="font-poppins font-semibold text-lg text-text-primary mb-4 flex items-center gap-2">
+              <Info className="w-5 h-5 text-primary" />
+              Condition d'accès
+            </h2>
+
+            {/* Tarif */}
+            <div className="mb-6 pb-6 border-b border-primary/10 flex items-start gap-4">
+              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Euro className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-poppins font-semibold text-sm text-primary/70 uppercase tracking-wide mb-1">
+                  Tarif
+                </h3>
+                {event.isFree ? (
+                  <p className="font-bold text-green-600">Gratuit</p>
+                ) : (
+                  <p className="font-bold text-text-primary">
+                    {event.price ? `${event.price} €` : 'Payant (consulter l\'organisateur)'}
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            {!(event.registrationUrl || event.contactPhone || event.contactEmail) ? (
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-green-100 text-green-800">
+                  <span className="w-2 h-2 bg-green-500 rounded-full" />
+                  Entrée libre
+                </span>
+                <p className="mt-3 text-text-secondary text-sm">
+                  Cet événement est en accès libre et ne nécessite aucune inscription préalable.
+                </p>
+              </div>
+            ) : (
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-amber-100 text-amber-800 mb-3">
+                  <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                  Sur inscription
+                </span>
+                <p className="text-text-secondary text-sm mb-4">
+                  L'inscription à cet événement est requise. Vous pouvez vous inscrire par les moyens suivants :
+                </p>
+                <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+                  {event.registrationUrl && (
+                    <a
+                      href={event.registrationUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2.5 rounded-button text-sm font-medium hover:bg-primary-dark transition-colors shadow-sm"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      S'inscrire par Internet
+                    </a>
+                  )}
+                  {event.contactPhone && (
+                    <a
+                      href={`tel:${event.contactPhone.replace(/\s+/g, '')}`}
+                      className="inline-flex items-center gap-2 bg-white border border-primary/20 text-primary-dark hover:bg-primary/5 px-4 py-2.5 rounded-button text-sm font-medium transition-colors shadow-sm"
+                    >
+                      <Phone className="w-4 h-4 text-primary" />
+                      S'inscrire par Téléphone ({event.contactPhone})
+                    </a>
+                  )}
+                  {event.contactEmail && (
+                    <a
+                      href={`mailto:${event.contactEmail}`}
+                      className="inline-flex items-center gap-2 bg-white border border-primary/20 text-primary-dark hover:bg-primary/5 px-4 py-2.5 rounded-button text-sm font-medium transition-colors shadow-sm"
+                    >
+                      <Mail className="w-4 h-4 text-primary" />
+                      S'inscrire par E-mail ({event.contactEmail})
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Contact */}
           <div className="p-6 md:p-8 border-b border-primary/10">
@@ -399,20 +460,10 @@ export function EventDetailPage() {
                   <Tag className="w-5 h-5" />
                   Événement complet
                 </div>
-              ) : event.registrationUrl ? (
-                <a
-                  href={event.registrationUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-primary flex-1 flex items-center justify-center gap-2 shadow-lg"
-                >
-                  <ExternalLink className="w-5 h-5" />
-                  S'inscrire à l'événement
-                </a>
               ) : null}
-              {event.organizerContact && (
+              {event.contactEmail && (
                 <a
-                  href={`mailto:${event.organizerContact}`}
+                  href={`mailto:${event.contactEmail}`}
                   className="btn-secondary flex-1 flex items-center justify-center gap-2"
                 >
                   <Mail className="w-5 h-5" />
