@@ -174,18 +174,18 @@ describe('extractImageUrl', () => {
 });
 
 describe('computeIsDuringWeek', () => {
-  it('retourne true pour une date pendant la semaine (18-24 mai 2026)', () => {
-    expect(computeIsDuringWeek('2026-05-18T10:00:00.000Z')).toBe(true);
-    expect(computeIsDuringWeek('2026-05-21T14:00:00.000Z')).toBe(true);
-    expect(computeIsDuringWeek('2026-05-24T20:00:00.000Z')).toBe(true);
+  it('retourne true pour une date pendant la semaine (25 sept - 4 oct 2026)', () => {
+    expect(computeIsDuringWeek('2026-09-25T10:00:00.000Z')).toBe(true);
+    expect(computeIsDuringWeek('2026-09-30T14:00:00.000Z')).toBe(true);
+    expect(computeIsDuringWeek('2026-10-04T20:00:00.000Z')).toBe(true);
   });
 
   it('retourne false pour une date avant la semaine', () => {
-    expect(computeIsDuringWeek('2026-05-17T23:59:59.000Z')).toBe(false);
+    expect(computeIsDuringWeek('2026-09-24T23:59:59.000Z')).toBe(false);
   });
 
   it('retourne false pour une date après la semaine', () => {
-    expect(computeIsDuringWeek('2026-05-25T00:00:00.000Z')).toBe(false);
+    expect(computeIsDuringWeek('2026-10-05T00:00:00.000Z')).toBe(false);
   });
 
   it('retourne false si undefined', () => {

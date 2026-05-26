@@ -44,6 +44,11 @@ describe('isDateFilterActive', () => {
   it('custom avec dateFrom est actif', () => {
     expect(isDateFilterActive('custom', '2026-05-20')).toBe(true);
   });
+
+  it('weekend-sept et weekend-oct sont actifs', () => {
+    expect(isDateFilterActive('weekend-sept', '')).toBe(true);
+    expect(isDateFilterActive('weekend-oct', '')).toBe(true);
+  });
 });
 
 describe('formatFrDateRangeLabel', () => {

@@ -164,9 +164,9 @@ export function extractImageUrl(attachments: AirtableAttachment[] | undefined): 
 // Calcul isDuringWeek
 // ============================================================
 
-// Semaine de l'IA pour Tous : 18-24 mai 2026
-const WEEK_START = new Date('2026-05-18T00:00:00.000Z');
-const WEEK_END = new Date('2026-05-24T23:59:59.999Z');
+// La grande semaine végétale : 25 septembre au 4 octobre 2026
+const WEEK_START = new Date('2026-09-25T00:00:00.000Z');
+const WEEK_END = new Date('2026-10-04T23:59:59.999Z');
 
 /**
  * Vérifie si une date tombe pendant la Semaine de l'IA pour Tous (18-24 mai 2026)

@@ -125,10 +125,15 @@ export function EventFiltersBar({
       onRemove: () =>
         onUpdateFilters({ dateFilter: 'all', dateFrom: '', dateTo: '' }),
     });
-  } else if (filters.dateFilter === 'during-week' || filters.dateFilter === 'other') {
+  } else if (
+    filters.dateFilter === 'during-week' || 
+    filters.dateFilter === 'weekend-sept' ||
+    filters.dateFilter === 'weekend-oct'
+  ) {
     const dateLabels: Record<string, string> = {
       'during-week': 'La Grande Semaine Végétale',
-      other: 'Autres dates',
+      'weekend-sept': 'Weekend du 26-27 septembre',
+      'weekend-oct': 'Weekend du 4-5 octobre',
     };
     activeTags.push({
       key: 'date',
@@ -260,7 +265,8 @@ export function EventFiltersBar({
             {[
               { value: 'all', label: 'Toutes les dates' },
               { value: 'during-week', label: 'La Grande Semaine Végétale' },
-              { value: 'other', label: 'Autres dates' },
+              { value: 'weekend-sept', label: 'Weekend du 26-27 septembre' },
+              { value: 'weekend-oct', label: 'Weekend du 4-5 octobre' },
               { value: 'custom', label: 'Plage au calendrier' },
             ].map((option) => (
               <button

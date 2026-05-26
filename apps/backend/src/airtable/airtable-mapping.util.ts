@@ -170,8 +170,8 @@ export function extractImageUrl(
 // isDuringWeek
 // ============================================================
 
-const WEEK_START = new Date('2026-05-18T00:00:00.000Z');
-const WEEK_END = new Date('2026-05-24T23:59:59.999Z');
+const WEEK_START = new Date('2026-09-25T00:00:00.000Z');
+const WEEK_END = new Date('2026-10-04T23:59:59.999Z');
 
 export function computeIsDuringWeek(dateString: string | undefined): boolean {
   if (!dateString) return false;

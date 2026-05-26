@@ -105,7 +105,12 @@ export function useEvents() {
 
       // Filtre date
       if (filters.dateFilter === 'during-week' && !event.isDuringWeek) return false;
-      if (filters.dateFilter === 'other' && event.isDuringWeek) return false;
+      if (filters.dateFilter === 'weekend-sept') {
+        if (!eventIntersectsYmdRange(event, '2026-09-26', '2026-09-27')) return false;
+      }
+      if (filters.dateFilter === 'weekend-oct') {
+        if (!eventIntersectsYmdRange(event, '2026-10-04', '2026-10-05')) return false;
+      }
       if (filters.dateFilter === 'custom' && filters.dateFrom) {
         const rangeStart = filters.dateFrom.slice(0, 10);
         const rangeEnd = (filters.dateTo || filters.dateFrom).slice(0, 10);

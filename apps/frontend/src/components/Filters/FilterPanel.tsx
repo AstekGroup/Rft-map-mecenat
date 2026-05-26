@@ -103,7 +103,8 @@ export function FilterPanel({
             {[
               { value: 'all', label: 'Toutes les dates' },
               { value: 'during-week', label: 'La Grande Semaine Végétale' },
-              { value: 'other', label: 'Autres dates' },
+              { value: 'weekend-sept', label: 'Weekend du 26-27 septembre' },
+              { value: 'weekend-oct', label: 'Weekend du 4-5 octobre' },
               { value: 'custom', label: 'Plage au calendrier' },
             ].map((option) => (
               <label
