@@ -232,7 +232,8 @@ export class AirtableService {
     const modality = mapModality(f["Type de l'événement"]);
     const targetAudience = mapTargetAudience(f['Public']);
     const themes = mapThemes(f['Thématique']);
-    const imageUrl = extractImageUrl(f["Visuel de l'événement"]);
+    
+    const imageUrl = extractImageUrl(f["Visuel de l'évènement"]);
     const isDuringWeek = computeIsDuringWeek(
       f["Date de début de l'événement"],
     );

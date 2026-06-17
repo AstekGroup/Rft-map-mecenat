@@ -47,7 +47,7 @@ export interface AirtableRecord {
     'Visibilité sur la cartographie'?: string;
     Public?: string[];
     Thématique?: string[];
-    "Visuel de l'événement"?: AirtableAttachment[];
+    "Visuel de l'évènement"?: AirtableAttachment[];
     'Respect de la charte'?: boolean;
     'Réception kit communication'?: string;
     'Type de structure'?: string;
