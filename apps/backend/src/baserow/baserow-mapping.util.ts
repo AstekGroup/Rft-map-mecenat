@@ -1,5 +1,5 @@
 /**
- * Utilitaires de mapping entre les valeurs Airtable et les types internes (La Grande Semaine Végétale).
+ * Utilitaires de mapping entre les valeurs Baserow et les types internes (La Grande Semaine Végétale).
  */
 
 import type {
@@ -9,38 +9,48 @@ import type {
   EventModality,
   EventTheme,
 } from '@make-map/types';
-import type { AirtableAttachment } from './airtable.types';
+import { BaserowAttachment, BaserowSelect } from './baserow.types';
 
 // ============================================================
-// Mapping Thématique Airtable -> EventTheme[]
+// Mapping Thématique Baserow -> EventTheme[]
 // ============================================================
 
 const THEME_MAP: Record<string, EventTheme> = {
   'Cuisine végétale': 'cuisine-vegetale',
   'Santé & nutrition': 'sante-nutrition',
-  'Biodiversité': 'biodiversite',
-  'Agriculture': 'agriculture',
+  Biodiversité: 'biodiversite',
+  Agriculture: 'agriculture',
   'Climat & environnement': 'climat-environnement',
   Autres: 'autre',
 };
 
-export function mapThemes(airtableThemes: string[] | undefined): EventTheme[] {
-  if (!airtableThemes || airtableThemes.length === 0) return ['autre'];
+export function mapThemes(
+  baserowThemes: BaserowSelect[] | undefined,
+): EventTheme[] {
+  if (!baserowThemes || baserowThemes.length === 0) return ['autre'];
 
-  const mapped = airtableThemes
+  const mapped = baserowThemes
     .map((t) => {
-      const exact = THEME_MAP[t];
+      const exact = THEME_MAP[t.value];
       if (exact) return exact;
 
-      const lower = t.toLowerCase();
-      if (lower.includes('cuisine') || lower.includes('végétal') || lower.includes('culinaire'))
+      const lower = t.value.toLowerCase();
+      if (
+        lower.includes('cuisine') ||
+        lower.includes('végétal') ||
+        lower.includes('culinaire')
+      )
         return 'cuisine-vegetale';
       if (lower.includes('santé') || lower.includes('nutrition'))
         return 'sante-nutrition';
-      if (lower.includes('biodiv'))
-        return 'biodiversite';
-      if (lower.includes('agri') || lower.includes('agro')) return 'agriculture';
-      if (lower.includes('climat') || lower.includes('environ') || lower.includes('éco'))
+      if (lower.includes('biodiv')) return 'biodiversite';
+      if (lower.includes('agri') || lower.includes('agro'))
+        return 'agriculture';
+      if (
+        lower.includes('climat') ||
+        lower.includes('environ') ||
+        lower.includes('éco')
+      )
         return 'climat-environnement';
 
       return 'autre';
@@ -51,7 +61,7 @@ export function mapThemes(airtableThemes: string[] | undefined): EventTheme[] {
 }
 
 // ============================================================
-// Mapping Format Airtable -> EventFormat + EventType
+// Mapping Format Baserow -> EventFormat + EventType
 // ============================================================
 
 interface FormatMapping {
@@ -62,58 +72,71 @@ interface FormatMapping {
 const FORMAT_MAP: Record<string, FormatMapping> = {
   'Atelier de cuisine': { format: 'atelier-cuisine', type: 'atelier-cuisine' },
   'Dégustation ou menu végétal': { format: 'degustation', type: 'degustation' },
-  'Visite de jardin / potager ou cueillette': { format: 'visite-jardin', type: 'visite-jardin' },
-  'Atelier pédagogique ou formation': { format: 'atelier-pedagogique', type: 'atelier-pedagogique' },
-  'Conférence/webinaire/table-ronde': { format: 'conference', type: 'conference' },
-  'Festival': { format: 'festival', type: 'festival' },
-  'Autres': { format: 'autre', type: 'autre' },
+  'Visite de jardin / potager ou cueillette': {
+    format: 'visite-jardin',
+    type: 'visite-jardin',
+  },
+  'Atelier pédagogique ou formation': {
+    format: 'atelier-pedagogique',
+    type: 'atelier-pedagogique',
+  },
+  'Conférence/webinaire/table-ronde': {
+    format: 'conference',
+    type: 'conference',
+  },
+  Festival: { format: 'festival', type: 'festival' },
+  Autres: { format: 'autre', type: 'autre' },
 };
 
-export function mapFormat(airtableFormat: string | undefined): FormatMapping {
-  if (!airtableFormat) return { format: 'autre', type: 'autre' };
+export function mapFormat(
+  baserowFormat: BaserowSelect | undefined,
+): FormatMapping {
+  if (!baserowFormat) return { format: 'autre', type: 'autre' };
 
-  const exact = FORMAT_MAP[airtableFormat];
+  const exact = FORMAT_MAP[baserowFormat.value];
   if (exact) return exact;
 
   return { format: 'autre', type: 'autre' };
 }
 
 // ============================================================
-// Mapping Public Airtable -> TargetAudience[]
+// Mapping Public Baserow -> TargetAudience[]
 // ============================================================
 
 const AUDIENCE_MAP: Record<string, TargetAudience> = {
   'Tout public': 'tout-public',
-  'Familles': 'familles-enfants',
+  Familles: 'familles-enfants',
   'Famille / enfants': 'familles-enfants',
-  'Scolaire': 'scolaires',
+  Scolaire: 'scolaires',
   'Ecoliers / Etudiants': 'scolaires',
   'Écoliers / Étudiants': 'scolaires',
-  'Professionnels': 'professionnels',
+  Professionnels: 'professionnels',
   "Salariés d'une entreprise": 'salaries-entreprise',
-  'Salariés': 'salaries-entreprise',
+  Salariés: 'salaries-entreprise',
 };
 
 export function mapTargetAudience(
-  airtablePublic: string[] | undefined,
+  baserowPublic: BaserowSelect[] | undefined,
 ): TargetAudience[] {
-  if (!airtablePublic || airtablePublic.length === 0) return ['tout-public'];
+  if (!baserowPublic || baserowPublic.length === 0) return ['tout-public'];
 
-  const mapped = airtablePublic
+  const mapped = baserowPublic
     .map((p) => {
-      const exact = AUDIENCE_MAP[p];
+      const exact = AUDIENCE_MAP[p.value];
       if (exact) return exact;
 
-      const lower = p.toLowerCase();
+      const lower = p.value.toLowerCase();
       if (lower.includes('tout public')) return 'tout-public';
-      if (lower.includes('famille') || lower.includes('enfant')) return 'familles-enfants';
+      if (lower.includes('famille') || lower.includes('enfant'))
+        return 'familles-enfants';
       if (
         lower.includes('colier') ||
         lower.includes('tudiant') ||
         lower.includes('scolaire')
       )
         return 'scolaires';
-      if (lower.includes('salari') || lower.includes('entreprise')) return 'salaries-entreprise';
+      if (lower.includes('salari') || lower.includes('entreprise'))
+        return 'salaries-entreprise';
       if (lower.includes('pro')) return 'professionnels';
 
       return null;
@@ -135,14 +158,14 @@ const MODALITY_MAP: Record<string, EventModality> = {
 };
 
 export function mapModality(
-  airtableType: string | undefined,
+  baserowType: BaserowSelect | undefined,
 ): EventModality {
-  if (!airtableType) return 'presentiel';
+  if (!baserowType) return 'presentiel';
 
-  const exact = MODALITY_MAP[airtableType];
+  const exact = MODALITY_MAP[baserowType.value];
   if (exact) return exact;
 
-  const lower = airtableType.toLowerCase();
+  const lower = baserowType.value.toLowerCase();
   if (
     lower.includes('distanciel') ||
     lower.includes('en ligne') ||
@@ -159,11 +182,13 @@ export function mapModality(
 // ============================================================
 
 export function extractImageUrl(
-  attachments: AirtableAttachment[] | undefined,
+  attachments: BaserowAttachment[] | undefined,
 ): string | undefined {
   if (!attachments || attachments.length === 0) return undefined;
   const first = attachments[0];
-  return first.thumbnails?.large?.url || first.url;
+  return (
+    first.thumbnails?.card?.url || first.thumbnails?.small?.url || first.url
+  );
 }
 
 // ============================================================
@@ -187,9 +212,10 @@ export function computeIsDuringWeek(dateString: string | undefined): boolean {
 // DateTime parsing
 // ============================================================
 
-export function parseAirtableDateTime(
-  dateTimeString: string | undefined,
-): { date: string; time: string } {
+export function parseDateTime(dateTimeString: string | undefined): {
+  date: string;
+  time: string;
+} {
   if (!dateTimeString) return { date: '', time: '' };
 
   try {

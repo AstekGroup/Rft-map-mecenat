@@ -12,7 +12,7 @@ make-map/
 ├── CLAUDE.md               # Architecture détaillée pour agents
 ├── apps/
 │   ├── frontend/           # React + Vite (consomme l'API backend)
-│   ├── backend/            # NestJS (proxy Airtable + géocodage)
+│   ├── backend/            # NestJS (proxy Baserow + géocodage)
 │   └── map-interactive/    # Version standalone originale (référence)
 ├── shared/
 │   └── types/              # @make-map/types (types TypeScript partagés)
@@ -47,9 +47,11 @@ cp apps/frontend/.env.example apps/frontend/.env
 
 | Variable | Où | Description |
 |---|---|---|
-| `AIRTABLE_API_KEY` | backend | Personal Access Token Airtable |
-| `AIRTABLE_BASE_ID` | backend | ID de la base (commence par `app`) |
-| `AIRTABLE_TABLE_ID` | backend | ID de la table (commence par `tbl`) |
+| `BASEROW_API_URL` | backend | URL de l'instance Baserow (ex: https://api.baserow.io) |
+| `BASEROW_API_TOKEN` | backend | Jeton de base de données Baserow |
+| `BASEROW_TABLE_ID` | backend | ID numérique de la table des événements |
+| `BASEROW_PARTNERS_TABLE_ID` | backend | ID numérique de la table des partenaires |
+| `BASEROW_MODERATION_FIELD_ID` | backend | ID numérique du champ de modération |
 | `VITE_API_URL` | frontend | URL du backend (`http://localhost:3000`) |
 | `VITE_MAPTILER_KEY` | frontend | Clé API MapTiler ([obtenir ici](https://cloud.maptiler.com/account/keys/)) |
 
@@ -68,11 +70,11 @@ pnpm front:dev   # Frontend (port 5173)
 
 ### Backend (`apps/backend`)
 
-Proxy sécurisé NestJS pour l'API Airtable. Le token reste côté serveur.
+Proxy sécurisé NestJS pour l'API Baserow. Le token reste côté serveur.
 
 - **API** : `GET /api/events` · `GET /api/events/:id` · `GET /api/health`
 - Géocodage via [api-adresse.data.gouv.fr](https://adresse.data.gouv.fr) avec cache permanent
-- Cache TTL 5 min pour les données Airtable
+- Cache TTL 5 min pour les données Baserow
 - `?devMode=true` pour bypasser le filtre de modération
 
 ### Frontend (`apps/frontend`)
@@ -87,7 +89,7 @@ Application React avec carte interactive MapLibre GL JS.
 
 ### map-interactive (`apps/map-interactive`)
 
-Version standalone originale avec appel direct Airtable côté client. Conservée comme référence, non modifiée.
+Version standalone originale avec appel direct Airtable côté client. Conservée comme référence, non modifiée (elle continue à utiliser Airtable).
 
 ```bash
 pnpm map:dev

@@ -10,9 +10,10 @@ async function bootstrap() {
   // CORS configurable via env var
   const corsOrigin = process.env.CORS_ORIGIN;
   app.enableCors({
-    origin: corsOrigin === '*' || !corsOrigin
-      ? true // Autorise toutes les origines
-      : corsOrigin.split(',').map(o => o.trim()),
+    origin:
+      corsOrigin === '*' || !corsOrigin
+        ? true // Autorise toutes les origines
+        : corsOrigin.split(',').map((o) => o.trim()),
     methods: 'GET',
     credentials: false,
   });
@@ -42,7 +43,9 @@ async function bootstrap() {
         throw err;
       }
     }
-    logger.error(`Impossible de trouver un port disponible (${port}-${port + 9})`);
+    logger.error(
+      `Impossible de trouver un port disponible (${port}-${port + 9})`,
+    );
     process.exit(1);
   }
 }

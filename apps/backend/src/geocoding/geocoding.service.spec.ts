@@ -3,7 +3,11 @@ import { GeocodingService } from './geocoding.service';
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
-function makeBanResponse(lon: number, lat: number, context = '69, Rhône, Auvergne-Rhône-Alpes') {
+function makeBanResponse(
+  lon: number,
+  lat: number,
+  context = '69, Rhône, Auvergne-Rhône-Alpes',
+) {
   return {
     type: 'FeatureCollection',
     features: [
@@ -34,7 +38,9 @@ describe('GeocodingService', () => {
 
   describe('getRegionFromPostalCode', () => {
     it('retourne la région pour un code postal métropolitain', () => {
-      expect(service.getRegionFromPostalCode('69001')).toBe('Auvergne-Rhône-Alpes');
+      expect(service.getRegionFromPostalCode('69001')).toBe(
+        'Auvergne-Rhône-Alpes',
+      );
       expect(service.getRegionFromPostalCode('75008')).toBe('Île-de-France');
       expect(service.getRegionFromPostalCode('35000')).toBe('Bretagne');
     });
@@ -54,23 +60,27 @@ describe('GeocodingService', () => {
   });
 
   describe('geocodeAddress', () => {
-    it('appelle l\'API BAN et retourne le résultat', async () => {
+    it("appelle l'API BAN et retourne le résultat", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => makeBanResponse(4.8357, 45.7640),
+        json: async () => makeBanResponse(4.8357, 45.764),
       });
 
-      const result = await service.geocodeAddress('1 rue de la Paix', '69001', 'Lyon');
+      const result = await service.geocodeAddress(
+        '1 rue de la Paix',
+        '69001',
+        'Lyon',
+      );
       expect(result).not.toBeNull();
       expect(result!.longitude).toBeCloseTo(4.8357);
-      expect(result!.latitude).toBeCloseTo(45.7640);
+      expect(result!.latitude).toBeCloseTo(45.764);
       expect(result!.region).toBe('Auvergne-Rhône-Alpes');
     });
 
     it('retourne le résultat depuis le cache au 2ème appel', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => makeBanResponse(4.8357, 45.7640),
+        json: async () => makeBanResponse(4.8357, 45.764),
       });
 
       await service.geocodeAddress('1 rue test', '69001', 'Lyon');
@@ -90,18 +100,22 @@ describe('GeocodingService', () => {
         json: async () => ({ type: 'FeatureCollection', features: [] }),
       });
 
-      const result = await service.geocodeAddress('adresse introuvable', '99999', 'Ville');
+      const result = await service.geocodeAddress(
+        'adresse introuvable',
+        '99999',
+        'Ville',
+      );
       expect(result).toBeNull();
     });
 
-    it('retourne null en cas d\'erreur HTTP', async () => {
+    it("retourne null en cas d'erreur HTTP", async () => {
       mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
 
       const result = await service.geocodeAddress('rue test', '69001', 'Lyon');
       expect(result).toBeNull();
     });
 
-    it('retourne null en cas d\'erreur réseau', async () => {
+    it("retourne null en cas d'erreur réseau", async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
       const result = await service.geocodeAddress('rue test', '69001', 'Lyon');
@@ -119,12 +133,23 @@ describe('GeocodingService', () => {
     it('retourne une map avec les résultats pour chaque id', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => makeBanResponse(2.3522, 48.8566, '75, Paris, Île-de-France'),
+        json: async () =>
+          makeBanResponse(2.3522, 48.8566, '75, Paris, Île-de-France'),
       });
 
       const items = [
-        { id: 'evt1', address: '1 rue de Rivoli', postalCode: '75001', city: 'Paris' },
-        { id: 'evt2', address: '2 rue de Rivoli', postalCode: '75001', city: 'Paris' },
+        {
+          id: 'evt1',
+          address: '1 rue de Rivoli',
+          postalCode: '75001',
+          city: 'Paris',
+        },
+        {
+          id: 'evt2',
+          address: '2 rue de Rivoli',
+          postalCode: '75001',
+          city: 'Paris',
+        },
       ];
 
       const results = await service.batchGeocode(items);

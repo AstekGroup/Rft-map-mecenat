@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { EventsController } from './events.controller';
 import { EventsService } from './events.service';
-import { AirtableModule } from '../airtable/airtable.module';
+import { BaserowModule } from '../baserow/baserow.module';
 
 @Module({
-  imports: [AirtableModule],
+  imports: [BaserowModule],
   controllers: [EventsController],
   providers: [EventsService],
 })
