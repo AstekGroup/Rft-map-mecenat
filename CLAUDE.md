@@ -16,7 +16,7 @@ This is an MVP POC for **"La Grande Semaine Végétale"** - an interactive map a
 make-map/
 ├── apps/
 │   ├── frontend/           # React + Vite (consumes backend API)
-│   ├── backend/            # NestJS (Airtable proxy + geocoding)
+│   ├── backend/            # NestJS (Baserow proxy + geocoding)
 │   └── map-interactive/    # Original standalone version (unchanged)
 ├── shared/
 │   └── types/              # @make-map/types (shared TypeScript types)
@@ -43,10 +43,10 @@ pnpm lint                 # Lint all packages
 
 ```
 src/
-├── airtable/               # Airtable API integration
-│   ├── airtable.service.ts     # Fetch paginated + transform records
-│   ├── airtable.types.ts       # AirtableRecord interface (French field names)
-│   └── airtable-mapping.util.ts # Format/Audience/Modality mapping
+├── baserow/                # Baserow API integration
+│   ├── baserow.service.ts      # Fetch paginated + transform records
+│   ├── baserow.types.ts        # BaserowRecord interface (French field names)
+│   └── baserow-mapping.util.ts # Format/Audience/Modality mapping
 ├── geocoding/              # Address geocoding
 │   └── geocoding.service.ts    # api-adresse.data.gouv.fr + in-memory cache
 ├── events/                 # REST API
@@ -58,9 +58,9 @@ src/
 ```
 
 **Key features**:
-- Airtable token stays server-side (env var `AIRTABLE_API_KEY`)
+- Baserow token stays server-side (env var `BASEROW_API_TOKEN`)
 - Geocoding via api-adresse.data.gouv.fr with permanent in-memory cache
-- 5-minute TTL cache for Airtable data
+- 5-minute TTL cache for Baserow data
 - CORS configured for localhost dev ports
 - `?devMode=true` query param to bypass moderation filter
 
@@ -68,7 +68,7 @@ src/
 
 Same UI as `map-interactive` but with simplified API layer:
 - `services/api.ts` only makes HTTP calls to backend
-- No Airtable/geocoding code client-side
+- No Baserow/geocoding code client-side
 - Types imported from `@make-map/types` (via re-export in `types/event.ts`)
 
 ### Shared Types (@make-map/types)
@@ -106,8 +106,8 @@ Frontend                    Backend                    External
 --------                    -------                    --------
 useEvents() ──GET /api/events──> EventsController
                                  └─> EventsService (cache check)
-                                      └─> AirtableService
-                                           ├─> Airtable API (fetch)
+                                      └─> BaserowService
+                                           ├─> Baserow API (fetch)
                                            ├─> mapping (transform)
                                            └─> GeocodingService
                                                 └─> api-adresse.data.gouv.fr
@@ -124,9 +124,11 @@ Custom design system matching semaine-ia.fr branding (in `tailwind.config.ts`):
 
 **Backend** (`apps/backend/.env`):
 ```
-AIRTABLE_API_KEY=...   # Airtable Personal Access Token
-AIRTABLE_BASE_ID=...   # Airtable Base ID (app...)
-AIRTABLE_TABLE_ID=...  # Airtable Table ID (tbl...)
+BASEROW_API_URL=...             # Baserow API URL
+BASEROW_API_TOKEN=...           # Baserow Database Token
+BASEROW_TABLE_ID=...            # Baserow Events Table ID
+BASEROW_PARTNERS_TABLE_ID=...   # Baserow Partners Table ID
+BASEROW_MODERATION_FIELD_ID=... # Baserow Moderation Field ID
 PORT=3000
 ```
 
@@ -148,7 +150,7 @@ import { Event } from '@/types/event';  // Re-exports from @make-map/types
 
 - **Clustering**: Supercluster handles 500k+ points efficiently
 - **Server-side geocoding**: Geocoded once, cached in memory permanently
-- **Backend cache**: 5-minute TTL avoids repeated Airtable calls
+- **Backend cache**: 5-minute TTL avoids repeated Baserow calls
 - **Memoization**: Frontend uses `useMemo` and `useCallback` extensively
 - **WebGL rendering**: MapLibre uses GPU acceleration
 
@@ -158,7 +160,7 @@ import { Event } from '@/types/event';  // Re-exports from @make-map/types
 - `apps/map-interactive` is the original standalone version - DO NOT MODIFY
 - All French text/labels should remain in French
 - Event dates reference May 2026 event week
-- Backend is READ-ONLY on Airtable (only GET operations)
+- Backend is READ-ONLY on Baserow (only GET operations)
 ## Design System (LGSV)
 
 Custom design system matching `resources/lgsv-design.yml`:

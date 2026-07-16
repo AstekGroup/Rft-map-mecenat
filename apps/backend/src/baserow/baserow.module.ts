@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AirtableService } from './airtable.service';
+import { BaserowService } from './baserow.service';
 import { GeocodingModule } from '../geocoding/geocoding.module';
 
 @Module({
   imports: [GeocodingModule],
-  providers: [AirtableService],
-  exports: [AirtableService],
+  providers: [BaserowService],
+  exports: [BaserowService],
 })
-export class AirtableModule {}
+export class BaserowModule {}

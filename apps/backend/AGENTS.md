@@ -4,7 +4,7 @@
 
 ## Contexte
 
-**NestJS 11** : proxy Airtable, transformation des enregistrements, géocodage BAN, cache.
+**NestJS 11** : proxy Baserow, transformation des enregistrements, géocodage BAN, cache.
 
 ## Commandes (depuis `apps/backend`)
 
@@ -32,16 +32,16 @@ Depuis la racine : `pnpm back:dev`.
 
 | Module       | Rôle                                                           |
 | ------------ | -------------------------------------------------------------- |
-| `airtable/`  | Fetch paginé, types enregistrement, mapping champs FR → modèle |
+| `baserow/`  | Fetch paginé, types enregistrement, mapping champs FR → modèle |
 | `geocoding/` | api-adresse.data.gouv.fr + cache mémoire                       |
 | `events/`    | Controller + service (orchestration, cache TTL ~5 min)         |
 
 
 ## Règles métier
 
-- **Lecture seule** sur Airtable ; secret dans `AIRTABLE_API_KEY` uniquement serveur.
+- **Lecture seule** sur Baserow ; secret dans `BASEROW_API_TOKEN` uniquement serveur.
 - CORS : origines dev configurées dans `main.ts`.
 
 ## Variables
 
-Copier `.env.example` : `AIRTABLE_`*, `PORT`.
+Copier `.env.example` : `BASEROW_`*, `PORT`.

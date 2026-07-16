@@ -7,7 +7,7 @@ import type { Event, Partner } from '@make-map/types';
 const mockEvent: Event = {
   id: 'rec123',
   title: 'Atelier IA',
-  description: 'Un atelier sur l\'IA',
+  description: "Un atelier sur l'IA",
   date: '2026-05-20',
   time: '10:00',
   address: '10 rue du Test',
@@ -87,7 +87,7 @@ describe('EventsController', () => {
   });
 
   describe('findOne', () => {
-    it('retourne l\'événement si trouvé', async () => {
+    it("retourne l'événement si trouvé", async () => {
       eventsService.findOne.mockResolvedValueOnce(mockEvent);
 
       const result = await controller.findOne('rec123');
@@ -95,10 +95,12 @@ describe('EventsController', () => {
       expect(result).toEqual(mockEvent);
     });
 
-    it('lève NotFoundException si l\'événement n\'existe pas', async () => {
+    it("lève NotFoundException si l'événement n'existe pas", async () => {
       eventsService.findOne.mockResolvedValueOnce(null);
 
-      await expect(controller.findOne('rec_inconnu')).rejects.toThrow(NotFoundException);
+      await expect(controller.findOne('rec_inconnu')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('passe devMode=true pour findOne', async () => {

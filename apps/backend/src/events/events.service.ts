@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { Event, Partner } from '@make-map/types';
-import { AirtableService } from '../airtable/airtable.service';
+import { BaserowService } from '../baserow/baserow.service';
 
 interface CachedData {
   events: Event[];
@@ -22,7 +22,7 @@ export class EventsService {
   private partnersCache: CachedPartners | null = null;
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-  constructor(private readonly airtableService: AirtableService) {}
+  constructor(private readonly baserowService: BaserowService) {}
 
   /**
    * Récupère tous les événements (avec cache TTL).
@@ -37,8 +37,8 @@ export class EventsService {
       return cached.events;
     }
 
-    this.logger.log(`Cache miss, chargement depuis Airtable...`);
-    const events = await this.airtableService.fetchEvents(devMode);
+    this.logger.log(`Cache miss, chargement depuis Baserow...`);
+    const events = await this.baserowService.fetchEvents(devMode);
 
     const newCache: CachedData = { events, timestamp: Date.now() };
     if (devMode) {
@@ -61,8 +61,8 @@ export class EventsService {
       return this.partnersCache.partners;
     }
 
-    this.logger.log(`Cache miss partners, chargement depuis Airtable...`);
-    const partners = await this.airtableService.fetchPartners();
+    this.logger.log(`Cache miss partners, chargement depuis Baserow...`);
+    const partners = await this.baserowService.fetchPartners();
     this.partnersCache = { partners, timestamp: Date.now() };
     return partners;
   }

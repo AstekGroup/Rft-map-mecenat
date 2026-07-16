@@ -5,31 +5,41 @@ import {
   mapModality,
   extractImageUrl,
   computeIsDuringWeek,
-  parseAirtableDateTime,
+  parseDateTime,
   buildOrganizerContact,
   buildAccessibilityInfo,
-} from './airtable-mapping.util';
+} from './baserow-mapping.util';
+import { BaserowAttachment } from './baserow.types';
 
 describe('mapThemes', () => {
   it('mappe les thèmes exacts', () => {
-    const result = mapThemes(['Cuisine végétale', 'Agriculture']);
+    const result = mapThemes([
+      { id: 1, value: 'Cuisine végétale' },
+      { id: 2, value: 'Agriculture' },
+    ]);
     expect(result).toEqual(['cuisine-vegetale', 'agriculture']);
   });
 
   it('fait une correspondance floue (heuristique)', () => {
-    expect(mapThemes(['Découverte culinaire', 'Agroécologie'])).toEqual([
-      'cuisine-vegetale',
-      'agriculture',
+    expect(
+      mapThemes([
+        { id: 1, value: 'Découverte culinaire' },
+        { id: 2, value: 'Agroécologie' },
+      ]),
+    ).toEqual(['cuisine-vegetale', 'agriculture']);
+    expect(
+      mapThemes([
+        { id: 1, value: 'Nutrition santé' },
+        { id: 2, value: 'Climat' },
+      ]),
+    ).toEqual(['sante-nutrition', 'climat-environnement']);
+    expect(mapThemes([{ id: 1, value: 'Biodiversité locale' }])).toEqual([
+      'biodiversite',
     ]);
-    expect(mapThemes(['Nutrition santé', 'Climat'])).toEqual([
-      'sante-nutrition',
-      'climat-environnement',
-    ]);
-    expect(mapThemes(['Biodiversité locale'])).toEqual(['biodiversite']);
   });
 
   it('retourne "autre" pour des thèmes inconnus', () => {
-    expect(mapThemes(['Thème mystère'])).toEqual(['autre']);
+    expect(mapThemes([{ id: 1, value: 'Thème mystère' }])).toEqual(['autre']);
   });
 
   it('retourne ["autre"] si undefined ou vide', () => {
@@ -38,23 +48,35 @@ describe('mapThemes', () => {
   });
 
   it('supprime les doublons', () => {
-    const result = mapThemes(['Cuisine végétale', 'Cuisine']);
+    const result = mapThemes([
+      { id: 1, value: 'Cuisine végétale' },
+      { id: 2, value: 'Cuisine' },
+    ]);
     expect(result).toEqual(['cuisine-vegetale']);
   });
 });
 
 describe('mapFormat', () => {
   it('retourne la correspondance exacte', () => {
-    const result = mapFormat('Conférence/webinaire/table-ronde');
+    const result = mapFormat({
+      id: 1,
+      value: 'Conférence/webinaire/table-ronde',
+    });
     expect(result).toEqual({ format: 'conference', type: 'conference' });
   });
 
   it('retourne la correspondance exacte pour Atelier de cuisine', () => {
-    expect(mapFormat('Atelier de cuisine')).toEqual({ format: 'atelier-cuisine', type: 'atelier-cuisine' });
+    expect(mapFormat({ id: 1, value: 'Atelier de cuisine' })).toEqual({
+      format: 'atelier-cuisine',
+      type: 'atelier-cuisine',
+    });
   });
 
   it('retourne autre/autre pour une valeur inconnue', () => {
-    expect(mapFormat('Format inconnu XYZ')).toEqual({ format: 'autre', type: 'autre' });
+    expect(mapFormat({ id: 1, value: 'Format inconnu XYZ' })).toEqual({
+      format: 'autre',
+      type: 'autre',
+    });
   });
 
   it('retourne autre/autre si undefined', () => {
@@ -62,16 +84,21 @@ describe('mapFormat', () => {
   });
 
   it('ne fait plus de correspondance floue (fuzzy) pour les anciens types', () => {
-    const result = mapFormat('Atelier Cuisine');
+    const result = mapFormat({ id: 1, value: 'Atelier Cuisine' });
     expect(result).toEqual({ format: 'autre', type: 'autre' });
   });
 
   it('mappe Festival correctement', () => {
-    expect(mapFormat('Festival')).toEqual({ format: 'festival', type: 'festival' });
+    expect(mapFormat({ id: 1, value: 'Festival' })).toEqual({
+      format: 'festival',
+      type: 'festival',
+    });
   });
 
   it('mappe Visite de jardin / potager ou cueillette vers type visite-jardin', () => {
-    expect(mapFormat('Visite de jardin / potager ou cueillette')).toEqual({
+    expect(
+      mapFormat({ id: 1, value: 'Visite de jardin / potager ou cueillette' }),
+    ).toEqual({
       format: 'visite-jardin',
       type: 'visite-jardin',
     });
@@ -80,11 +107,16 @@ describe('mapFormat', () => {
 
 describe('mapTargetAudience', () => {
   it('mappe "Tout public" correctement', () => {
-    expect(mapTargetAudience(['Tout public'])).toEqual(['tout-public']);
+    expect(mapTargetAudience([{ id: 1, value: 'Tout public' }])).toEqual([
+      'tout-public',
+    ]);
   });
 
   it('mappe plusieurs publics valides', () => {
-    const result = mapTargetAudience(['Scolaire', 'Professionnels']);
+    const result = mapTargetAudience([
+      { id: 1, value: 'Scolaire' },
+      { id: 2, value: 'Professionnels' },
+    ]);
     expect(result).toEqual(['scolaires', 'professionnels']);
   });
 
@@ -97,39 +129,53 @@ describe('mapTargetAudience', () => {
   });
 
   it('fait une correspondance floue pour scolaires', () => {
-    const result = mapTargetAudience(['Écoliers / Étudiants']);
+    const result = mapTargetAudience([
+      { id: 1, value: 'Écoliers / Étudiants' },
+    ]);
     expect(result).toEqual(['scolaires']);
   });
 
   it('retourne tout-public si aucun mappage trouvé (ex: anciens types)', () => {
-    expect(mapTargetAudience(['Inconnu XYZ', 'Jeunes', 'Seniors'])).toEqual(['tout-public']);
+    expect(
+      mapTargetAudience([
+        { id: 1, value: 'Inconnu XYZ' },
+        { id: 2, value: 'Jeunes' },
+        { id: 3, value: 'Seniors' },
+      ]),
+    ).toEqual(['tout-public']);
   });
 
   it('mappe les familles et enfants', () => {
-    expect(mapTargetAudience(["Familles"])).toEqual(['familles-enfants']);
-    expect(mapTargetAudience(["Enfants"])).toEqual(['familles-enfants']);
+    expect(mapTargetAudience([{ id: 1, value: 'Familles' }])).toEqual([
+      'familles-enfants',
+    ]);
+    expect(mapTargetAudience([{ id: 1, value: 'Enfants' }])).toEqual([
+      'familles-enfants',
+    ]);
   });
 
   it('mappe les salariés', () => {
-    expect(mapTargetAudience(["Salariés d'une entreprise"])).toEqual(['salaries-entreprise']);
+    expect(
+      mapTargetAudience([{ id: 1, value: "Salariés d'une entreprise" }]),
+    ).toEqual(['salaries-entreprise']);
   });
 });
 
 describe('mapModality', () => {
   it('mappe Présentiel', () => {
-    expect(mapModality('Présentiel')).toBe('presentiel');
+    expect(mapModality({ id: 1, value: 'Présentiel' })).toBe('presentiel');
   });
 
   it('mappe Distanciel', () => {
-    expect(mapModality('Distanciel')).toBe('distanciel');
+    expect(mapModality({ id: 1, value: 'Distanciel' })).toBe('distanciel');
   });
 
   it('mappe En ligne vers distanciel', () => {
-    expect(mapModality('En ligne')).toBe('distanciel');
+    expect(mapModality({ id: 1, value: 'En ligne' })).toBe('distanciel');
   });
 
   it('mappe Hybride vers présentiel', () => {
-    expect(mapModality('Hybride')).toBe('presentiel');
+    expect(mapModality({ id: 1, value: 'Hybride' })).toBe('presentiel');
   });
 
   it('retourne presentiel par défaut si undefined', () => {
@@ -137,7 +183,9 @@ describe('mapModality', () => {
   });
 
   it('fait une correspondance floue pour visio', () => {
-    expect(mapModality('Réunion en visio')).toBe('distanciel');
+    expect(mapModality({ id: 1, value: 'Réunion en visio' })).toBe(
+      'distanciel',
+    );
   });
 });
 
@@ -147,28 +195,26 @@ describe('extractImageUrl', () => {
     expect(extractImageUrl([])).toBeUndefined();
   });
 
-  it('retourne le thumbnail large si disponible', () => {
-    const attachments = [{
-      id: 'att1',
+  it('retourne le thumbnail card si disponible', () => {
+    const attachments: BaserowAttachment[] = [];
+    const item: BaserowAttachment = {
       url: 'https://example.com/original.jpg',
       filename: 'image.jpg',
-      size: 12345,
-      type: 'image/jpeg',
       thumbnails: {
-        large: { url: 'https://example.com/large.jpg', width: 800, height: 600 },
+        card: { url: 'https://example.com/card.jpg', width: 400, height: 300 },
       },
-    }];
-    expect(extractImageUrl(attachments)).toBe('https://example.com/large.jpg');
+    };
+    attachments.push(item);
+    expect(extractImageUrl(attachments)).toBe('https://example.com/card.jpg');
   });
 
-  it('retourne l\'URL directe si pas de thumbnail', () => {
-    const attachments = [{
-      id: 'att1',
+  it("retourne l'URL directe si pas de thumbnail", () => {
+    const attachments: BaserowAttachment[] = [];
+    const item: BaserowAttachment = {
       url: 'https://example.com/image.jpg',
       filename: 'image.jpg',
-      size: 12345,
-      type: 'image/jpeg',
-    }];
+    };
+    attachments.push(item);
     expect(extractImageUrl(attachments)).toBe('https://example.com/image.jpg');
   });
 });
@@ -193,19 +239,19 @@ describe('computeIsDuringWeek', () => {
   });
 });
 
-describe('parseAirtableDateTime', () => {
+describe('parseDateTime', () => {
   it('retourne des chaînes vides si undefined', () => {
-    expect(parseAirtableDateTime(undefined)).toEqual({ date: '', time: '' });
+    expect(parseDateTime(undefined)).toEqual({ date: '', time: '' });
   });
 
   it('parse une date ISO valide', () => {
-    const result = parseAirtableDateTime('2026-05-20T14:00:00.000Z');
+    const result = parseDateTime('2026-05-20T14:00:00.000Z');
     expect(result.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(result.time).toMatch(/^\d{2}:\d{2}$/);
   });
 
   it('retourne des chaînes vides pour une date invalide', () => {
-    expect(parseAirtableDateTime('not-a-date')).toEqual({ date: '', time: '' });
+    expect(parseDateTime('not-a-date')).toEqual({ date: '', time: '' });
   });
 });
 
@@ -229,7 +275,9 @@ describe('buildOrganizerContact', () => {
 
 describe('buildAccessibilityInfo', () => {
   it('joint les modalités avec une virgule', () => {
-    expect(buildAccessibilityInfo(['Rampe d\'accès', 'Ascenseur'])).toBe("Rampe d'accès, Ascenseur");
+    expect(buildAccessibilityInfo(["Rampe d'accès", 'Ascenseur'])).toBe(
+      "Rampe d'accès, Ascenseur",
+    );
   });
 
   it('retourne undefined si tableau vide', () => {

@@ -5,7 +5,7 @@ Ce dépôt suit le format ouvert [AGENTS.md](https://agents.md/) : instructions 
 ## Règles globales (tout le monorepo)
 
 1. `**apps/map-interactive**` : référence historique — **ne pas modifier** sans décision explicite.
-2. **Airtable** : **lecture seule** ; jeton uniquement côté backend (`AIRTABLE_API_KEY`).
+2. **Baserow** : **lecture seule** ; jeton uniquement côté backend (`BASEROW_API_TOKEN`).
 3. **Langue** : interface et libellés en **français**.
 4. **Git** : pas de push direct sur `main` ; branche + PR.
 5. **Portée** : changements ciblés ; pas de refactor gratuit hors demande.
@@ -18,7 +18,7 @@ Les agents lisent en priorité l’`**AGENTS.md` le plus proche** du fichier mod
 | Zone                                  | Fichier                                                            |
 | ------------------------------------- | ------------------------------------------------------------------ |
 | Frontend React + carte                | [apps/frontend/AGENTS.md](./apps/frontend/AGENTS.md)               |
-| API NestJS + Airtable + géocodage     | [apps/backend/AGENTS.md](./apps/backend/AGENTS.md)                 |
+| API NestJS + Baserow + géocodage      | [apps/backend/AGENTS.md](./apps/backend/AGENTS.md)                 |
 | Types partagés `@make-map/types`      | [shared/types/AGENTS.md](./shared/types/AGENTS.md)                 |
 | Déploiement Docker / Scaleway         | [deploy/AGENTS.md](./deploy/AGENTS.md)                             |
 | Référence `map-interactive` (lecture) | [apps/map-interactive/AGENTS.md](./apps/map-interactive/AGENTS.md) |
