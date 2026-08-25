@@ -42,9 +42,18 @@ const DEFAULT_THEME_HINTS: Record<string, EventTheme> = {
 const DEFAULT_FORMAT_MAP: Record<string, FormatMapping> = {
   'Atelier de cuisine': { format: 'atelier-cuisine', type: 'atelier-cuisine' },
   'Dégustation ou menu végétal': { format: 'degustation', type: 'degustation' },
-  'Visite de jardin / potager ou cueillette': { format: 'visite-jardin', type: 'visite-jardin' },
-  'Atelier pédagogique ou formation': { format: 'atelier-pedagogique', type: 'atelier-pedagogique' },
-  'Conférence/webinaire/table-ronde': { format: 'conference', type: 'conference' },
+  'Visite de jardin / potager ou cueillette': {
+    format: 'visite-jardin',
+    type: 'visite-jardin',
+  },
+  'Atelier pédagogique ou formation': {
+    format: 'atelier-pedagogique',
+    type: 'atelier-pedagogique',
+  },
+  'Conférence/webinaire/table-ronde': {
+    format: 'conference',
+    type: 'conference',
+  },
   Festival: { format: 'festival', type: 'festival' },
   Autres: { format: 'autre', type: 'autre' },
 };
@@ -199,7 +208,9 @@ export function extractImageUrl(
 ): string | undefined {
   if (!attachments || attachments.length === 0) return undefined;
   const first = attachments[0];
-  return first.thumbnails?.card?.url || first.thumbnails?.small?.url || first.url;
+  return (
+    first.thumbnails?.card?.url || first.thumbnails?.small?.url || first.url
+  );
 }
 
 // ============================================================
