@@ -65,8 +65,17 @@ function MiniEventCard({ event }: { event: Event }) {
 }
 
 export function HomePage() {
+  const { config, helpers, loading: configLoading } = useConfig();
+
+  if (configLoading || !config) {
+    return (
+      <div className="min-h-screen bg-surface-offwhite flex items-center justify-center font-body">
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+      </div>
+    );
+  }
+
   const { allEvents, loading } = useEvents();
-  const { config, helpers } = useConfig();
 
   const presentielEvents = useMemo(() =>
     allEvents
