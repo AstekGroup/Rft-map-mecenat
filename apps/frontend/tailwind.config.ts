@@ -8,31 +8,34 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Couleurs du design system La Grande Semaine Végétale
         primary: {
-          DEFAULT: '#3BAE5D', // green_main
-          dark: '#1F7A3E',    // green_dark
-          light: '#A7D7B5',   // green_light
+          DEFAULT: 'rgb(var(--color-primary-rgb, 59 174 93) / <alpha-value>)',
+          dark: 'rgb(var(--color-primary-dark-rgb, 31 122 62) / <alpha-value>)',
+          light: 'rgb(var(--color-primary-light-rgb, 167 215 181) / <alpha-value>)',
         },
         accent: {
-          yellow: '#F4C542',
-          red: '#E46A5D',
+          yellow: 'rgb(var(--color-accent-yellow-rgb, 244 197 66) / <alpha-value>)',
+          red: 'rgb(var(--color-accent-red-rgb, 228 106 93) / <alpha-value>)',
         },
         surface: {
-          beige: '#F2EDE4',
-          offwhite: '#F7F7F2',
-          white: '#ffffff',
+          beige: 'rgb(var(--color-surface-beige-rgb, 242 237 228) / <alpha-value>)',
+          offwhite: 'rgb(var(--color-surface-offwhite-rgb, 247 247 242) / <alpha-value>)',
+          white: 'rgb(var(--color-surface-white-rgb, 255 255 255) / <alpha-value>)',
         },
         text: {
-          primary: '#2E2E2E',
-          secondary: '#69727d',
-          light: '#ffffff',
-          green: '#1F7A3E',
+          primary: 'rgb(var(--color-text-primary-rgb, 46 46 46) / <alpha-value>)',
+          secondary: 'rgb(var(--color-text-secondary-rgb, 105 114 125) / <alpha-value>)',
+          light: 'rgb(var(--color-text-light-rgb, 255 255 255) / <alpha-value>)',
+          green: 'rgb(var(--color-text-green-rgb, 31 122 62) / <alpha-value>)',
         }
       },
       fontFamily: {
-        inter: ['Inter', 'sans-serif'],
-        poppins: ['Poppins', 'sans-serif'],
+        body: ['var(--font-body)', 'sans-serif'],
+        heading: ['var(--font-heading)', 'sans-serif'],
+      },
+      fontWeight: {
+        heading: 'var(--font-heading-weight, 900)',
+        body: 'var(--font-body-weight, 400)',
       },
       fontSize: {
         'hero': ['3rem', { lineHeight: '1.2', fontWeight: '700' }],
@@ -40,9 +43,9 @@ export default {
         'subtitle': ['1.75rem', { lineHeight: '1.4', fontWeight: '600' }],
       },
       borderRadius: {
-        'button': '999px', // Rounded pill shape from LGSV design
-        'card': '16px',
-        'cluster': '50%',
+        'button': 'var(--radius-button, 999px)',
+        'card': 'var(--radius-card, 16px)',
+        'cluster': 'var(--radius-cluster, 50%)',
       },
       boxShadow: {
         'card': '0 4px 12px rgba(0, 0, 0, 0.08)',
@@ -69,7 +72,7 @@ export default {
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         'scale-in': {
-          '0%': { opacity: '0', transform: 'scale(0.9)' },
+          '0%': { opacity: '0', transform: 'scale(0.95)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
       },

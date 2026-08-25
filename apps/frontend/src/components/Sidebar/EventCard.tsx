@@ -1,5 +1,6 @@
 import { memo } from 'react';
-import { Event, EVENT_TYPE_COLORS, EVENT_THEME_LABELS } from '@/types/event';
+import { Event } from '@/types/event';
+import { useConfig } from '@/hooks/useConfig';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { Calendar, Clock, MapPin, BookOpen, Handshake, Globe } from 'lucide-react';
 import { Badge } from '@/components/UI';
@@ -21,13 +22,14 @@ function EventCardComponent({
   onMouseEnter,
   onMouseLeave,
 }: EventCardProps) {
+  const { helpers } = useConfig();
   const formattedDate = new Date(event.date).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'short',
   });
 
   const Icon = TYPE_ICONS[event.type] || Globe;
-  const color = EVENT_TYPE_COLORS[event.type] || '#3BAE5D';
+  const color = helpers.getEnumColor(event.type);
 
   return (
     <div
@@ -116,7 +118,7 @@ function EventCardComponent({
               <div className="flex items-center gap-1.5 text-xs text-text-secondary font-medium">
                 <BookOpen className="w-3.5 h-3.5 text-accent-pink flex-shrink-0" />
                 <span className="truncate italic">
-                  {event.themes.map(t => EVENT_THEME_LABELS[t]).join(', ')}
+                  {event.themes.map(t => helpers.getEnumLabel('eventThemes', t)).join(', ')}
                 </span>
               </div>
             )}

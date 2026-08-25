@@ -5,11 +5,22 @@
  * Tout passe par le backend qui sécurise le token et le cache.
  */
 
-import { Event, EventsGeoJSON, GeoJSONEvent, Partner } from '@/types/event';
+import type { Event, EventsGeoJSON, GeoJSONEvent, Partner, AppConfig } from '@/types/event';
 
 // En prod : VITE_API_URL vide = chemins relatifs (/api/events), proxiés par Caddy
 // En dev  : VITE_API_URL = http://localhost:3000
 const API_BASE = import.meta.env.VITE_API_URL ?? '';
+
+/**
+ * Récupère la configuration globale depuis le backend.
+ */
+export async function fetchConfig(): Promise<AppConfig> {
+  const response = await fetch(`${API_BASE}/api/config`);
+  if (!response.ok) {
+    throw new Error(`Erreur API config: ${response.status} ${response.statusText}`);
+  }
+  return response.json();
+}
 
 /**
  * Récupère tous les événements depuis le backend.

@@ -1,4 +1,5 @@
-import { Event, MODALITY_LABELS } from '@/types/event';
+import { Event } from '@/types/event';
+import { useConfig } from '@/hooks/useConfig';
 import { Badge } from '@/components/UI';
 import { Calendar, Clock, MapPin, User, Mail, Eye, Video, Building } from 'lucide-react';
 
@@ -9,6 +10,8 @@ interface EventPopupProps {
 }
 
 export function EventPopup({ event, onClose, onViewDetails }: EventPopupProps) {
+  const { helpers } = useConfig();
+  const modalityLabel = helpers.getEnumLabel('modalities', event.modality);
   const formattedDate = new Date(event.date).toLocaleDateString('fr-FR', {
     weekday: 'short',
     day: 'numeric',
@@ -30,7 +33,7 @@ export function EventPopup({ event, onClose, onViewDetails }: EventPopupProps) {
                   ) : (
                     <Building className="w-3 h-3" />
                   )}
-                  {MODALITY_LABELS[event.modality]}
+                  {modalityLabel}
                 </span>
               )}
             </div>

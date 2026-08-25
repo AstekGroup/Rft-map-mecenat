@@ -1,0 +1,311 @@
+{
+  "profile": "lgsv",
+
+  "app": {
+    "name": "La Grande Semaine Végétale",
+    "shortName": "LGSV",
+    "description": "Supper Carte interactive des événements de La Grande Semaine Végétale",
+    "eventDates": {
+      "weekStart": "2026-10-25",
+      "weekEnd": "2026-11-04"
+    },
+    "url": "https://lagrandesemainevegetale.fr",
+    "locale": "fr"
+  },
+
+  "theme": {
+    "colors": {
+      "primary": "#AE3B5D",
+      "primary-dark": "#7A1F3B",
+      "primary-light": "#D7A7B5"
+    },
+    "fonts": {
+      "heading": "Oswald",
+      "body": "Open Sans",
+      "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap"
+    }
+  },
+
+  "enums": {
+    "eventTypes": [
+      { "id": "atelier-cuisine", "label": "Atelier de cuisine", "color": "#3BAE5D" },
+      { "id": "degustation", "label": "Dégustation ou menu végétal", "color": "#F4C542" },
+      { "id": "visite-jardin", "label": "Visite de jardin / potager ou cueillette", "color": "#A7D7B5" },
+      { "id": "atelier-pedagogique", "label": "Atelier pédagogique ou formation", "color": "#1F7A3E" },
+      { "id": "conference", "label": "Conférence/webinaire/table-ronde", "color": "#E46A5D" },
+      { "id": "festival", "label": "Festival", "color": "#FF8C00" },
+      { "id": "autre", "label": "Autres", "color": "#D9D9D9" }
+    ],
+    "eventFormats": [
+      { "id": "atelier-cuisine", "label": "Atelier de cuisinessss" },
+      { "id": "degustation", "label": "Dégustation ou menu végétal" },
+      { "id": "visite-jardin", "label": "Visite de jardin / potager ou cueillette" },
+      { "id": "atelier-pedagogique", "label": "Atelier pédagogique ou formation" },
+      { "id": "conference", "label": "Conférence/webinaire/table-ronde" },
+      { "id": "festival", "label": "Festival" },
+      { "id": "autre", "label": "Autres" }
+    ],
+    "targetAudiences": [
+      { "id": "tout-public", "label": "Tout public" },
+      { "id": "familles-enfants", "label": "Famille / enfants" },
+      { "id": "salaries-entreprise", "label": "Salariés d'une entreprise" },
+      { "id": "professionnels", "label": "Professionnels" },
+      { "id": "scolaires", "label": "Scolaires" }
+    ],
+    "modalities": [
+      { "id": "presentiel", "label": "En présentiel" },
+      { "id": "distanciel", "label": "En ligne" }
+    ],
+    "eventThemes": [
+      { "id": "cuisine-vegetale", "label": "Cuisine végétale" },
+      { "id": "sante-nutrition", "label": "Santé & nutrition" },
+      { "id": "biodiversite", "label": "Biodiversité" },
+      { "id": "agriculture", "label": "Agriculture" },
+      { "id": "climat-environnement", "label": "Climat & environnement" },
+      { "id": "autre", "label": "Autres" }
+    ]
+  },
+
+  "regions": [
+    { "id": "Auvergne-Rhône-Alpes", "group": "metropole" },
+    { "id": "Bourgogne-Franche-Comté", "group": "metropole" },
+    { "id": "Bretagne", "group": "metropole" },
+    { "id": "Centre-Val de Loire", "group": "metropole" },
+    { "id": "Corse", "group": "metropole" },
+    { "id": "Grand Est", "group": "metropole" },
+    { "id": "Hauts-de-France", "group": "metropole" },
+    { "id": "Île-de-France", "group": "metropole" },
+    { "id": "Normandie", "group": "metropole" },
+    { "id": "Nouvelle-Aquitaine", "group": "metropole" },
+    { "id": "Occitanie", "group": "metropole" },
+    { "id": "Pays de la Loire", "group": "metropole" },
+    { "id": "Provence-Alpes-Côte d'Azur", "group": "metropole" },
+    { "id": "Guadeloupe", "group": "domtom" },
+    { "id": "Martinique", "group": "domtom" },
+    { "id": "Guyane", "group": "domtom" },
+    { "id": "La Réunion", "group": "domtom" },
+    { "id": "Mayotte", "group": "domtom" }
+  ],
+
+  "texts": {
+    "meta": {
+      "title": "La super Carte Interactive - La Grande Semaine Végétale",
+      "description": "Découvrez les ateliers cuisine, dégustations et événements végétaux près de chez vous",
+      "ogTitle": "Carte Interactive - La Grande Semaine Végétale",
+      "ogDescription": "Découvrez les ateliers cuisine, dégustations et événements végétaux près de chez vous"
+    },
+    "home": {
+      "heroTitle": "La Grande Semaine Végétale",
+      "heroSubtitle": "Ateliers de cuisine, dégustations, conférences… des centaines d'événements pour découvrir une alimentation végétale accessible à tous.",
+      "ctaText": "Découvrir les événements",
+      "onlineEvents": "Événements en ligne",
+      "sectionPresentiel": "Événements en présentiel"
+    },
+    "map": {
+      "title": "Carte interactive",
+      "viewList": "Voir la liste",
+      "onlineEvents": "Événements en ligne",
+      "backToMap": "Retour à la carte"
+    },
+    "list": {
+      "title": "Tous les événements",
+      "results": "résultat",
+      "results_plural": "résultats",
+      "noResults": "Aucun événement ne correspond à vos critères",
+      "viewOnMap": "Voir sur la carte",
+      "resetFilters": "Réinitialiser les filtres",
+      "clearAll": "Tout effacer"
+    },
+    "detail": {
+      "back": "Retour",
+      "duringWeek": "La Grande Semaine Végétale",
+      "full": "Complet",
+      "free": "Gratuit",
+      "paid": "Payant",
+      "price": "Prix",
+      "registration": "Inscription",
+      "registerOnline": "S'inscrire en ligne",
+      "contact": "Contacter l'organisateur",
+      "location": "Lieu",
+      "online": "En ligne",
+      "accessibility": "Accessibilité",
+      "format": "Formats",
+      "audience": "Public cible",
+      "themes": "Thématiques",
+      "partners": "Partenaires",
+      "organizer": "Organisateur",
+      "website": "Site web",
+      "email": "Email",
+      "phone": "Téléphone",
+      "capacity": "Capacité d'accueil",
+      "registered": "Inscrits"
+    },
+    "filters": {
+      "search": "Rechercher un événement, un lieu…",
+      "allModalities": "Tous",
+      "presentiel": "Présentiel",
+      "distanciel": "En ligne",
+      "date": "Date",
+      "dateAll": "Toutes les dates",
+      "dateDuringWeek": "Pendant La Grande Semaine Végétale",
+      "dateWeekendSept": "Week-end des 26-27 septembre",
+      "dateWeekendOct": "Week-end du 4-5 octobre",
+      "dateCustom": "Dates personnalisées",
+      "type": "Type d'événement",
+      "theme": "Thématique",
+      "audience": "Public cible",
+      "region": "Région",
+      "partner": "Partenaires",
+      "postalCode": "Code postal",
+      "showPast": "Afficher les événements passés",
+      "hidePast": "Masquer les événements passés",
+      "metropole": "Métropole",
+      "domtom": "DOM-TOM",
+      "reset": "Réinitialiser"
+    },
+    "footer": {
+      "copyright": "La Grande Semaine Végétale",
+      "madeWith": "Fait avec ❤️ pour une alimentation durable",
+      "contact": "Contact",
+      "discover": "Découvrir le projet"
+    }
+  },
+
+  "filters": {
+    "showPastEvents": false,
+    "defaultModality": "all",
+    "dateFilterModes": [
+      "all",
+      "during-week",
+      "weekend-sept",
+      "weekend-oct",
+      "custom"
+    ],
+    "dateRanges": {
+      "weekend-sept": { "start": "2026-09-26", "end": "2026-09-27" },
+      "weekend-oct": { "start": "2026-10-04", "end": "2026-10-05" }
+    }
+  },
+
+  "baserow": {
+    "apiUrlEnv": "BASEROW_API_URL",
+    "apiTokenEnv": "BASEROW_API_TOKEN",
+    "tableIdEnv": "BASEROW_TABLE_ID",
+    "partnersTableIdEnv": "BASEROW_PARTNERS_TABLE_ID",
+    "moderationFieldIdEnv": "BASEROW_MODERATION_FIELD_ID",
+    "moderationVisibleValue": "Accepté",
+    "fieldMapping": {
+      "title": "Nom de l'événement",
+      "description": "Description",
+      "startDate": "Date de début de l'événement",
+      "endDate": "Date de fin de l'événement",
+      "format": "Format",
+      "modality": "Type de l'événement",
+      "audience": "Public",
+      "theme": "Thématique",
+      "image": "Visuel de l'évènement",
+      "address": "Adresse du lieu",
+      "postalCode": "Code postal du lieu",
+      "city": "Ville du lieu",
+      "organizer": "Nom de la structure organisatrice",
+      "organizerFirstName": "Prénom de l'animateur",
+      "organizerLastName": "Nom de l'animateur",
+      "registrationUrl": "Lien d'inscription à l'événement",
+      "venueName": "Lieu",
+      "accessModalities": "Modalités spécifiques d'accès au lieu",
+      "videoConferenceUrl": "Lien de la visio",
+      "contactEmail": "Email contact événement",
+      "contactEmailFallback": "E-mail de l'animateur",
+      "contactPhone": "Téléphone inscription",
+      "organizerWebsite": "Site web de la structure",
+      "capacity": "Capacité d'accueil de l'événement",
+      "price": "Montant",
+      "tariff": "Tarif",
+      "partnerField": "Partenaires",
+      "moderation": "Modération de l'événement",
+      "visibility": "Visibilité sur la cartographie"
+    },
+    "mapping": {
+      "format": {
+        "Atelier de cuisine": { "format": "atelier-cuisine", "type": "atelier-cuisine" },
+        "Dégustation ou menu végétal": { "format": "degustation", "type": "degustation" },
+        "Visite de jardin / potager ou cueillette": { "format": "visite-jardin", "type": "visite-jardin" },
+        "Atelier pédagogique ou formation": { "format": "atelier-pedagogique", "type": "atelier-pedagogique" },
+        "Conférence/webinaire/table-ronde": { "format": "conference", "type": "conference" },
+        "Festival": { "format": "festival", "type": "festival" },
+        "Autres": { "format": "autre", "type": "autre" }
+      },
+      "modality": {
+        "Présentiel": "presentiel",
+        "Distanciel": "distanciel",
+        "En ligne": "distanciel",
+        "Hybride": "presentiel"
+      },
+      "audience": {
+        "Tout public": "tout-public",
+        "Familles": "familles-enfants",
+        "Famille / enfants": "familles-enfants",
+        "Scolaire": "scolaires",
+        "Ecoliers / Etudiants": "scolaires",
+        "Écoliers / Étudiants": "scolaires",
+        "Professionnels": "professionnels",
+        "Salariés d'une entreprise": "salaries-entreprise",
+        "Salariés": "salaries-entreprise"
+      },
+      "theme": {
+        "Cuisine végétale": "cuisine-vegetale",
+        "Santé & nutrition": "sante-nutrition",
+        "Biodiversité": "biodiversite",
+        "Agriculture": "agriculture",
+        "Climat & environnement": "climat-environnement",
+        "Autres": "autre"
+      }
+    },
+    "mappingHints": {
+      "theme": {
+        "cuisine": "cuisine-vegetale",
+        "végétal": "cuisine-vegetale",
+        "culinaire": "cuisine-vegetale",
+        "santé": "sante-nutrition",
+        "nutrition": "sante-nutrition",
+        "biodiv": "biodiversite",
+        "agri": "agriculture",
+        "agro": "agriculture",
+        "climat": "climat-environnement",
+        "environ": "climat-environnement",
+        "éco": "climat-environnement"
+      },
+      "modality": {
+        "distanciel": "distanciel",
+        "en ligne": "distanciel",
+        "visio": "distanciel"
+      },
+      "audience": {
+        "tout public": "tout-public",
+        "famille": "familles-enfants",
+        "enfant": "familles-enfants",
+        "colier": "scolaires",
+        "tudiant": "scolaires",
+        "scolaire": "scolaires",
+        "salari": "salaries-entreprise",
+        "entreprise": "salaries-entreprise",
+        "pro": "professionnels"
+      }
+    }
+  },
+
+  "map": {
+    "center": { "lng": 2.2137, "lat": 46.2276 },
+    "defaultZoom": 5.5,
+    "maxZoom": 18,
+    "minZoom": 2,
+    "defaultStyle": "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+    "styles": [
+      { "id": "bright", "label": "Bright", "url": "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json" },
+      { "id": "liberty", "label": "Liberty", "url": "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json" },
+      { "id": "positron", "label": "Positron", "url": "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json" }
+    ],
+    "clusterRadius": 50,
+    "clusterMaxZoom": 14
+  }
+}

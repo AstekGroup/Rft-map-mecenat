@@ -1,4 +1,5 @@
-import { EventType, EVENT_TYPE_LABELS, EVENT_TYPE_COLORS } from '@/types/event';
+import { EventType } from '@/types/event';
+import { useConfig } from '@/hooks/useConfig';
 
 interface BadgeProps {
   type: EventType;
@@ -7,8 +8,9 @@ interface BadgeProps {
 }
 
 export function Badge({ type, size = 'md', variant = 'default' }: BadgeProps) {
-  const color = EVENT_TYPE_COLORS[type];
-  const label = EVENT_TYPE_LABELS[type];
+  const { helpers } = useConfig();
+  const color = helpers.getEnumColor(type);
+  const label = helpers.getEnumLabel('eventTypes', type);
 
   const sizes = {
     sm: 'px-2 py-0.5 text-xs',
