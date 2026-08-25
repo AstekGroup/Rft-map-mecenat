@@ -18,9 +18,7 @@ import {
   buildAccessibilityInfo,
 } from './baserow-mapping.util';
 import { GeocodingService } from '../geocoding/geocoding.service';
-
-// Seule valeur qui autorise l'affichage sur la cartographie
-const MODERATION_VISIBLE = 'Accepté';
+import { AppConfigService } from '../config/config.service';
 
 @Injectable()
 export class BaserowService {
@@ -29,6 +27,7 @@ export class BaserowService {
   constructor(
     private readonly configService: ConfigService,
     private readonly geocodingService: GeocodingService,
+    private readonly appConfig: AppConfigService,
   ) {}
 
   /**
@@ -204,7 +203,7 @@ export class BaserowService {
       if (!devMode && moderationFieldId) {
         url.searchParams.set(
           `filter__field_${moderationFieldId}__contains_word`,
-          MODERATION_VISIBLE,
+          this.appConfig.get()?.baserow.moderationVisibleValue || 'Accepté',
         );
       }
 
@@ -237,6 +236,15 @@ export class BaserowService {
     return records;
   }
 
+
+  private get fm(): Record<string, string> {
+    return this.appConfig.get()?.baserow.fieldMapping || {};
+  }
+
+  private get mm() {
+    return this.appConfig.get()?.baserow.mapping;
+  }
+
   /**
    * Transforme un enregistrement Baserow en Event (sans géocodage).
    */
@@ -244,43 +252,68 @@ export class BaserowService {
     record: BaserowRecord,
     partnersMap: Map<string, Partner>,
   ): Event {
-    const startDateTime = parseDateTime(record["Date de début de l'événement"]);
-    const endDateTime = parseDateTime(record["Date de fin de l'événement"]);
-    const { format, type } = mapFormat(record['Format']);
-    const modality = mapModality(record["Type de l'événement"]);
-    const targetAudience = mapTargetAudience(record['Public']);
-    const themes = mapThemes(record['Thématique']);
+    const fm = this.fm;
 
-    const imageUrl = extractImageUrl(record["Visuel de l'évènement"]);
+    const startDateTime = parseDateTime(record[fm.startDate || "Date de début de l'événement"]);
+    const endDateTime = parseDateTime(record[fm.endDate || "Date de fin de l'événement"]);
+
+    const formatMap = this.mm?.format as Record<string, { format: string; type: string }> | undefined;
+    const modalityMap = this.mm?.modality as Record<string, string> | undefined;
+    const audienceMap = this.mm?.audience as Record<string, string> | undefined;
+    const themeMap = this.mm?.theme as Record<string, string> | undefined;
+
+    const { format, type } = mapFormat(
+      record[fm.format || 'Format'],
+      formatMap as any,
+    );
+    const modality = mapModality(
+      record[fm.modality || "Type de l'événement"],
+      modalityMap as any,
+      this.appConfig.get()?.baserow.mappingHints?.modality as any,
+    );
+    const targetAudience = mapTargetAudience(
+      record[fm.audience || 'Public'],
+      audienceMap as any,
+      this.appConfig.get()?.baserow.mappingHints?.audience as any,
+    );
+    const themes = mapThemes(
+      record[fm.theme || 'Thématique'],
+      themeMap as any,
+      this.appConfig.get()?.baserow.mappingHints?.theme as any,
+    );
+
+    const imageUrl = extractImageUrl(record[fm.image || "Visuel de l'évènement"]);
+    const { weekStart, weekEnd } = this.appConfig.eventDates;
     const isDuringWeek = computeIsDuringWeek(
-      record["Date de début de l'événement"],
+      record[fm.startDate || "Date de début de l'événement"],
+      weekStart,
+      weekEnd,
     );
     const organizerContact = buildOrganizerContact(
-      record["Prénom de l'animateur"],
-      record["Nom de l'animateur"],
+      record[fm.organizerFirstName || "Prénom de l'animateur"],
+      record[fm.organizerLastName || "Nom de l'animateur"],
     );
     const accessibilityInfo = buildAccessibilityInfo(
-      record["Modalités spécifiques d'accès au lieu"],
+      record[fm.accessModalities || "Modalités spécifiques d'accès au lieu"],
     );
-    const postalCode = (record['Code postal du lieu'] || '').trim();
+    const postalCode = (record[fm.postalCode || 'Code postal du lieu'] || '').trim();
     const fallbackRegion =
       this.geocodingService.getRegionFromPostalCode(postalCode);
 
-    // Résolution des partenaires (Partenaires est BaserowLinkedRow[])
-    const partners: Partner[] = (record.Partenaires || [])
-      .map((linkedRow) => partnersMap.get(String(linkedRow.id)))
+    const partners: Partner[] = (record[fm.partnerField || 'Partenaires'] || [])
+      .map((linkedRow: any) => partnersMap.get(String(linkedRow.id)))
       .filter((p): p is Partner => !!p);
 
     return {
       id: String(record.id),
-      title: record["Nom de l'événement"] || 'Événement sans titre',
-      description: record['Description'] || '',
+      title: record[fm.title || "Nom de l'événement"] || 'Événement sans titre',
+      description: record[fm.description || 'Description'] || '',
       date: startDateTime.date,
       time: startDateTime.time,
       endDate: endDateTime.date || undefined,
       endTime: endDateTime.time || undefined,
-      address: (record['Adresse du lieu'] || '').trim(),
-      city: (record['Ville du lieu'] || '').trim(),
+      address: (record[fm.address || 'Adresse du lieu'] || '').trim(),
+      city: (record[fm.city || 'Ville du lieu'] || '').trim(),
       region: fallbackRegion,
       department: '',
       postalCode,
@@ -288,28 +321,28 @@ export class BaserowService {
       longitude: 0,
       type,
       themes,
-      organizer: record['Nom de la structure organisatrice'] || '',
+      organizer: record[fm.organizer || 'Nom de la structure organisatrice'] || '',
       organizerContact,
-      registrationUrl: record["Lien d'inscription à l'événement"] || undefined,
+      registrationUrl: record[fm.registrationUrl || "Lien d'inscription à l'événement"] || undefined,
       isDuringWeek,
       modality,
       imageUrl,
-      venueName: record['Lieu'] || undefined,
+      venueName: record[fm.venueName || 'Lieu'] || undefined,
       accessibilityInfo,
-      videoConferenceUrl: record['Lien de la visio'] || undefined,
+      videoConferenceUrl: record[fm.videoConferenceUrl || 'Lien de la visio'] || undefined,
       format,
       targetAudience,
       contactEmail:
-        record['Email contact événement'] ||
-        record["E-mail de l'animateur"] ||
+        record[fm.contactEmail || 'Email contact événement'] ||
+        record[fm.contactEmailFallback || "E-mail de l'animateur"] ||
         undefined,
-      contactPhone: record['Téléphone inscription'] || undefined,
-      organizerWebsite: record['Site web de la structure'] || undefined,
-      capacity: record["Capacité d'accueil de l'événement"] || undefined,
+      contactPhone: record[fm.contactPhone || 'Téléphone inscription'] || undefined,
+      organizerWebsite: record[fm.organizerWebsite || 'Site web de la structure'] || undefined,
+      capacity: record[fm.capacity || "Capacité d'accueil de l'événement"] || undefined,
       registeredCount: undefined,
       partners: partners.length > 0 ? partners : undefined,
-      isFree: record['Tarif']?.value === 'Gratuit' || !record['Montant'],
-      price: record['Montant'] || undefined,
+      isFree: record[fm.tariff || 'Tarif']?.value === 'Gratuit' || !record[fm.price || 'Montant'],
+      price: record[fm.price || 'Montant'] || undefined,
     };
   }
 }

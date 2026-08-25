@@ -1,22 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { EventFilters } from '@/hooks';
-import {
-  
-  EventType, 
- 
-  TargetAudience,
-  EVENT_TYPE_LABELS, 
- 
-  EVENT_TYPE_COLORS, 
-  EventTheme, 
-  EVENT_THEME_LABELS, 
- 
-  TARGET_AUDIENCE_LABELS,
-  REGIONS,
-  EVENT_TYPES_ALL,
-  Partner,
-
-} from '@/types/event';
+import { EventFilters, useConfig } from '@/hooks';
+import { EventType, EventTheme, TargetAudience, Partner } from '@/types/event';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { DateCustomRangeInputs } from '@/components/Filters/DateCustomRangeInputs';
 import { formatFrDateRangeLabel, isDateFilterActive } from '@/utils/eventDateRange';
@@ -33,11 +17,6 @@ interface EventFiltersBarProps {
   onToggleAudience: (audience: string) => void;
   onResetFilters: () => void;
 }
-
-const EVENT_TYPES: EventType[] = EVENT_TYPES_ALL;
-const AUDIENCES: TargetAudience[] = ['tout-public', 'familles-enfants', 'salaries-entreprise', 'professionnels', 'scolaires'];
-
-const EVENT_THEMES = Object.keys(EVENT_THEME_LABELS) as EventTheme[];
 
 interface FilterDropdownProps {
   label: string;
@@ -96,6 +75,11 @@ export function EventFiltersBar({
   onToggleAudience,
   onResetFilters,
 }: EventFiltersBarProps) {
+  const { helpers } = useConfig();
+  const EVENT_TYPES = (helpers.getEnumList('eventTypes') as { id: EventType }[]).map(e => e.id);
+  const EVENT_THEMES = (helpers.getEnumList('eventThemes') as { id: string }[]).map(e => e.id) as EventTheme[];
+  const AUDIENCES: TargetAudience[] = ['tout-public', 'familles-enfants', 'salaries-entreprise', 'professionnels', 'scolaires'];
+  const { metropole: REGIONS_METRO, domtom: REGIONS_DOMTOM } = helpers.getRegionGroups();
   const hasActiveFilters =
     filters.search ||
     filters.postalCode ||
@@ -146,7 +130,7 @@ export function EventFiltersBar({
   filters.types.forEach((type) => {
     activeTags.push({
       key: `type-${type}`,
-      label: EVENT_TYPE_LABELS[type as EventType] || type,
+      label: helpers.getEnumLabel('eventTypes', type),
       onRemove: () => onToggleType(type),
     });
   });
@@ -154,7 +138,7 @@ export function EventFiltersBar({
   filters.themes.forEach((theme) => {
     activeTags.push({
       key: `theme-${theme}`,
-      label: EVENT_THEME_LABELS[theme as EventTheme] || theme,
+      label: helpers.getEnumLabel('eventThemes', theme),
       onRemove: () => onToggleTheme(theme),
     });
   });
@@ -179,7 +163,7 @@ export function EventFiltersBar({
   filters.audiences.forEach((audience) => {
     activeTags.push({
       key: `audience-${audience}`,
-      label: TARGET_AUDIENCE_LABELS[audience as TargetAudience] || audience,
+      label: helpers.getEnumLabel('targetAudiences', audience),
       onRemove: () => onToggleAudience(audience),
     });
   });
@@ -335,7 +319,7 @@ export function EventFiltersBar({
           <div className="p-2 space-y-1">
             {EVENT_TYPES.map((type) => {
               const Icon = TYPE_ICONS[type] || Globe;
-              const color = EVENT_TYPE_COLORS[type];
+              const color = helpers.getEnumColor(type);
               return (
                 <label
                   key={type}
@@ -354,7 +338,7 @@ export function EventFiltersBar({
                     <Icon className="w-3 h-3 text-white" />
                   </span>
                   <span className={filters.types.includes(type) ? 'text-primary font-medium' : 'text-text-secondary'}>
-                    {EVENT_TYPE_LABELS[type]}
+                    {helpers.getEnumLabel('eventTypes', type)}
                   </span>
                 </label>
               );
@@ -380,7 +364,7 @@ export function EventFiltersBar({
                   className="w-4 h-4 text-accent-pink border-primary/30 rounded focus:ring-accent-pink"
                 />
                 <span className={filters.themes.includes(theme) ? 'text-primary font-medium' : 'text-text-secondary'}>
-                  {EVENT_THEME_LABELS[theme]}
+                  {helpers.getEnumLabel('eventThemes', theme)}
                 </span>
               </label>
             ))}
@@ -405,7 +389,7 @@ export function EventFiltersBar({
                   className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
                 />
                 <span className={filters.audiences.includes(audience) ? 'text-primary font-medium' : 'text-text-secondary'}>
-                  {TARGET_AUDIENCE_LABELS[audience]}
+                  {helpers.getEnumLabel('targetAudiences', audience)}
                 </span>
               </label>
             ))}
@@ -447,7 +431,7 @@ export function EventFiltersBar({
             badge={filters.regions.length || undefined}
           >
             <div className="p-2 space-y-1 max-h-[250px] overflow-y-auto scrollbar-thin">
-              {REGIONS.filter(r => !['Guadeloupe', 'Martinique', 'Guyane', 'La Réunion', 'Mayotte'].includes(r)).map((region) => (
+              {REGIONS_METRO.map((region) => (
                 <label
                   key={region}
                   className="flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-primary/5 transition-colors"
@@ -465,7 +449,7 @@ export function EventFiltersBar({
               ))}
               <div className="border-t border-primary/10 mt-2 pt-2">
                 <p className="px-3 py-1 text-xs text-text-secondary font-medium uppercase">Outre-mer</p>
-                {REGIONS.filter(r => ['Guadeloupe', 'Martinique', 'Guyane', 'La Réunion', 'Mayotte'].includes(r)).map((region) => (
+                {REGIONS_DOMTOM.map((region) => (
                   <label
                     key={region}
                     className="flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-primary/5 transition-colors"

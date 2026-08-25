@@ -2,13 +2,15 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Globe, Calendar, ArrowRight, Clock, Users } from 'lucide-react';
 import { useEvents } from '@/hooks';
-import { Event, EVENT_TYPE_LABELS, EVENT_TYPE_COLORS } from '@/types/event';
+import { useConfig } from '@/hooks/useConfig';
+import { Event } from '@/types/event';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { Loader2 } from 'lucide-react';
 
 function MiniEventCard({ event }: { event: Event }) {
+  const { helpers } = useConfig();
   const Icon = TYPE_ICONS[event.type] || Globe;
-  const typeColor = EVENT_TYPE_COLORS[event.type];
+  const typeColor = helpers.getEnumColor(event.type);
   const formattedDate = new Date(event.date).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'long',
@@ -25,7 +27,7 @@ function MiniEventCard({ event }: { event: Event }) {
           <div className="absolute top-2 left-2 flex flex-wrap gap-1">
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 text-primary-dark shadow-sm">
               <Icon className="w-2.5 h-2.5" />
-              {EVENT_TYPE_LABELS[event.type]}
+              {helpers.getEnumLabel('eventTypes', event.type)}
             </span>
             {event.isDuringWeek && (
               <span className="inline-flex items-center gap-1 bg-primary text-white px-1.5 py-0.5 rounded-full text-[10px] font-medium">

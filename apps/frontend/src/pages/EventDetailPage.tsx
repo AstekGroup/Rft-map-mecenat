@@ -1,13 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, MapPin, ExternalLink, Mail, Globe, Video, Building, Accessibility, Tag, BookOpen, Handshake, Euro, Phone, Info } from 'lucide-react';
 import { useEvents } from '@/hooks';
-import { 
-  EVENT_TYPE_LABELS, 
-  EVENT_FORMAT_LABELS, 
-  TARGET_AUDIENCE_LABELS, 
-  MODALITY_LABELS,
-  EVENT_THEME_LABELS
-} from '@/types/event';
+import { useConfig } from '@/hooks/useConfig';
 import { Loader2 } from 'lucide-react';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
 
@@ -15,6 +9,7 @@ export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { allEvents, loading, error } = useEvents();
+  const { helpers } = useConfig();
   
   const event = allEvents.find(e => e.id === id);
 
@@ -126,7 +121,7 @@ export function EventDetailPage() {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-surface-beige text-primary-dark"
               >
                 <Icon className="w-4 h-4" />
-                {EVENT_TYPE_LABELS[event.type]}
+                {helpers.getEnumLabel('eventTypes', event.type)}
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-primary/10 text-primary-dark">
                 {event.modality === 'distanciel' ? (
@@ -134,7 +129,7 @@ export function EventDetailPage() {
                 ) : (
                   <Building className="w-4 h-4" />
                 )}
-                {MODALITY_LABELS[event.modality]}
+                {helpers.getEnumLabel('modalities', event.modality)}
               </span>
               {event.isDuringWeek && (
                 <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary-dark px-3 py-1.5 rounded-full text-sm font-medium">
@@ -285,7 +280,7 @@ export function EventDetailPage() {
                 Format
               </h3>
               <p className="text-text-primary font-medium">
-                {EVENT_FORMAT_LABELS[event.format]}
+                {helpers.getEnumLabel('eventFormats', event.format)}
               </p>
             </div>
 
@@ -300,7 +295,7 @@ export function EventDetailPage() {
                     key={audience}
                     className="text-sm bg-primary/5 text-primary-dark px-2.5 py-1 rounded-full border border-primary/10"
                   >
-                    {TARGET_AUDIENCE_LABELS[audience]}
+                    {helpers.getEnumLabel('targetAudiences', audience)}
                   </span>
                 ))}
               </div>
@@ -324,7 +319,7 @@ export function EventDetailPage() {
                         key={theme}
                         className="text-sm font-medium text-primary bg-white border border-primary/10 px-3 py-1 rounded-full shadow-sm"
                       >
-                        {EVENT_THEME_LABELS[theme]}
+                        {helpers.getEnumLabel('eventThemes', theme)}
                       </span>
                     ))}
                   </div>

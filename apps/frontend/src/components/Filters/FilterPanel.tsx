@@ -1,20 +1,6 @@
-import { EventFilters } from '@/hooks';
+import { EventFilters, useConfig } from '@/hooks';
 import {
-  
-  EventType, 
- 
-  TargetAudience,
-  EVENT_TYPE_LABELS, 
- 
-  EVENT_TYPE_COLORS, 
-  EventTheme, 
-  EVENT_THEME_LABELS, 
- 
-  TARGET_AUDIENCE_LABELS,
-  REGIONS,
-  EVENT_TYPES_ALL,
-  Partner,
-
+  EventType, EventTheme, TargetAudience, Partner,
 } from '@/types/event';
 import { Calendar, MapPin, Tag, RotateCcw, Search, X, Hash, BookOpen, Handshake, Users, History, Globe } from 'lucide-react';
 import { Button } from '@/components/UI';
@@ -40,11 +26,6 @@ interface FilterPanelProps {
   };
 }
 
-const EVENT_TYPES: EventType[] = EVENT_TYPES_ALL;
-const AUDIENCES: TargetAudience[] = ['tout-public', 'familles-enfants', 'salaries-entreprise', 'professionnels', 'scolaires'];
-
-const EVENT_THEMES = Object.keys(EVENT_THEME_LABELS) as EventTheme[];
-
 export function FilterPanel({
   filters,
   onUpdateFilters,
@@ -56,6 +37,11 @@ export function FilterPanel({
   onToggleAudience,
   onResetFilters,
 }: FilterPanelProps) {
+  const { helpers } = useConfig();
+  const EVENT_TYPES = (helpers.getEnumList('eventTypes') as { id: EventType }[]).map(e => e.id);
+  const AUDIENCES: TargetAudience[] = ['tout-public', 'familles-enfants', 'salaries-entreprise', 'professionnels', 'scolaires'];
+  const EVENT_THEMES = (helpers.getEnumList('eventThemes') as { id: string }[]).map(e => e.id) as EventTheme[];
+  const { metropole: REGIONS_METRO, domtom: REGIONS_DOMTOM } = helpers.getRegionGroups();
   const hasActiveFilters =
     filters.search ||
     filters.postalCode ||
@@ -178,7 +164,7 @@ export function FilterPanel({
           <div className="space-y-2">
             {EVENT_TYPES.map((type) => {
               const Icon = TYPE_ICONS[type] || Globe;
-              const color = EVENT_TYPE_COLORS[type];
+              const color = helpers.getEnumColor(type);
               return (
                 <label
                   key={type}
@@ -197,7 +183,7 @@ export function FilterPanel({
                     <Icon className="w-3.5 h-3.5 text-white" />
                   </div>
                   <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-                    {EVENT_TYPE_LABELS[type]}
+                    {helpers.getEnumLabel('eventTypes', type)}
                   </span>
                 </label>
               );
@@ -225,7 +211,7 @@ export function FilterPanel({
                   className="w-4 h-4 text-accent-pink border-primary/30 rounded focus:ring-accent-pink"
                 />
                 <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-                  {EVENT_THEME_LABELS[theme]}
+                  {helpers.getEnumLabel('eventThemes', theme)}
                 </span>
               </label>
             ))}
@@ -252,7 +238,7 @@ export function FilterPanel({
                   className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
                 />
                 <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-                  {TARGET_AUDIENCE_LABELS[audience]}
+                  {helpers.getEnumLabel('targetAudiences', audience)}
                 </span>
               </label>
             ))}
@@ -303,7 +289,7 @@ export function FilterPanel({
           <div className="space-y-2">
             {/* Métropole */}
             <div className="space-y-2">
-              {REGIONS.filter(r => !['Guadeloupe', 'Martinique', 'Guyane', 'La Réunion', 'Mayotte'].includes(r)).map((region) => (
+              {REGIONS_METRO.map((region) => (
                 <label
                   key={region}
                   className="flex items-center gap-3 cursor-pointer group"
@@ -325,7 +311,7 @@ export function FilterPanel({
             <div className="pt-3 mt-3 border-t border-primary/10">
               <p className="text-xs text-text-secondary mb-2 font-medium uppercase tracking-wide">Outre-mer</p>
               <div className="space-y-2">
-                {REGIONS.filter(r => ['Guadeloupe', 'Martinique', 'Guyane', 'La Réunion', 'Mayotte'].includes(r)).map((region) => (
+                {REGIONS_DOMTOM.map((region) => (
                   <label
                     key={region}
                     className="flex items-center gap-3 cursor-pointer group"

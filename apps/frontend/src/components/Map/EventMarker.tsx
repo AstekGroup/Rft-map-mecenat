@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { MapPin, Utensils, Apple, Mic2, HelpCircle, Map, BookOpen, Music } from 'lucide-react';
-import { EventType, EVENT_TYPE_COLORS } from '@/types/event';
+import { EventType } from '@/types/event';
+import { useConfig } from '@/hooks/useConfig';
 
 interface EventMarkerProps {
   type: EventType;
@@ -31,8 +32,9 @@ function EventMarkerComponent({
   size = 'md',
   dateLabel,
 }: EventMarkerProps) {
+  const { helpers } = useConfig();
   const Icon = TYPE_ICONS[type] || HelpCircle;
-  const color = EVENT_TYPE_COLORS[type] || '#3BAE5D';
+  const color = helpers.getEnumColor(type);
   const isSmall = size === 'sm';
 
   return (

@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Event, EVENT_TYPE_LABELS, EVENT_TYPE_COLORS, EVENT_THEME_LABELS } from '@/types/event';
+import { Event } from '@/types/event';
+import { useConfig } from '@/hooks/useConfig';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { Pagination } from '@/components/UI/Pagination';
 import { Calendar, Clock, Users, Accessibility, MapPin, Video, BookOpen } from 'lucide-react';
@@ -12,6 +13,7 @@ interface EventListViewProps {
 }
 
 export function EventListView({ events }: EventListViewProps) {
+  const { helpers } = useConfig();
   const [currentPage, setCurrentPage] = useState(1);
   
   const totalPages = Math.ceil(events.length / ITEMS_PER_PAGE);
@@ -65,7 +67,7 @@ export function EventListView({ events }: EventListViewProps) {
         <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {paginatedEvents.map((event) => {
             const Icon = TYPE_ICONS[event.type];
-            const typeColor = EVENT_TYPE_COLORS[event.type];
+            const typeColor = helpers.getEnumColor(event.type);
             
             return (
               <Link
@@ -92,7 +94,7 @@ export function EventListView({ events }: EventListViewProps) {
                         className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-surface-beige text-primary-dark"
                       >
                         <Icon className="w-2.5 h-2.5" />
-                        {EVENT_TYPE_LABELS[event.type]}
+                        {helpers.getEnumLabel('eventTypes', event.type)}
                       </span>
                     </div>
                   </div>
@@ -140,7 +142,7 @@ export function EventListView({ events }: EventListViewProps) {
                       <p className="flex items-start gap-2">
                         <BookOpen className="w-4 h-4 text-accent-pink flex-shrink-0 mt-0.5" />
                         <span className="line-clamp-1 font-medium italic">
-                          {event.themes.map(t => EVENT_THEME_LABELS[t]).join(', ')}
+                          {event.themes.map(t => helpers.getEnumLabel('eventThemes', t)).join(', ')}
                         </span>
                       </p>
                     )}

@@ -1,7 +1,3 @@
-/**
- * Utilitaires de mapping entre les valeurs Baserow et les types internes (La Grande Semaine Végétale).
- */
-
 import type {
   EventType,
   EventFormat,
@@ -9,13 +5,18 @@ import type {
   EventModality,
   EventTheme,
 } from '@make-map/types';
-import { BaserowAttachment, BaserowSelect } from './baserow.types';
+import type { BaserowAttachment, BaserowSelect } from './baserow.types';
+
+interface FormatMapping {
+  format: EventFormat;
+  type: EventType;
+}
 
 // ============================================================
-// Mapping Thématique Baserow -> EventTheme[]
+// Default mapping maps (surchargeables via AppConfig)
 // ============================================================
 
-const THEME_MAP: Record<string, EventTheme> = {
+const DEFAULT_THEME_MAP: Record<string, EventTheme> = {
   'Cuisine végétale': 'cuisine-vegetale',
   'Santé & nutrition': 'sante-nutrition',
   Biodiversité: 'biodiversite',
@@ -24,86 +25,31 @@ const THEME_MAP: Record<string, EventTheme> = {
   Autres: 'autre',
 };
 
-export function mapThemes(
-  baserowThemes: BaserowSelect[] | undefined,
-): EventTheme[] {
-  if (!baserowThemes || baserowThemes.length === 0) return ['autre'];
+const DEFAULT_THEME_HINTS: Record<string, EventTheme> = {
+  cuisine: 'cuisine-vegetale',
+  végétal: 'cuisine-vegetale',
+  culinaire: 'cuisine-vegetale',
+  santé: 'sante-nutrition',
+  nutrition: 'sante-nutrition',
+  biodiv: 'biodiversite',
+  agri: 'agriculture',
+  agro: 'agriculture',
+  climat: 'climat-environnement',
+  environ: 'climat-environnement',
+  éco: 'climat-environnement',
+};
 
-  const mapped = baserowThemes
-    .map((t) => {
-      const exact = THEME_MAP[t.value];
-      if (exact) return exact;
-
-      const lower = t.value.toLowerCase();
-      if (
-        lower.includes('cuisine') ||
-        lower.includes('végétal') ||
-        lower.includes('culinaire')
-      )
-        return 'cuisine-vegetale';
-      if (lower.includes('santé') || lower.includes('nutrition'))
-        return 'sante-nutrition';
-      if (lower.includes('biodiv')) return 'biodiversite';
-      if (lower.includes('agri') || lower.includes('agro'))
-        return 'agriculture';
-      if (
-        lower.includes('climat') ||
-        lower.includes('environ') ||
-        lower.includes('éco')
-      )
-        return 'climat-environnement';
-
-      return 'autre';
-    })
-    .filter((t): t is EventTheme => t !== null);
-
-  return [...new Set(mapped)]; // Remove duplicates
-}
-
-// ============================================================
-// Mapping Format Baserow -> EventFormat + EventType
-// ============================================================
-
-interface FormatMapping {
-  format: EventFormat;
-  type: EventType;
-}
-
-const FORMAT_MAP: Record<string, FormatMapping> = {
+const DEFAULT_FORMAT_MAP: Record<string, FormatMapping> = {
   'Atelier de cuisine': { format: 'atelier-cuisine', type: 'atelier-cuisine' },
   'Dégustation ou menu végétal': { format: 'degustation', type: 'degustation' },
-  'Visite de jardin / potager ou cueillette': {
-    format: 'visite-jardin',
-    type: 'visite-jardin',
-  },
-  'Atelier pédagogique ou formation': {
-    format: 'atelier-pedagogique',
-    type: 'atelier-pedagogique',
-  },
-  'Conférence/webinaire/table-ronde': {
-    format: 'conference',
-    type: 'conference',
-  },
+  'Visite de jardin / potager ou cueillette': { format: 'visite-jardin', type: 'visite-jardin' },
+  'Atelier pédagogique ou formation': { format: 'atelier-pedagogique', type: 'atelier-pedagogique' },
+  'Conférence/webinaire/table-ronde': { format: 'conference', type: 'conference' },
   Festival: { format: 'festival', type: 'festival' },
   Autres: { format: 'autre', type: 'autre' },
 };
 
-export function mapFormat(
-  baserowFormat: BaserowSelect | undefined,
-): FormatMapping {
-  if (!baserowFormat) return { format: 'autre', type: 'autre' };
-
-  const exact = FORMAT_MAP[baserowFormat.value];
-  if (exact) return exact;
-
-  return { format: 'autre', type: 'autre' };
-}
-
-// ============================================================
-// Mapping Public Baserow -> TargetAudience[]
-// ============================================================
-
-const AUDIENCE_MAP: Record<string, TargetAudience> = {
+const DEFAULT_AUDIENCE_MAP: Record<string, TargetAudience> = {
   'Tout public': 'tout-public',
   Familles: 'familles-enfants',
   'Famille / enfants': 'familles-enfants',
@@ -115,29 +61,102 @@ const AUDIENCE_MAP: Record<string, TargetAudience> = {
   Salariés: 'salaries-entreprise',
 };
 
+const DEFAULT_AUDIENCE_HINTS: Record<string, TargetAudience> = {
+  'tout public': 'tout-public',
+  famille: 'familles-enfants',
+  enfant: 'familles-enfants',
+  colier: 'scolaires',
+  tudiant: 'scolaires',
+  scolaire: 'scolaires',
+  salari: 'salaries-entreprise',
+  entreprise: 'salaries-entreprise',
+  pro: 'professionnels',
+};
+
+const DEFAULT_MODALITY_MAP: Record<string, EventModality> = {
+  Présentiel: 'presentiel',
+  Distanciel: 'distanciel',
+  'En ligne': 'distanciel',
+  Hybride: 'presentiel',
+};
+
+const DEFAULT_MODALITY_HINTS: Record<string, EventModality> = {
+  distanciel: 'distanciel',
+  'en ligne': 'distanciel',
+  visio: 'distanciel',
+};
+
+// ============================================================
+// Mapping Thématique
+// ============================================================
+
+export function mapThemes(
+  baserowThemes: BaserowSelect[] | undefined,
+  themeMap?: Record<string, EventTheme>,
+  themeHints?: Record<string, EventTheme>,
+): EventTheme[] {
+  const map = themeMap || DEFAULT_THEME_MAP;
+  const hints = themeHints || DEFAULT_THEME_HINTS;
+
+  if (!baserowThemes || baserowThemes.length === 0) return ['autre'];
+
+  const mapped = baserowThemes
+    .map((t) => {
+      const exact = map[t.value];
+      if (exact) return exact;
+
+      const lower = t.value.toLowerCase();
+      for (const [keyword, theme] of Object.entries(hints)) {
+        if (lower.includes(keyword)) return theme;
+      }
+
+      return 'autre';
+    })
+    .filter((t): t is EventTheme => t !== null);
+
+  return [...new Set(mapped)];
+}
+
+// ============================================================
+// Mapping Format
+// ============================================================
+
+export function mapFormat(
+  baserowFormat: BaserowSelect | undefined,
+  formatMap?: Record<string, FormatMapping>,
+): FormatMapping {
+  const map = formatMap || DEFAULT_FORMAT_MAP;
+  if (!baserowFormat) return { format: 'autre', type: 'autre' };
+
+  const exact = map[baserowFormat.value];
+  if (exact) return exact;
+
+  return { format: 'autre', type: 'autre' };
+}
+
+// ============================================================
+// Mapping Public
+// ============================================================
+
 export function mapTargetAudience(
   baserowPublic: BaserowSelect[] | undefined,
+  audienceMap?: Record<string, TargetAudience>,
+  audienceHints?: Record<string, TargetAudience>,
 ): TargetAudience[] {
+  const map = audienceMap || DEFAULT_AUDIENCE_MAP;
+  const hints = audienceHints || DEFAULT_AUDIENCE_HINTS;
+
   if (!baserowPublic || baserowPublic.length === 0) return ['tout-public'];
 
   const mapped = baserowPublic
     .map((p) => {
-      const exact = AUDIENCE_MAP[p.value];
+      const exact = map[p.value];
       if (exact) return exact;
 
       const lower = p.value.toLowerCase();
-      if (lower.includes('tout public')) return 'tout-public';
-      if (lower.includes('famille') || lower.includes('enfant'))
-        return 'familles-enfants';
-      if (
-        lower.includes('colier') ||
-        lower.includes('tudiant') ||
-        lower.includes('scolaire')
-      )
-        return 'scolaires';
-      if (lower.includes('salari') || lower.includes('entreprise'))
-        return 'salaries-entreprise';
-      if (lower.includes('pro')) return 'professionnels';
+      for (const [keyword, audience] of Object.entries(hints)) {
+        if (lower.includes(keyword)) return audience;
+      }
 
       return null;
     })
@@ -150,28 +169,22 @@ export function mapTargetAudience(
 // Mapping Modalité
 // ============================================================
 
-const MODALITY_MAP: Record<string, EventModality> = {
-  Présentiel: 'presentiel',
-  Distanciel: 'distanciel',
-  'En ligne': 'distanciel',
-  Hybride: 'presentiel',
-};
-
 export function mapModality(
   baserowType: BaserowSelect | undefined,
+  modalityMap?: Record<string, EventModality>,
+  modalityHints?: Record<string, EventModality>,
 ): EventModality {
+  const map = modalityMap || DEFAULT_MODALITY_MAP;
+  const hints = modalityHints || DEFAULT_MODALITY_HINTS;
+
   if (!baserowType) return 'presentiel';
 
-  const exact = MODALITY_MAP[baserowType.value];
+  const exact = map[baserowType.value];
   if (exact) return exact;
 
   const lower = baserowType.value.toLowerCase();
-  if (
-    lower.includes('distanciel') ||
-    lower.includes('en ligne') ||
-    lower.includes('visio')
-  ) {
-    return 'distanciel';
+  for (const [keyword, mod] of Object.entries(hints)) {
+    if (lower.includes(keyword)) return mod;
   }
 
   return 'presentiel';
@@ -186,23 +199,24 @@ export function extractImageUrl(
 ): string | undefined {
   if (!attachments || attachments.length === 0) return undefined;
   const first = attachments[0];
-  return (
-    first.thumbnails?.card?.url || first.thumbnails?.small?.url || first.url
-  );
+  return first.thumbnails?.card?.url || first.thumbnails?.small?.url || first.url;
 }
 
 // ============================================================
 // isDuringWeek
 // ============================================================
 
-const WEEK_START = new Date('2026-09-25T00:00:00.000Z');
-const WEEK_END = new Date('2026-10-04T23:59:59.999Z');
-
-export function computeIsDuringWeek(dateString: string | undefined): boolean {
+export function computeIsDuringWeek(
+  dateString: string | undefined,
+  weekStart?: string,
+  weekEnd?: string,
+): boolean {
   if (!dateString) return false;
+  const start = weekStart || '2026-09-25';
+  const end = weekEnd || '2026-10-04';
   try {
     const date = new Date(dateString);
-    return date >= WEEK_START && date <= WEEK_END;
+    return date >= new Date(start) && date <= new Date(`${end}T23:59:59.999Z`);
   } catch {
     return false;
   }
@@ -222,7 +236,7 @@ export function parseDateTime(dateTimeString: string | undefined): {
     const dt = new Date(dateTimeString);
     if (isNaN(dt.getTime())) return { date: '', time: '' };
 
-    const date = dt.toLocaleDateString('fr-CA'); // YYYY-MM-DD
+    const date = dt.toLocaleDateString('fr-CA');
     const time = dt.toLocaleTimeString('fr-FR', {
       hour: '2-digit',
       minute: '2-digit',
