@@ -38,16 +38,22 @@ export class AppConfigService implements OnModuleInit {
     const resolvedPath = this.resolveConfigPath();
 
     if (!existsSync(resolvedPath)) {
-      this.logger.warn(`Fichier de config introuvable: ${resolvedPath}. Utilisation des valeurs par défaut.`);
+      this.logger.warn(
+        `Fichier de config introuvable: ${resolvedPath}. Utilisation des valeurs par défaut.`,
+      );
       return;
     }
 
     try {
       const raw = readFileSync(resolvedPath, 'utf-8');
       this.config = JSON.parse(raw) as AppConfig;
-      this.logger.log(`Configuration chargée depuis ${resolvedPath} (profil: ${this.config.profile})`);
+      this.logger.log(
+        `Configuration chargée depuis ${resolvedPath} (profil: ${this.config.profile})`,
+      );
     } catch (error) {
-      this.logger.error(`Erreur lors du chargement de la config: ${error.message}`);
+      this.logger.error(
+        `Erreur lors du chargement de la config: ${error.message}`,
+      );
     }
   }
 

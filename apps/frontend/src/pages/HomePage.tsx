@@ -8,9 +8,11 @@ import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { Loader2 } from 'lucide-react';
 
 function MiniEventCard({ event }: { event: Event }) {
-  const { helpers } = useConfig();
+  const { config, helpers } = useConfig();
   const Icon = TYPE_ICONS[event.type] || Globe;
   const typeColor = helpers.getEnumColor(event.type);
+  const editionYear = config?.app?.eventDates?.weekStart?.split('-')[0];
+  const weekBadgeText = editionYear ? `${config.app.shortName} ${editionYear}` : 'LGSV 2026';
   const formattedDate = new Date(event.date).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'long',
@@ -31,7 +33,7 @@ function MiniEventCard({ event }: { event: Event }) {
             </span>
             {event.isDuringWeek && (
               <span className="inline-flex items-center gap-1 bg-primary text-white px-1.5 py-0.5 rounded-full text-[10px] font-medium">
-                LGSV 2026
+                {weekBadgeText}
               </span>
             )}
           </div>
@@ -64,6 +66,7 @@ function MiniEventCard({ event }: { event: Event }) {
 
 export function HomePage() {
   const { allEvents, loading } = useEvents();
+  const { config, helpers } = useConfig();
 
   const presentielEvents = useMemo(() =>
     allEvents
@@ -73,28 +76,38 @@ export function HomePage() {
     [allEvents]
   );
 
+  const editionYear = config?.app?.eventDates?.weekStart?.split('-')[0];
+  const heroTitle = helpers.getText('home', 'heroTitle');
+  const editionLabel = helpers.getText('home', 'editionLabel');
+  const heroDescription = helpers.getText('home', 'heroDescription');
+  const ctaText = helpers.getText('home', 'ctaText');
+  const sectionPresentiel = helpers.getText('home', 'sectionPresentiel');
+  const nearbySubtitle = helpers.getText('home', 'nearbySubtitle');
+  const seeAll = helpers.getText('home', 'seeAll');
+  const infoTitle = helpers.getText('home', 'infoTitle');
+  const infoDescription = helpers.getText('home', 'infoDescription');
+
   return (
-    <div className="min-h-screen bg-surface-offwhite overflow-y-auto font-inter">
+    <div className="min-h-screen bg-surface-offwhite overflow-y-auto font-body">
       {/* Hero Section */}
       <div className="bg-primary text-white py-16 px-4">
         <div className="max-w-5xl mx-auto text-center">
           <h1 className="font-poppins text-4xl md:text-5xl font-bold mb-4">
-            La Grande Semaine Végétale
+            {heroTitle}
           </h1>
           <p className="text-xl md:text-2xl text-white/90 mb-2 flex items-center justify-center gap-2">
             <Calendar className="w-6 h-6" />
-            Édition 2026
+            {editionLabel} {editionYear}
           </p>
-          <p className="text-lg text-white/80 max-w-2xl mx-auto mt-4 font-inter">
-            Découvrez des ateliers cuisine, des dégustations et des rencontres
-            partout en France pour promouvoir une alimentation végétale accessible et gourmande.
+          <p className="text-lg text-white/80 max-w-2xl mx-auto mt-4 font-body">
+            {heroDescription}
           </p>
           <div className="mt-8">
             <Link
               to="/carte"
               className="inline-flex items-center gap-2 bg-accent-yellow text-text-primary px-8 py-3 rounded-button font-bold text-lg hover:bg-yellow-500 transition-colors shadow-lg"
             >
-              Voir la carte des événements
+              {ctaText}
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
@@ -112,15 +125,15 @@ export function HomePage() {
                 <MapPin className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h2 className="font-poppins font-bold text-xl text-text-primary">Événements en présentiel</h2>
-                <p className="text-text-secondary text-sm">Près de chez vous</p>
+                <h2 className="font-poppins font-bold text-xl text-text-primary">{sectionPresentiel}</h2>
+                <p className="text-text-secondary text-sm">{nearbySubtitle}</p>
               </div>
             </div>
             <Link
               to="/carte"
               className="text-primary font-semibold flex items-center gap-1 hover:underline"
             >
-              Tout voir
+              {seeAll}
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -141,13 +154,10 @@ export function HomePage() {
         {/* Info Section */}
         <div className="bg-primary/5 rounded-2xl p-8 text-center border border-primary/10">
           <h3 className="font-poppins font-semibold text-xl text-primary-dark mb-3">
-            C'est quoi La Grande Semaine Végétale ?
+            {infoTitle}
           </h3>
-          <p className="text-text-primary max-w-3xl mx-auto leading-relaxed font-inter">
-            Une initiative nationale pour démocratiser l'alimentation végétale. 
-            Pendant une semaine, des fermes, des restaurants, des associations et des 
-            cuisiniers se mobilisent pour vous faire découvrir de nouvelles saveurs, 
-            apprendre à cuisiner les légumineuses et comprendre les enjeux de notre alimentation.
+          <p className="text-text-primary max-w-3xl mx-auto leading-relaxed font-body">
+            {infoDescription}
           </p>
         </div>
       </div>

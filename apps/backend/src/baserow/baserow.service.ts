@@ -254,10 +254,16 @@ export class BaserowService {
   ): Event {
     const fm = this.fm;
 
-    const startDateTime = parseDateTime(record[fm.startDate || "Date de début de l'événement"]);
-    const endDateTime = parseDateTime(record[fm.endDate || "Date de fin de l'événement"]);
+    const startDateTime = parseDateTime(
+      record[fm.startDate || "Date de début de l'événement"],
+    );
+    const endDateTime = parseDateTime(
+      record[fm.endDate || "Date de fin de l'événement"],
+    );
 
-    const formatMap = this.mm?.format as Record<string, { format: string; type: string }> | undefined;
+    const formatMap = this.mm?.format as
+      | Record<string, { format: string; type: string }>
+      | undefined;
     const modalityMap = this.mm?.modality as Record<string, string> | undefined;
     const audienceMap = this.mm?.audience as Record<string, string> | undefined;
     const themeMap = this.mm?.theme as Record<string, string> | undefined;
@@ -282,7 +288,9 @@ export class BaserowService {
       this.appConfig.get()?.baserow.mappingHints?.theme as any,
     );
 
-    const imageUrl = extractImageUrl(record[fm.image || "Visuel de l'évènement"]);
+    const imageUrl = extractImageUrl(
+      record[fm.image || "Visuel de l'évènement"],
+    );
     const { weekStart, weekEnd } = this.appConfig.eventDates;
     const isDuringWeek = computeIsDuringWeek(
       record[fm.startDate || "Date de début de l'événement"],
@@ -296,7 +304,9 @@ export class BaserowService {
     const accessibilityInfo = buildAccessibilityInfo(
       record[fm.accessModalities || "Modalités spécifiques d'accès au lieu"],
     );
-    const postalCode = (record[fm.postalCode || 'Code postal du lieu'] || '').trim();
+    const postalCode = (
+      record[fm.postalCode || 'Code postal du lieu'] || ''
+    ).trim();
     const fallbackRegion =
       this.geocodingService.getRegionFromPostalCode(postalCode);
 
@@ -321,27 +331,36 @@ export class BaserowService {
       longitude: 0,
       type,
       themes,
-      organizer: record[fm.organizer || 'Nom de la structure organisatrice'] || '',
+      organizer:
+        record[fm.organizer || 'Nom de la structure organisatrice'] || '',
       organizerContact,
-      registrationUrl: record[fm.registrationUrl || "Lien d'inscription à l'événement"] || undefined,
+      registrationUrl:
+        record[fm.registrationUrl || "Lien d'inscription à l'événement"] ||
+        undefined,
       isDuringWeek,
       modality,
       imageUrl,
       venueName: record[fm.venueName || 'Lieu'] || undefined,
       accessibilityInfo,
-      videoConferenceUrl: record[fm.videoConferenceUrl || 'Lien de la visio'] || undefined,
+      videoConferenceUrl:
+        record[fm.videoConferenceUrl || 'Lien de la visio'] || undefined,
       format,
       targetAudience,
       contactEmail:
         record[fm.contactEmail || 'Email contact événement'] ||
         record[fm.contactEmailFallback || "E-mail de l'animateur"] ||
         undefined,
-      contactPhone: record[fm.contactPhone || 'Téléphone inscription'] || undefined,
-      organizerWebsite: record[fm.organizerWebsite || 'Site web de la structure'] || undefined,
-      capacity: record[fm.capacity || "Capacité d'accueil de l'événement"] || undefined,
+      contactPhone:
+        record[fm.contactPhone || 'Téléphone inscription'] || undefined,
+      organizerWebsite:
+        record[fm.organizerWebsite || 'Site web de la structure'] || undefined,
+      capacity:
+        record[fm.capacity || "Capacité d'accueil de l'événement"] || undefined,
       registeredCount: undefined,
       partners: partners.length > 0 ? partners : undefined,
-      isFree: record[fm.tariff || 'Tarif']?.value === 'Gratuit' || !record[fm.price || 'Montant'],
+      isFree:
+        record[fm.tariff || 'Tarif']?.value === 'Gratuit' ||
+        !record[fm.price || 'Montant'],
       price: record[fm.price || 'Montant'] || undefined,
     };
   }
