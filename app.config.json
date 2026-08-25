@@ -92,7 +92,8 @@
       "title": "La super Carte Interactive - La Grande Semaine Végétale",
       "description": "Découvrez les ateliers cuisine, dégustations et événements végétaux près de chez vous",
       "ogTitle": "Carte Interactive - La Grande Semaine Végétale",
-      "ogDescription": "Découvrez les ateliers cuisine, dégustations et événements végétaux près de chez vous"
+      "ogDescription": "Découvrez les ateliers cuisine, dégustations et événements végétaux près de chez vous",
+      "iconRef": "https://lagrandesemainevegetale.fr/favicon.ico"
     },
     "home": {
       "heroTitle": "La Grande Semaine Végétale",
