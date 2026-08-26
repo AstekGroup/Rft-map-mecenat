@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { EventFilters, useConfig } from '@/hooks';
-import { EventType, EventTheme, TargetAudience, Partner } from '@/types/event';
+import { EventType, TargetAudience, LinkedTableRow } from '@/types/event';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { DateCustomRangeInputs } from '@/components/Filters/DateCustomRangeInputs';
 import { formatFrDateRangeLabel, isDateFilterActive } from '@/utils/eventDateRange';
@@ -11,11 +11,12 @@ interface EventFiltersBarProps {
   onUpdateFilters: (filters: Partial<EventFilters>) => void;
   onToggleRegion: (region: string) => void;
   onToggleType: (type: string) => void;
-  onToggleTheme: (theme: EventTheme) => void;
+  onToggleTheme: (themeId: string) => void;
   onTogglePartner: (partnerId: string) => void;
-  availablePartners: Partner[];
+  availablePartners: LinkedTableRow[];
   onToggleAudience: (audience: string) => void;
   onResetFilters: () => void;
+  availableThemes: LinkedTableRow[];
 }
 
 interface FilterDropdownProps {
@@ -70,14 +71,14 @@ export function EventFiltersBar({
   onToggleRegion,
   onToggleType,
   onToggleTheme,
-  onTogglePartner,
-  availablePartners,
-  onToggleAudience,
-  onResetFilters,
+   onTogglePartner,
+   availablePartners,
+   onToggleAudience,
+   availableThemes,
+   onResetFilters,
 }: EventFiltersBarProps) {
   const { helpers } = useConfig();
   const EVENT_TYPES = (helpers.getEnumList('eventTypes') as { id: EventType }[]).map(e => e.id);
-  const EVENT_THEMES = (helpers.getEnumList('eventThemes') as { id: string }[]).map(e => e.id) as EventTheme[];
   const AUDIENCES: TargetAudience[] = ['tout-public', 'familles-enfants', 'salaries-entreprise', 'professionnels', 'scolaires'];
   const { metropole: REGIONS_METRO, domtom: REGIONS_DOMTOM } = helpers.getRegionGroups();
   const hasActiveFilters =
@@ -134,12 +135,12 @@ export function EventFiltersBar({
       onRemove: () => onToggleType(type),
     });
   });
-
-  filters.themes.forEach((theme) => {
+  filters.themes.forEach((themeId) => {
+    const theme = availableThemes.find(t => t.id === themeId);
     activeTags.push({
-      key: `theme-${theme}`,
-      label: helpers.getEnumLabel('eventThemes', theme),
-      onRemove: () => onToggleTheme(theme),
+      key: `theme-${themeId}`,
+      label: theme?.name || themeId,
+      onRemove: () => onToggleTheme(themeId as any),
     });
   });
 
@@ -352,19 +353,19 @@ export function EventFiltersBar({
           badge={filters.themes.length || undefined}
         >
           <div className="p-2 space-y-1 min-w-[250px]">
-            {EVENT_THEMES.map((theme) => (
+            {availableThemes.map((theme) => (
               <label
-                key={theme}
+                key={theme.id}
                 className="flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-primary/5 transition-colors"
               >
                 <input
                   type="checkbox"
-                  checked={filters.themes.includes(theme)}
-                  onChange={() => onToggleTheme(theme)}
+                  checked={filters.themes.includes(theme.id)}
+                  onChange={() => onToggleTheme(theme.id as any)}
                   className="w-4 h-4 text-accent-pink border-primary/30 rounded focus:ring-accent-pink"
                 />
-                <span className={filters.themes.includes(theme) ? 'text-primary font-medium' : 'text-text-secondary'}>
-                  {helpers.getEnumLabel('eventThemes', theme)}
+                <span className={filters.themes.includes(theme.id) ? 'text-primary font-medium' : 'text-text-secondary'}>
+                  {theme.name}
                 </span>
               </label>
             ))}

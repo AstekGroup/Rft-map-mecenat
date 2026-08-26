@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { Event, Partner } from '@make-map/types';
+import type { Event, LinkedTableRow } from '@make-map/types';
 import { BaserowService } from '../baserow/baserow.service';
 
 interface CachedData {
@@ -7,8 +7,8 @@ interface CachedData {
   timestamp: number;
 }
 
-interface CachedPartners {
-  partners: Partner[];
+interface CachedLinkedTable {
+  values: LinkedTableRow[];
   timestamp: number;
 }
 
@@ -19,7 +19,8 @@ export class EventsService {
   // Cache en mémoire avec TTL
   private cache: CachedData | null = null;
   private devCache: CachedData | null = null;
-  private partnersCache: CachedPartners | null = null;
+  private partnersCache: CachedLinkedTable | null = null;
+  private themesCache: CachedLinkedTable | null = null;
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   constructor(private readonly baserowService: BaserowService) {}
@@ -53,18 +54,40 @@ export class EventsService {
   /**
    * Récupère tous les partenaires (avec cache TTL).
    */
-  async findAllPartners(): Promise<Partner[]> {
+  async findAllPartners(): Promise<LinkedTableRow[]> {
     if (
       this.partnersCache &&
       Date.now() - this.partnersCache.timestamp < this.CACHE_TTL
     ) {
-      return this.partnersCache.partners;
+      return this.partnersCache.values;
     }
 
     this.logger.log(`Cache miss partners, chargement depuis Baserow...`);
-    const partners = await this.baserowService.fetchPartners();
-    this.partnersCache = { partners, timestamp: Date.now() };
+    const partners = await this.baserowService.fetchLinkedTableRow(
+      'BASEROW_PARTNERS_TABLE',
+    );
+    this.partnersCache = { values: partners, timestamp: Date.now() };
     return partners;
+  }
+
+  /**
+   * Récupère tous les thèmes (avec cache TTL).
+   */
+  async findAllThemes(): Promise<LinkedTableRow[]> {
+    if (
+        this.themesCache &&
+        Date.now() - this.themesCache.timestamp < this.CACHE_TTL
+    ) {
+      return this.themesCache.values;
+    }
+
+    this.logger.log(`Cache miss themes, chargement depuis Baserow...`);
+
+    const themes = await this.baserowService.fetchLinkedTableRow(
+      'BASEROW_THEMATIQUES_TABLE',
+    );
+     this.themesCache = { values: themes, timestamp: Date.now() };
+    return themes;
   }
 
   /**

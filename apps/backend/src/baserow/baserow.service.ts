@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { Event, Partner } from '@make-map/types';
+import type { Event, LinkedTableRow } from '@make-map/types';
 import type {
   BaserowRecord,
   BaserowResponse,
@@ -10,7 +10,6 @@ import {
   mapFormat,
   mapTargetAudience,
   mapModality,
-  mapThemes,
   extractImageUrl,
   computeIsDuringWeek,
   parseDateTime,
@@ -40,9 +39,16 @@ export class BaserowService {
     );
 
     // 1. Récupérer les partenaires
-    const partnersMap = await this.fetchPartnersMap();
+    const partnersMap = await this.fetchLinkedTableMap(
+      'BASEROW_PARTNERS_TABLE',
+    );
 
-    // 2. Récupérer les enregistrements bruts
+    // 2. Récupérer les thématiques
+    const themesMap = await this.fetchLinkedTableMap(
+      'BASEROW_THEMATIQUES_TABLE',
+    );
+
+    // 3. Récupérer les enregistrements bruts
     const records = await this.fetchRecords(devMode);
     this.logger.log(
       `${records.length} enregistrements récupérés depuis Baserow`,
@@ -50,7 +56,7 @@ export class BaserowService {
 
     // 3. Transformer sans géocodage
     const partialEvents = records.map((r) =>
-      this.transformRecord(r, partnersMap),
+      this.transformRecord(r, partnersMap, themesMap),
     );
 
     // 4. Préparer le batch geocoding (seulement pour les événements présentiels)
@@ -96,10 +102,10 @@ export class BaserowService {
   }
 
   /**
-   * Récupère tous les partenaires depuis Baserow.
+   * Récupère les éléments des tables depuis Baserow.
    */
-  async fetchPartners(): Promise<Partner[]> {
-    const map = await this.fetchPartnersMap();
+  async fetchLinkedTableRow(tableName: string): Promise<LinkedTableRow[]> {
+    const map = await this.fetchLinkedTableMap(tableName);
     return Array.from(map.values()).sort((a, b) =>
       a.name.localeCompare(b.name),
     );
@@ -108,28 +114,28 @@ export class BaserowService {
   /**
    * Récupère les partenaires et les retourne sous forme de Map (id -> Partner).
    */
-  private async fetchPartnersMap(): Promise<Map<string, Partner>> {
+  private async fetchLinkedTableMap(
+    tableName: string,
+  ): Promise<Map<string, LinkedTableRow>> {
     const apiToken = this.configService.get<string>('BASEROW_API_TOKEN');
     const apiUrl = this.configService.get<string>('BASEROW_API_URL');
-    const partnersTableId = this.configService.get<string>(
-      'BASEROW_PARTNERS_TABLE_ID',
-    );
+    const linkedTableId = this.configService.get<string>(tableName + '_ID');
 
-    if (!apiToken || !apiUrl || !partnersTableId) {
+    if (!apiToken || !apiUrl || !linkedTableId) {
       this.logger.warn(
-        'Configuration des partenaires manquante (BASEROW_PARTNERS_TABLE_ID). Aucun partenaire ne sera chargé.',
+        `Configuration manquante pour la table ${tableName}. Aucun élément ne sera chargé`,
       );
       return new Map();
     }
 
     try {
-      const partnersMap = new Map<string, Partner>();
+      const linkedTableMap = new Map<string, LinkedTableRow>();
       let page = 1;
       let hasNext = true;
 
       while (hasNext) {
         const url = new URL(
-          `${apiUrl}/api/database/rows/table/${partnersTableId}/`,
+          `${apiUrl}/api/database/rows/table/${linkedTableId}/`,
         );
         url.searchParams.set('user_field_names', 'true');
         url.searchParams.set('size', '200');
@@ -141,7 +147,7 @@ export class BaserowService {
 
         if (!response.ok) {
           throw new Error(
-            `Erreur Baserow Partners: ${response.status} ${response.statusText}`,
+            `Erreur Baserow pour la table ${tableName}: ${response.status} ${response.statusText}`,
           );
         }
 
@@ -149,7 +155,7 @@ export class BaserowService {
           (await response.json()) as BaserowResponse<BaserowPartnerRecord>;
 
         for (const record of data.results) {
-          partnersMap.set(String(record.id), {
+          linkedTableMap.set(String(record.id), {
             id: String(record.id),
             name: record.Nom,
             logoUrl: extractImageUrl(record.Logo),
@@ -163,11 +169,13 @@ export class BaserowService {
         }
       }
 
-      this.logger.log(`${partnersMap.size} partenaires récupérés`);
-      return partnersMap;
+      this.logger.log(
+        `${linkedTableMap.size} éléments récupérés à partir de la table ${tableName}`,
+      );
+      return linkedTableMap;
     } catch (error) {
       this.logger.error(
-        `Erreur lors de la récupération des partenaires: ${error.message}`,
+        `Erreur lors de la récupération des éléments à partir de la table ${tableName}: ${error.message}`,
       );
       return new Map();
     }
@@ -236,7 +244,6 @@ export class BaserowService {
     return records;
   }
 
-
   private get fm(): Record<string, string> {
     return this.appConfig.get()?.baserow.fieldMapping || {};
   }
@@ -250,7 +257,8 @@ export class BaserowService {
    */
   private transformRecord(
     record: BaserowRecord,
-    partnersMap: Map<string, Partner>,
+    partnersMap: Map<string, LinkedTableRow>,
+    thematiquesMap: Map<string, LinkedTableRow>,
   ): Event {
     const fm = this.fm;
 
@@ -266,7 +274,6 @@ export class BaserowService {
       | undefined;
     const modalityMap = this.mm?.modality as Record<string, string> | undefined;
     const audienceMap = this.mm?.audience as Record<string, string> | undefined;
-    const themeMap = this.mm?.theme as Record<string, string> | undefined;
 
     const { format, type } = mapFormat(
       record[fm.format || 'Format'],
@@ -282,11 +289,10 @@ export class BaserowService {
       audienceMap as any,
       this.appConfig.get()?.baserow.mappingHints?.audience as any,
     );
-    const themes = mapThemes(
-      record[fm.theme || 'Thématique'],
-      themeMap as any,
-      this.appConfig.get()?.baserow.mappingHints?.theme as any,
-    );
+
+    const themes: LinkedTableRow[] = (record[fm.theme || 'Thématiques'] || [])
+      .map((linkedRow: any) => thematiquesMap.get(String(linkedRow.id)))
+      .filter((p): p is LinkedTableRow => !!p);
 
     const imageUrl = extractImageUrl(
       record[fm.image || "Visuel de l'évènement"],
@@ -310,9 +316,11 @@ export class BaserowService {
     const fallbackRegion =
       this.geocodingService.getRegionFromPostalCode(postalCode);
 
-    const partners: Partner[] = (record[fm.partnerField || 'Partenaires'] || [])
+    const partners: LinkedTableRow[] = (
+      record[fm.partnerField || 'Partenaires'] || []
+    )
       .map((linkedRow: any) => partnersMap.get(String(linkedRow.id)))
-      .filter((p): p is Partner => !!p);
+      .filter((p): p is LinkedTableRow => !!p);
 
     return {
       id: String(record.id),

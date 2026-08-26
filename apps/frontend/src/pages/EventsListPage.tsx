@@ -23,6 +23,7 @@ export function EventsListPage() {
     availablePartners,
     toggleAudience,
     stats,
+    availableThemes,
   } = useEvents();
 
   const searchParamsKey = searchParams.toString();
@@ -141,6 +142,7 @@ export function EventsListPage() {
         availablePartners={availablePartners}
         onToggleAudience={(audience) => toggleAudience(audience as TargetAudience)}
         onResetFilters={handleResetFilters}
+        availableThemes={availableThemes}
       />
       
       {/* Event list grid with pagination */}

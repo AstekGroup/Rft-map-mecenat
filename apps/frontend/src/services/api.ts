@@ -5,7 +5,7 @@
  * Tout passe par le backend qui sécurise le token et le cache.
  */
 
-import type { Event, EventsGeoJSON, GeoJSONEvent, Partner, AppConfig } from '@/types/event';
+import {Event, EventsGeoJSON, GeoJSONEvent, AppConfig, LinkedTableRow} from '@/types/event';
 
 // En prod : VITE_API_URL vide = chemins relatifs (/api/events), proxiés par Caddy
 // En dev  : VITE_API_URL = http://localhost:3000
@@ -38,8 +38,20 @@ export async function fetchEvents(devMode = false): Promise<Event[]> {
 /**
  * Récupère tous les partenaires depuis le backend.
  */
-export async function fetchPartners(): Promise<Partner[]> {
+export async function fetchPartners(): Promise<LinkedTableRow[]> {
   const response = await fetch(`${API_BASE}/api/events/partners`);
+  if (!response.ok) {
+    throw new Error(`Erreur API: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Récupère toues les thématiques depuis le backend.
+ */
+export async function fetchThemes(): Promise<LinkedTableRow[]> {
+  const response = await fetch(`${API_BASE}/api/events/themes`);
   if (!response.ok) {
     throw new Error(`Erreur API: ${response.status} ${response.statusText}`);
   }

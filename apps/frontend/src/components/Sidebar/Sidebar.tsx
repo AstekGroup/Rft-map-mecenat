@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Event, EventTheme, Partner } from '@/types/event';
+import { Event, LinkedTableRow } from '@/types/event';
 import { EventFilters } from '@/hooks';
 import { EventCard } from './EventCard';
 import { FilterPanel } from '@/components/Filters/FilterPanel';
@@ -13,9 +13,9 @@ interface SidebarProps {
   onUpdateFilters: (filters: Partial<EventFilters>) => void;
   onToggleRegion: (region: string) => void;
   onToggleType: (type: string) => void;
-  onToggleTheme: (theme: EventTheme) => void;
+  onToggleTheme: (themeId: string) => void;
   onTogglePartner: (partnerId: string) => void;
-  availablePartners: Partner[];
+  availablePartners: LinkedTableRow[];
   onToggleAudience: (audience: string) => void;
   onResetFilters: () => void;
   selectedEvent: Event | null;
@@ -28,6 +28,7 @@ interface SidebarProps {
     duringWeek: number;
   };
   mapBounds?: MapBounds | null;
+  availableThemes: LinkedTableRow[];
 }
 
 export function Sidebar({
@@ -47,6 +48,7 @@ export function Sidebar({
   onHoverEvent,
   stats,
   mapBounds,
+  availableThemes,
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<'list' | 'filters'>('list');
@@ -248,6 +250,7 @@ export function Sidebar({
             onToggleAudience={onToggleAudience}
             onResetFilters={onResetFilters}
             stats={stats}
+            availableThemes={availableThemes}
           />
         )}
       </div>

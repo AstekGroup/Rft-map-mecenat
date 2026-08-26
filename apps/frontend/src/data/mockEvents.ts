@@ -1,4 +1,4 @@
-import { Event, EventType, EventFormat, TargetAudience, EventsGeoJSON, GeoJSONEvent, EventModality, EVENT_TYPES_ALL, EventTheme } from '@/types/event';
+import { Event, EventType, EventFormat, TargetAudience, EventsGeoJSON, GeoJSONEvent, EventModality, EVENT_TYPES_ALL, EventTheme, LinkedTableRow } from '@/types/event';
 
 // Coordonnées des principales villes françaises par région
 const CITIES: Record<string, { name: string; lat: number; lng: number; department: string; postalCode: string }[]> = {
@@ -159,6 +159,27 @@ const EVENT_THEMES: EventTheme[] = [
   'autre',
 ];
 
+const THEME_LABELS: Record<EventTheme, string> = {
+  'cuisine-vegetale': 'Cuisine végétale',
+  'sante-nutrition': 'Santé & nutrition',
+  'biodiversite': 'Biodiversité',
+  'agriculture': 'Agriculture',
+  'climat-environnement': 'Climat & environnement',
+  autre: 'Autres',
+};
+
+const THEME_TO_LINKED: LinkedTableRow[] = EVENT_THEMES.map(id => ({
+  id,
+  name: THEME_LABELS[id],
+}));
+
+// Sélectionner plusieurs thématiques aléatoirement
+function getRandomThemes(): LinkedTableRow[] {
+  const count = 1 + Math.floor(Math.random() * 2);
+  const shuffled = [...THEME_TO_LINKED].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
 const EVENT_TITLES: Record<EventType, string[]> = {
   'atelier-cuisine': [
     'Atelier Cuisine : Les légumineuses à l\'honneur',
@@ -287,13 +308,6 @@ function generateEndDateTime(date: string, time: string): { endDate: string; end
 function getRandomTargetAudiences(): TargetAudience[] {
   const count = 1 + Math.floor(Math.random() * 2);
   const shuffled = [...TARGET_AUDIENCES].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
-}
-
-// Sélectionner plusieurs thématiques aléatoirement
-function getRandomThemes(): EventTheme[] {
-  const count = 1 + Math.floor(Math.random() * 2);
-  const shuffled = [...EVENT_THEMES].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
 }
 

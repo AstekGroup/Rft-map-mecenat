@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useEvents } from './useEvents';
 import * as api from '@/services/api';
-import type { Event, Partner } from '@/types/event';
+import type { Event, LinkedTableRow } from '@/types/event';
 
 vi.mock('@/services/api');
 
@@ -21,7 +21,7 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
     latitude: 48.8566,
     longitude: 2.3522,
     type: 'atelier-cuisine',
-    themes: ['autre'],
+    themes: [{ id: 'autre', name: 'Autres' }],
     organizer: 'Org Test',
     isDuringWeek: true,
     modality: 'presentiel',
@@ -32,7 +32,7 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
   };
 }
 
-const mockPartner: Partner = {
+const mockPartner: LinkedTableRow = {
   id: 'part1',
   name: 'Partenaire Test',
   logoUrl: 'https://test.com/logo.png',

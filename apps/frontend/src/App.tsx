@@ -21,6 +21,7 @@ function App() {
     availablePartners,
     toggleAudience,
     stats,
+    availableThemes,
   } = useEvents();
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -94,6 +95,7 @@ function App() {
         hoveredEvent={hoveredEvent}
         onHoverEvent={setHoveredEvent}
         stats={stats}
+        availableThemes={availableThemes}
       />
 
       {/* Badge compteur mobile */}
