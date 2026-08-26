@@ -142,7 +142,7 @@ export function EventListView({ events }: EventListViewProps) {
                       <p className="flex items-start gap-2">
                         <BookOpen className="w-4 h-4 text-accent-pink flex-shrink-0 mt-0.5" />
                         <span className="line-clamp-1 font-medium italic">
-                          {event.themes.map(t => helpers.getEnumLabel('eventThemes', t)).join(', ')}
+                          {event.themes.map(t => t.name).join(', ')}
                         </span>
                       </p>
                     )}

@@ -55,14 +55,6 @@
     "modalities": [
       { "id": "presentiel", "label": "En présentiel" },
       { "id": "distanciel", "label": "En ligne" }
-    ],
-    "eventThemes": [
-      { "id": "cuisine-vegetale", "label": "Cuisine végétale" },
-      { "id": "sante-nutrition", "label": "Santé & nutrition" },
-      { "id": "biodiversite", "label": "Biodiversité" },
-      { "id": "agriculture", "label": "Agriculture" },
-      { "id": "climat-environnement", "label": "Climat & environnement" },
-      { "id": "autre", "label": "Autres" }
     ]
   },
 
@@ -158,7 +150,7 @@
       "dateWeekendOct": "Week-end du 4-5 octobre",
       "dateCustom": "Dates personnalisées",
       "type": "Type d'événement",
-      "theme": "Thématique",
+      "theme": "Thématiques",
       "audience": "Public cible",
       "region": "Région",
       "partner": "Partenaires",
@@ -208,7 +200,7 @@
       "format": "Format",
       "modality": "Type de l'événement",
       "audience": "Public",
-      "theme": "Thématique",
+      "theme": "Thématiques",
       "image": "Visuel de l'évènement",
       "address": "Adresse du lieu",
       "postalCode": "Code postal du lieu",

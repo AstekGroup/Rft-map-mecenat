@@ -29,6 +29,7 @@ export function MapPage() {
     availablePartners,
     toggleAudience,
     stats,
+    availableThemes,
   } = useEvents();
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -165,6 +166,7 @@ export function MapPage() {
           onHoverEvent={setHoveredEvent}
           stats={stats}
           mapBounds={mapBounds}
+          availableThemes={availableThemes}
         />
       </div>
 
@@ -191,6 +193,7 @@ export function MapPage() {
             onHoverEvent={setHoveredEvent}
             stats={stats}
             mapBounds={mapBounds}
+            availableThemes={availableThemes}
           />
         </div>
       )}

@@ -45,7 +45,7 @@ export type EventTheme =
   | 'climat-environnement'
   | 'autre';
 
-export interface Partner {
+export interface LinkedTableRow {
   id: string;
   name: string;
   logoUrl?: string;
@@ -67,7 +67,7 @@ export interface Event {
   latitude: number;
   longitude: number;
   type: EventType;
-  themes: EventTheme[];
+  themes: LinkedTableRow[];
   organizer: string;
   organizerContact?: string;
   registrationUrl?: string;
@@ -84,7 +84,7 @@ export interface Event {
   organizerWebsite?: string;
   capacity?: number;
   registeredCount?: number;
-  partners?: Partner[];
+  partners?: LinkedTableRow[];
   price?: number;
   isFree: boolean;
 }

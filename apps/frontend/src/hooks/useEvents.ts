@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Event, EventType, EventTheme, TargetAudience, EventsGeoJSON, Partner, EVENT_TYPES_ALL } from '@/types/event';
-import { fetchEvents, fetchPartners, eventsToGeoJSON } from '@/services/api';
+import { Event, EventType, TargetAudience, EventsGeoJSON, EVENT_TYPES_ALL, LinkedTableRow } from '@/types/event';
+import {fetchEvents, fetchPartners, eventsToGeoJSON, fetchThemes} from '@/services/api';
 import type { DateFilterMode } from '@/utils/eventDateRange';
 import { eventIntersectsYmdRange } from '@/utils/eventDateRange';
 
@@ -13,7 +13,7 @@ export interface EventFilters {
   dateTo: string;
   regions: string[];
   types: EventType[];
-  themes: EventTheme[];
+  themes: string[]; // IDs des thèmes (LinkedTableRow)
   partners: string[]; // Partner IDs
   audiences: TargetAudience[];
   postalCode: string;
@@ -38,7 +38,8 @@ const initialFilters: EventFilters = {
 
 export function useEvents() {
   const [events, setEvents] = useState<Event[]>([]);
-  const [availablePartners, setAvailablePartners] = useState<Partner[]>([]);
+  const [availablePartners, setAvailablePartners] = useState<LinkedTableRow[]>([]);
+  const [availableThemes, setAvailableThemes] = useState<LinkedTableRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [filters, setFilters] = useState<EventFilters>(initialFilters);
@@ -52,13 +53,15 @@ export function useEvents() {
         setError(null);
         
         // Charger événements et partenaires en parallèle
-        const [eventsData, partnersData] = await Promise.all([
+        const [eventsData, partnersData, themesData] = await Promise.all([
           fetchEvents(devMode),
-          fetchPartners()
+          fetchPartners(),
+          fetchThemes()
         ]);
         
         setEvents(eventsData);
         setAvailablePartners(partnersData);
+        setAvailableThemes(themesData);
       } catch (err) {
         console.error('[useEvents] Erreur lors du chargement:', err);
         setError(err instanceof Error ? err : new Error('Erreur lors du chargement des données'));
@@ -77,7 +80,6 @@ export function useEvents() {
     return d;
   }, []);
 
-  // Filtrer les événements
   const filteredEvents = useMemo(() => {
     return events.filter(event => {
       // Filtre événements passés (par défaut on masque les passés)
@@ -123,9 +125,9 @@ export function useEvents() {
       // Filtre types
       if (filters.types.length > 0 && !filters.types.includes(event.type)) return false;
 
-      // Filtre thématiques
+      // Filtre thématiques - maintenant filter sur les IDs de thèmes (string)
       if (filters.themes.length > 0) {
-        const hasMatchingTheme = event.themes.some(theme => filters.themes.includes(theme));
+        const hasMatchingTheme = event.themes.some(theme => filters.themes.includes(theme.id));
         if (!hasMatchingTheme) return false;
       }
 
@@ -189,12 +191,12 @@ export function useEvents() {
     }));
   };
 
-  const toggleTheme = (theme: EventTheme) => {
+  const toggleTheme = (themeId: string) => {
     setFilters(prev => ({
       ...prev,
-      themes: prev.themes.includes(theme)
-        ? prev.themes.filter(t => t !== theme)
-        : [...prev.themes, theme],
+      themes: prev.themes.includes(themeId)
+        ? prev.themes.filter(t => t !== themeId)
+        : [...prev.themes, themeId],
     }));
   };
 
@@ -240,6 +242,7 @@ export function useEvents() {
     ) as Record<string, number>,
   }), [events, filteredEvents]);
 
+
   return {
     events: filteredEvents,
     allEvents: events,
@@ -258,5 +261,6 @@ export function useEvents() {
     stats,
     devMode,
     toggleDevMode,
+    availableThemes,
   };
 }

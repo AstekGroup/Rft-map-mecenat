@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { EventsController } from './events.controller';
 import { EventsService } from './events.service';
-import type { Event, Partner } from '@make-map/types';
+import type { Event, LinkedTableRow } from '@make-map/types';
 
 const mockEvent: Event = {
   id: 'rec123',
@@ -18,7 +18,7 @@ const mockEvent: Event = {
   latitude: 45.76,
   longitude: 4.83,
   type: 'atelier-cuisine',
-  themes: ['autre'],
+  themes: [{ id: 'autre', name: 'Autres' }],
   organizer: 'Lab IA',
   isDuringWeek: true,
   modality: 'presentiel',
@@ -27,7 +27,7 @@ const mockEvent: Event = {
   isFree: true,
 };
 
-const mockPartner: Partner = {
+const mockPartner: LinkedTableRow = {
   id: 'part1',
   name: 'Partenaire Test',
   logoUrl: 'https://test.com/logo.png',

@@ -316,10 +316,10 @@ export function EventDetailPage() {
                   <div className="flex flex-wrap gap-2">
                     {event.themes.map((theme) => (
                       <span
-                        key={theme}
+                        key={theme.id}
                         className="text-sm font-medium text-primary bg-white border border-primary/10 px-3 py-1 rounded-full shadow-sm"
                       >
-                        {helpers.getEnumLabel('eventThemes', theme)}
+                        {theme.name}
                       </span>
                     ))}
                   </div>

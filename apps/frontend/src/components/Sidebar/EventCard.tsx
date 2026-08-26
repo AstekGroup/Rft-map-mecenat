@@ -118,7 +118,7 @@ function EventCardComponent({
               <div className="flex items-center gap-1.5 text-xs text-text-secondary font-medium">
                 <BookOpen className="w-3.5 h-3.5 text-accent-pink flex-shrink-0" />
                 <span className="truncate italic">
-                  {event.themes.map(t => helpers.getEnumLabel('eventThemes', t)).join(', ')}
+                  {event.themes.map(t => t.name).join(', ')}
                 </span>
               </div>
             )}
