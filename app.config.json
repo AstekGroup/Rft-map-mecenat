@@ -6,8 +6,8 @@
     "shortName": "LGSV",
     "description": "Supper Carte interactive des événements de La Grande Semaine Végétale",
     "eventDates": {
-      "weekStart": "2026-10-25",
-      "weekEnd": "2026-11-04"
+      "weekStart": "2026-09-21",
+      "weekEnd": "2026-09-27"
     },
     "url": "https://lagrandesemainevegetale.fr",
     "locale": "fr"
@@ -144,11 +144,6 @@
       "presentiel": "Présentiel",
       "distanciel": "En ligne",
       "date": "Date",
-      "dateAll": "Toutes les dates",
-      "dateDuringWeek": "Pendant La Grande Semaine Végétale",
-      "dateWeekendSept": "Week-end des 26-27 septembre",
-      "dateWeekendOct": "Week-end du 4-5 octobre",
-      "dateCustom": "Dates personnalisées",
       "type": "Type d'événement",
       "theme": "Thématiques",
       "audience": "Public cible",
@@ -173,16 +168,10 @@
     "showPastEvents": false,
     "defaultModality": "all",
     "dateFilterModes": [
-      "all",
-      "during-week",
-      "weekend-sept",
-      "weekend-oct",
-      "custom"
-    ],
-    "dateRanges": {
-      "weekend-sept": { "start": "2026-09-26", "end": "2026-09-27" },
-      "weekend-oct": { "start": "2026-10-04", "end": "2026-10-05" }
-    }
+      { "mode": "all", "label": "Toutes les dates" },
+      { "mode": "during-week", "label": "Pendant La Grande Semaine Végétale !" },
+      { "mode": "custom", "label": "Dates personnalisées" }
+    ]
   },
 
   "baserow": {

@@ -32,11 +32,15 @@ export interface AppConfigTexts {
   footer: Record<string, string>;
 }
 
+export interface AppConfigDateFilterMode {
+  mode: string;
+  label: string;
+}
+
 export interface AppConfigFilters {
   showPastEvents: boolean;
   defaultModality: string;
-  dateFilterModes: string[];
-  dateRanges?: Record<string, { start: string; end: string }>;
+  dateFilterModes: AppConfigDateFilterMode[];
 }
 
 export interface AppConfigMap {

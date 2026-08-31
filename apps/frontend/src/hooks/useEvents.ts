@@ -106,18 +106,12 @@ export function useEvents() {
       if (filters.modality !== 'all' && event.modality !== filters.modality) return false;
 
       // Filtre date
-      if (filters.dateFilter === 'during-week' && !event.isDuringWeek) return false;
-      if (filters.dateFilter === 'weekend-sept') {
-        if (!eventIntersectsYmdRange(event, '2026-09-26', '2026-09-27')) return false;
-      }
-      if (filters.dateFilter === 'weekend-oct') {
-        if (!eventIntersectsYmdRange(event, '2026-10-04', '2026-10-05')) return false;
-      }
-      if (filters.dateFilter === 'custom' && filters.dateFrom) {
-        const rangeStart = filters.dateFrom.slice(0, 10);
-        const rangeEnd = (filters.dateTo || filters.dateFrom).slice(0, 10);
-        if (!eventIntersectsYmdRange(event, rangeStart, rangeEnd)) return false;
-      }
+       if (filters.dateFilter === 'during-week' && !event.isDuringWeek) return false;
+       if (filters.dateFilter === 'custom' && filters.dateFrom) {
+         const rangeStart = filters.dateFrom.slice(0, 10);
+         const rangeEnd = (filters.dateTo || filters.dateFrom).slice(0, 10);
+         if (!eventIntersectsYmdRange(event, rangeStart, rangeEnd)) return false;
+       }
 
       // Filtre régions
       if (filters.regions.length > 0 && !filters.regions.includes(event.region)) return false;

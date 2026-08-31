@@ -1,12 +1,10 @@
 import type { Event } from '@/types/event';
 
-export type DateFilterMode = 'all' | 'during-week' | 'custom' | 'weekend-sept' | 'weekend-oct';
+export type DateFilterMode = 'all' | 'during-week' | 'custom';
 
 export function isDateFilterActive(dateFilter: DateFilterMode, dateFrom: string): boolean {
   return (
     dateFilter === 'during-week' ||
-    dateFilter === 'weekend-sept' ||
-    dateFilter === 'weekend-oct' ||
     (dateFilter === 'custom' && !!dateFrom)
   );
 }

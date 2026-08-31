@@ -7,7 +7,6 @@ export interface ConfigHelpers {
   getEnumList: (category: keyof AppConfig['enums']) => AppConfig['enums'][keyof AppConfig['enums']];
   getText: (section: string, key: string) => string;
   getRegionGroups: () => { metropole: string[]; domtom: string[] };
-  getDateRange: (mode: string) => { start: string; end: string } | null;
 }
 
 export interface ConfigContextValue {
@@ -111,9 +110,6 @@ export function buildHelpers(config: AppConfig | null): ConfigHelpers {
         metropole: FALLBACK_REGIONS.filter(r => !DOMTOM.includes(r)),
         domtom: DOMTOM,
       };
-    },
-    getDateRange(mode) {
-      return config?.filters?.dateRanges?.[mode] || null;
     },
   };
 }

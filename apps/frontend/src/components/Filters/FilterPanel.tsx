@@ -39,10 +39,16 @@ export function FilterPanel({
   onResetFilters,
   availableThemes,
 }: FilterPanelProps) {
-  const { helpers } = useConfig();
+  const { config, helpers } = useConfig();
   const EVENT_TYPES = (helpers.getEnumList('eventTypes') as { id: EventType }[]).map(e => e.id);
   const AUDIENCES: TargetAudience[] = ['tout-public', 'familles-enfants', 'salaries-entreprise', 'professionnels', 'scolaires'];
   const { metropole: REGIONS_METRO, domtom: REGIONS_DOMTOM } = helpers.getRegionGroups();
+  
+  const dateFilterModes = config?.filters?.dateFilterModes || [
+    { mode: 'all', label: 'Toutes les dates' },
+    { mode: 'during-week', label: 'Pendant la semaine de ...' },
+    { mode: 'custom', label: 'Dates personnalisées' },
+  ];
   const hasActiveFilters =
     filters.search ||
     filters.postalCode ||
@@ -87,32 +93,29 @@ export function FilterPanel({
           defaultOpen={isDateFilterActive(filters.dateFilter, filters.dateFrom)}
         >
           <div className="space-y-2">
-            {[
-              { value: 'all', label: 'Toutes les dates' },
-              { value: 'during-week', label: 'La Grande Semaine Végétale' },
-              { value: 'weekend-sept', label: 'Weekend du 26-27 septembre' },
-              { value: 'weekend-oct', label: 'Weekend du 4-5 octobre' },
-              { value: 'custom', label: 'Plage au calendrier' },
-            ].map((option) => (
-              <label
-                key={option.value}
-                className="flex items-center gap-3 cursor-pointer group"
-              >
-                <input
-                  type="radio"
-                  name="dateFilter"
-                  value={option.value}
-                  checked={filters.dateFilter === option.value}
-                  onChange={() =>
-                    onUpdateFilters({ dateFilter: option.value as EventFilters['dateFilter'] })
-                  }
-                  className="w-4 h-4 text-primary border-primary/30 focus:ring-primary"
-                />
-                <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-                  {option.label}
-                </span>
-              </label>
-            ))}
+            {dateFilterModes.map((modeObj) => {
+              const mode = modeObj.mode;
+              return (
+                <label
+                  key={mode}
+                  className="flex items-center gap-3 cursor-pointer group"
+                >
+                  <input
+                    type="radio"
+                    name="dateFilter"
+                    value={mode}
+                    checked={filters.dateFilter === mode}
+                    onChange={() =>
+                      onUpdateFilters({ dateFilter: mode as EventFilters['dateFilter'] })
+                    }
+                    className="w-4 h-4 text-primary border-primary/30 focus:ring-primary"
+                  />
+                  <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
+                    {modeObj.label || mode}
+                  </span>
+                </label>
+              );
+            })}
             {filters.dateFilter === 'custom' && (
               <DateCustomRangeInputs filters={filters} onUpdateFilters={onUpdateFilters} />
             )}

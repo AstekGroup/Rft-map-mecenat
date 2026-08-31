@@ -71,16 +71,23 @@ export function EventFiltersBar({
   onToggleRegion,
   onToggleType,
   onToggleTheme,
-   onTogglePartner,
-   availablePartners,
-   onToggleAudience,
-   availableThemes,
-   onResetFilters,
+  onTogglePartner,
+  availablePartners,
+  onToggleAudience,
+  availableThemes,
+  onResetFilters,
 }: EventFiltersBarProps) {
-  const { helpers } = useConfig();
+  const { config, helpers } = useConfig();
   const EVENT_TYPES = (helpers.getEnumList('eventTypes') as { id: EventType }[]).map(e => e.id);
   const AUDIENCES: TargetAudience[] = ['tout-public', 'familles-enfants', 'salaries-entreprise', 'professionnels', 'scolaires'];
   const { metropole: REGIONS_METRO, domtom: REGIONS_DOMTOM } = helpers.getRegionGroups();
+  
+const dateFilterModes = config?.filters?.dateFilterModes || [
+  { mode: 'all', label: 'Toutes les dates' },
+  { mode: 'during-week', label: 'Pendant la semaine De ...' },
+  { mode: 'custom', label: 'Dates personnalisées' },
+];
+
   const hasActiveFilters =
     filters.search ||
     filters.postalCode ||
@@ -111,18 +118,12 @@ export function EventFiltersBar({
         onUpdateFilters({ dateFilter: 'all', dateFrom: '', dateTo: '' }),
     });
   } else if (
-    filters.dateFilter === 'during-week' || 
-    filters.dateFilter === 'weekend-sept' ||
-    filters.dateFilter === 'weekend-oct'
+    filters.dateFilter === 'during-week'
   ) {
-    const dateLabels: Record<string, string> = {
-      'during-week': 'La Grande Semaine Végétale',
-      'weekend-sept': 'Weekend du 26-27 septembre',
-      'weekend-oct': 'Weekend du 4-5 octobre',
-    };
+    const duringWeekMode = dateFilterModes.find(m => m.mode === 'during-week');
     activeTags.push({
       key: 'date',
-      label: dateLabels[filters.dateFilter],
+      label: duringWeekMode?.label || 'Pendant La Semaine De ...',
       onRemove: () =>
         onUpdateFilters({ dateFilter: 'all', dateFrom: '', dateTo: '' }),
     });
@@ -247,27 +248,24 @@ export function EventFiltersBar({
           badge={isDateFilterActive(filters.dateFilter, filters.dateFrom) ? 1 : undefined}
         >
           <div className="p-2 space-y-1">
-            {[
-              { value: 'all', label: 'Toutes les dates' },
-              { value: 'during-week', label: 'La Grande Semaine Végétale' },
-              { value: 'weekend-sept', label: 'Weekend du 26-27 septembre' },
-              { value: 'weekend-oct', label: 'Weekend du 4-5 octobre' },
-              { value: 'custom', label: 'Plage au calendrier' },
-            ].map((option) => (
-              <button
-                key={option.value}
-                onClick={() =>
-                  onUpdateFilters({ dateFilter: option.value as EventFilters['dateFilter'] })
-                }
-                className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                  filters.dateFilter === option.value
-                    ? 'bg-primary/10 text-primary font-medium'
-                    : 'text-text-secondary hover:bg-primary/5'
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
+            {dateFilterModes.map((modeObj) => {
+              const mode = modeObj.mode;
+              return (
+                <button
+                  key={mode}
+                  onClick={() =>
+                    onUpdateFilters({ dateFilter: mode as EventFilters['dateFilter'] })
+                  }
+                  className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                    filters.dateFilter === mode
+                      ? 'bg-primary/10 text-primary font-medium'
+                      : 'text-text-secondary hover:bg-primary/5'
+                  }`}
+                >
+                  {modeObj.label || mode}
+                </button>
+              );
+            })}
             {filters.dateFilter === 'custom' && (
               <DateCustomRangeInputs filters={filters} onUpdateFilters={onUpdateFilters} compact />
             )}
