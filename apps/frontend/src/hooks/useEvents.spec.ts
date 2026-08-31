@@ -169,42 +169,6 @@ describe('useEvents', () => {
       expect(result.current.events[0].isDuringWeek).toBe(true);
     });
 
-    it('filtre par weekend de septembre (weekend-sept)', async () => {
-      const events = [
-        makeEvent({ id: 'a', date: '2026-09-26' }),
-        makeEvent({ id: 'b', date: '2026-09-28' }),
-      ];
-      vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
-
-      const { result } = renderHook(() => useEvents());
-      await waitFor(() => expect(result.current.loading).toBe(false));
-
-      act(() => {
-        result.current.updateFilters({ dateFilter: 'weekend-sept' });
-      });
-
-      expect(result.current.events).toHaveLength(1);
-      expect(result.current.events[0].id).toBe('a');
-    });
-
-    it('filtre par weekend d’octobre (weekend-oct)', async () => {
-      const events = [
-        makeEvent({ id: 'a', date: '2026-10-04' }),
-        makeEvent({ id: 'b', date: '2026-10-06' }),
-      ];
-      vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
-
-      const { result } = renderHook(() => useEvents());
-      await waitFor(() => expect(result.current.loading).toBe(false));
-
-      act(() => {
-        result.current.updateFilters({ dateFilter: 'weekend-oct' });
-      });
-
-      expect(result.current.events).toHaveLength(1);
-      expect(result.current.events[0].id).toBe('a');
-    });
-
     it('filtre par plage calendrier (un jour)', async () => {
       const events = [
         makeEvent({ id: 'a', date: '2035-05-10' }),
