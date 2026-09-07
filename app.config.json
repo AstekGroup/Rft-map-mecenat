@@ -26,59 +26,6 @@
     }
   },
 
-  "enums": {
-    "eventTypes": [
-      { "id": "atelier-cuisine", "label": "Atelier de cuisine", "color": "#3BAE5D" },
-      { "id": "degustation", "label": "Dégustation ou menu végétal", "color": "#F4C542" },
-      { "id": "visite-jardin", "label": "Visite de jardin / potager ou cueillette", "color": "#A7D7B5" },
-      { "id": "atelier-pedagogique", "label": "Atelier pédagogique ou formation", "color": "#1F7A3E" },
-      { "id": "conference", "label": "Conférence/webinaire/table-ronde", "color": "#E46A5D" },
-      { "id": "festival", "label": "Festival", "color": "#FF8C00" },
-      { "id": "autre", "label": "Autres", "color": "#D9D9D9" }
-    ],
-    "eventFormats": [
-      { "id": "atelier-cuisine", "label": "Atelier de cuisinessss" },
-      { "id": "degustation", "label": "Dégustation ou menu végétal" },
-      { "id": "visite-jardin", "label": "Visite de jardin / potager ou cueillette" },
-      { "id": "atelier-pedagogique", "label": "Atelier pédagogique ou formation" },
-      { "id": "conference", "label": "Conférence/webinaire/table-ronde" },
-      { "id": "festival", "label": "Festival" },
-      { "id": "autre", "label": "Autres" }
-    ],
-    "targetAudiences": [
-      { "id": "tout-public", "label": "Tout public" },
-      { "id": "familles-enfants", "label": "Famille / enfants" },
-      { "id": "salaries-entreprise", "label": "Salariés d'une entreprise" },
-      { "id": "professionnels", "label": "Professionnels" },
-      { "id": "scolaires", "label": "Scolaires" }
-    ],
-    "modalities": [
-      { "id": "presentiel", "label": "En présentiel" },
-      { "id": "distanciel", "label": "En ligne" }
-    ]
-  },
-
-  "regions": [
-    { "id": "Auvergne-Rhône-Alpes", "group": "metropole" },
-    { "id": "Bourgogne-Franche-Comté", "group": "metropole" },
-    { "id": "Bretagne", "group": "metropole" },
-    { "id": "Centre-Val de Loire", "group": "metropole" },
-    { "id": "Corse", "group": "metropole" },
-    { "id": "Grand Est", "group": "metropole" },
-    { "id": "Hauts-de-France", "group": "metropole" },
-    { "id": "Île-de-France", "group": "metropole" },
-    { "id": "Normandie", "group": "metropole" },
-    { "id": "Nouvelle-Aquitaine", "group": "metropole" },
-    { "id": "Occitanie", "group": "metropole" },
-    { "id": "Pays de la Loire", "group": "metropole" },
-    { "id": "Provence-Alpes-Côte d'Azur", "group": "metropole" },
-    { "id": "Guadeloupe", "group": "domtom" },
-    { "id": "Martinique", "group": "domtom" },
-    { "id": "Guyane", "group": "domtom" },
-    { "id": "La Réunion", "group": "domtom" },
-    { "id": "Mayotte", "group": "domtom" }
-  ],
-
   "texts": {
     "meta": {
       "title": "La super Carte Interactive - La Grande Semaine Végétale",
@@ -186,7 +133,7 @@
       "description": "Description",
       "startDate": "Date de début de l'événement",
       "endDate": "Date de fin de l'événement",
-      "format": "Format",
+      "format": "Formats",
       "modality": "Type de l'événement",
       "audience": "Public",
       "theme": "Thématiques",
@@ -279,20 +226,5 @@
         "pro": "professionnels"
       }
     }
-  },
-
-  "map": {
-    "center": { "lng": 2.2137, "lat": 46.2276 },
-    "defaultZoom": 5.5,
-    "maxZoom": 18,
-    "minZoom": 2,
-    "defaultStyle": "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
-    "styles": [
-      { "id": "bright", "label": "Bright", "url": "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json" },
-      { "id": "liberty", "label": "Liberty", "url": "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json" },
-      { "id": "positron", "label": "Positron", "url": "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json" }
-    ],
-    "clusterRadius": 50,
-    "clusterMaxZoom": 14
   }
 }

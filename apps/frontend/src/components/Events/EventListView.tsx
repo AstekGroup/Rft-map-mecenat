@@ -1,10 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Event } from '@/types/event';
-import { useConfig } from '@/hooks/useConfig';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { Pagination } from '@/components/UI/Pagination';
-import { Calendar, Clock, Users, Accessibility, MapPin, Video, BookOpen } from 'lucide-react';
+import {Calendar, Clock, Users, Accessibility, MapPin, Video, BookOpen} from 'lucide-react';
 
 const ITEMS_PER_PAGE = 24;
 
@@ -13,7 +12,6 @@ interface EventListViewProps {
 }
 
 export function EventListView({ events }: EventListViewProps) {
-  const { helpers } = useConfig();
   const [currentPage, setCurrentPage] = useState(1);
   
   const totalPages = Math.ceil(events.length / ITEMS_PER_PAGE);
@@ -66,8 +64,8 @@ export function EventListView({ events }: EventListViewProps) {
       <div className="flex-1 overflow-y-auto p-4">
         <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {paginatedEvents.map((event) => {
-            const Icon = TYPE_ICONS[event.type];
-            const typeColor = helpers.getEnumColor(event.type);
+            const Icon = event.type?.pictoName ? TYPE_ICONS[event.type.pictoName] : TYPE_ICONS['autre'];
+            const typeColor = event.type?.colorHexa || "#D4DDE2";
             
             return (
               <Link
@@ -94,7 +92,7 @@ export function EventListView({ events }: EventListViewProps) {
                         className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-surface-beige text-primary-dark"
                       >
                         <Icon className="w-2.5 h-2.5" />
-                        {helpers.getEnumLabel('eventTypes', event.type)}
+                        {event.type?.name}
                       </span>
                     </div>
                   </div>

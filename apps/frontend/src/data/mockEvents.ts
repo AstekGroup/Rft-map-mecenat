@@ -1,4 +1,4 @@
-import { Event, EventType, EventFormat, TargetAudience, EventsGeoJSON, GeoJSONEvent, EventModality, EVENT_TYPES_ALL, EventTheme, LinkedTableRow } from '@/types/event';
+import { Event, EventType, TargetAudience, EventsGeoJSON, GeoJSONEvent, EventModality, EVENT_TYPES_ALL, EventTheme, LinkedTableRow } from '@/types/event';
 
 // Coordonnées des principales villes françaises par région
 const CITIES: Record<string, { name: string; lat: number; lng: number; department: string; postalCode: string }[]> = {
@@ -123,8 +123,6 @@ const CITIES: Record<string, { name: string; lat: number; lng: number; departmen
 
 const EVENT_TYPES: EventType[] = [...EVENT_TYPES_ALL];
 
-const EVENT_FORMATS: EventFormat[] = ['atelier-cuisine', 'degustation', 'visite-jardin', 'atelier-pedagogique', 'conference', 'festival', 'autre'];
-
 const TARGET_AUDIENCES: TargetAudience[] = ['tout-public', 'familles-enfants', 'salaries-entreprise', 'professionnels', 'scolaires'];
 
 const VENUE_NAMES = [
@@ -180,7 +178,7 @@ function getRandomThemes(): LinkedTableRow[] {
   return shuffled.slice(0, count);
 }
 
-const EVENT_TITLES: Record<EventType, string[]> = {
+const EVENT_TITLES: Record<string, string[]> = {
   'atelier-cuisine': [
     'Atelier Cuisine : Les légumineuses à l\'honneur',
     'Cours de cuisine végétale rapide',
@@ -313,8 +311,9 @@ function getRandomTargetAudiences(): TargetAudience[] {
 
 // Générer un événement
 function generateEvent(region: string, city: typeof CITIES[string][number], _index: number): Event {
-  const type = EVENT_TYPES[Math.floor(Math.random() * EVENT_TYPES.length)];
-  const titles = EVENT_TITLES[type];
+  const type = {id: `${EVENT_TYPES[Math.floor(Math.random() * EVENT_TYPES.length)]}`,
+    name: `${EVENT_TYPES[Math.floor(Math.random() * EVENT_TYPES.length)]}` };
+  const titles = EVENT_TITLES[type.id];
   const title = titles[Math.floor(Math.random() * titles.length)];
   const organizer = ORGANIZERS[Math.floor(Math.random() * ORGANIZERS.length)];
   const isDuringWeek = Math.random() > 0.3; // 70% pendant la semaine LGSV
@@ -323,22 +322,6 @@ function generateEvent(region: string, city: typeof CITIES[string][number], _ind
   const modality: EventModality = Math.random() > 0.05 ? 'presentiel' : 'distanciel'; // 95% présentiel (plus logique pour du végétal)
   const { endDate, endTime } = generateEndDateTime(date, time);
   const capacity = [10, 15, 20, 30, 50][Math.floor(Math.random() * 5)];
-  
-  // Correspondance type -> format
-  const typeToFormat: Record<EventType, EventFormat> = {
-    'atelier-cuisine': 'atelier-cuisine',
-    'degustation': 'degustation',
-    'visite-jardin': 'visite-jardin',
-    'atelier-pedagogique': 'atelier-pedagogique',
-    'conference': 'conference',
-    'festival': 'festival',
-    'autre': 'autre',
-  };
-  
-  const format = Math.random() > 0.5 
-    ? typeToFormat[type] 
-    : EVENT_FORMATS[Math.floor(Math.random() * EVENT_FORMATS.length)];
-
   const isFree = Math.random() > 0.3; // 70% gratuit
   const price = !isFree ? [5, 10, 15, 20, 30][Math.floor(Math.random() * 5)] : undefined;
   
@@ -368,7 +351,6 @@ function generateEvent(region: string, city: typeof CITIES[string][number], _ind
     venueName: modality === 'presentiel' ? VENUE_NAMES[Math.floor(Math.random() * VENUE_NAMES.length)] : undefined,
     accessibilityInfo: Math.random() > 0.6 ? 'Accessible PMR' : undefined,
     videoConferenceUrl: modality === 'distanciel' ? 'https://zoom.us/j/event-vegetal' : undefined,
-    format,
     targetAudience: getRandomTargetAudiences(),
     contactEmail: Math.random() > 0.3 ? `contact@${organizer.toLowerCase().replace(/\s+/g, '-')}.fr` : undefined,
     contactPhone: Math.random() > 0.4 ? '06 12 34 56 78' : undefined,

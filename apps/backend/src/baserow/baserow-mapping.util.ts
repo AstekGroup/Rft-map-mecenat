@@ -1,62 +1,17 @@
 import type {
-  EventType,
-  EventFormat,
   TargetAudience,
   EventModality,
-  EventTheme,
+  LinkedTableRow,
 } from '@make-map/types';
-import type { BaserowAttachment, BaserowSelect } from './baserow.types';
-
-interface FormatMapping {
-  format: EventFormat;
-  type: EventType;
-}
+import type {
+  BaserowAttachment,
+  BaserowSelect,
+  BaserowRecord,
+} from './baserow.types';
 
 // ============================================================
 // Default mapping maps (surchargeables via AppConfig)
 // ============================================================
-
-const DEFAULT_THEME_MAP: Record<string, EventTheme> = {
-  'Cuisine végétale': 'cuisine-vegetale',
-  'Santé & nutrition': 'sante-nutrition',
-  Biodiversité: 'biodiversite',
-  Agriculture: 'agriculture',
-  'Climat & environnement': 'climat-environnement',
-  Autres: 'autre',
-};
-
-const DEFAULT_THEME_HINTS: Record<string, EventTheme> = {
-  cuisine: 'cuisine-vegetale',
-  végétal: 'cuisine-vegetale',
-  culinaire: 'cuisine-vegetale',
-  santé: 'sante-nutrition',
-  nutrition: 'sante-nutrition',
-  biodiv: 'biodiversite',
-  agri: 'agriculture',
-  agro: 'agriculture',
-  climat: 'climat-environnement',
-  environ: 'climat-environnement',
-  éco: 'climat-environnement',
-};
-
-const DEFAULT_FORMAT_MAP: Record<string, FormatMapping> = {
-  'Atelier de cuisine': { format: 'atelier-cuisine', type: 'atelier-cuisine' },
-  'Dégustation ou menu végétal': { format: 'degustation', type: 'degustation' },
-  'Visite de jardin / potager ou cueillette': {
-    format: 'visite-jardin',
-    type: 'visite-jardin',
-  },
-  'Atelier pédagogique ou formation': {
-    format: 'atelier-pedagogique',
-    type: 'atelier-pedagogique',
-  },
-  'Conférence/webinaire/table-ronde': {
-    format: 'conference',
-    type: 'conference',
-  },
-  Festival: { format: 'festival', type: 'festival' },
-  Autres: { format: 'autre', type: 'autre' },
-};
 
 const DEFAULT_AUDIENCE_MAP: Record<string, TargetAudience> = {
   'Tout public': 'tout-public',
@@ -96,51 +51,20 @@ const DEFAULT_MODALITY_HINTS: Record<string, EventModality> = {
 };
 
 // ============================================================
-// Mapping Thématique
+// Mapping LinkedRow
 // ============================================================
 
-export function mapThemes(
-  baserowThemes: BaserowSelect[] | undefined,
-  themeMap?: Record<string, EventTheme>,
-  themeHints?: Record<string, EventTheme>,
-): EventTheme[] {
-  const map = themeMap || DEFAULT_THEME_MAP;
-  const hints = themeHints || DEFAULT_THEME_HINTS;
-
-  if (!baserowThemes || baserowThemes.length === 0) return ['autre'];
-
-  const mapped = baserowThemes
-    .map((t) => {
-      const exact = map[t.value];
-      if (exact) return exact;
-
-      const lower = t.value.toLowerCase();
-      for (const [keyword, theme] of Object.entries(hints)) {
-        if (lower.includes(keyword)) return theme;
-      }
-
-      return 'autre';
-    })
-    .filter((t): t is EventTheme => t !== null);
-
-  return [...new Set(mapped)];
-}
-
-// ============================================================
-// Mapping Format
-// ============================================================
-
-export function mapFormat(
-  baserowFormat: BaserowSelect | undefined,
-  formatMap?: Record<string, FormatMapping>,
-): FormatMapping {
-  const map = formatMap || DEFAULT_FORMAT_MAP;
-  if (!baserowFormat) return { format: 'autre', type: 'autre' };
-
-  const exact = map[baserowFormat.value];
-  if (exact) return exact;
-
-  return { format: 'autre', type: 'autre' };
+export function mapLinkedRow(
+  record: BaserowRecord,
+  fieldName: string,
+  linkedTableRowMap: Map<string, LinkedTableRow>,
+) {
+  const items: Array<{ id: number | string }> =
+    (record[fieldName] as Array<{ id: number | string }>) || [];
+  const mapped = items.map((linkedRow) =>
+    linkedTableRowMap.get(String(linkedRow.id)),
+  );
+  return mapped.filter((p): p is LinkedTableRow => !!p);
 }
 
 // ============================================================
@@ -273,8 +197,8 @@ export function buildOrganizerContact(
 }
 
 export function buildAccessibilityInfo(
-  accessModalities: string[] | undefined,
+  accessModalities: BaserowSelect[] | undefined,
 ): string | undefined {
   if (!accessModalities || accessModalities.length === 0) return undefined;
-  return accessModalities.join(', ');
+  return accessModalities.map((element) => element.value).join(', ');
 }

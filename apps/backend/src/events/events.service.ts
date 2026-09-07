@@ -21,6 +21,7 @@ export class EventsService {
   private devCache: CachedData | null = null;
   private partnersCache: CachedLinkedTable | null = null;
   private themesCache: CachedLinkedTable | null = null;
+  private formatsCache: CachedLinkedTable | null = null;
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   constructor(private readonly baserowService: BaserowService) {}
@@ -75,8 +76,8 @@ export class EventsService {
    */
   async findAllThemes(): Promise<LinkedTableRow[]> {
     if (
-        this.themesCache &&
-        Date.now() - this.themesCache.timestamp < this.CACHE_TTL
+      this.themesCache &&
+      Date.now() - this.themesCache.timestamp < this.CACHE_TTL
     ) {
       return this.themesCache.values;
     }
@@ -86,8 +87,28 @@ export class EventsService {
     const themes = await this.baserowService.fetchLinkedTableRow(
       'BASEROW_THEMATIQUES_TABLE',
     );
-     this.themesCache = { values: themes, timestamp: Date.now() };
+    this.themesCache = { values: themes, timestamp: Date.now() };
     return themes;
+  }
+
+  /**
+   * Récupère tous les formats (avec cache TTL).
+   */
+  async findAllFormats(): Promise<LinkedTableRow[]> {
+    if (
+      this.formatsCache &&
+      Date.now() - this.formatsCache.timestamp < this.CACHE_TTL
+    ) {
+      return this.formatsCache.values;
+    }
+
+    this.logger.log(`Cache miss format, chargement depuis Baserow...`);
+
+    const formats = await this.baserowService.fetchLinkedTableRow(
+      'BASEROW_FORMATS_TABLE',
+    );
+    this.formatsCache = { values: formats, timestamp: Date.now() };
+    return formats;
   }
 
   /**

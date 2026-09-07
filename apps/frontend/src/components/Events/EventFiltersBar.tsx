@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { EventFilters, useConfig } from '@/hooks';
-import { EventType, TargetAudience, LinkedTableRow } from '@/types/event';
+import { TargetAudience, LinkedTableRow } from '@/types/event';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { DateCustomRangeInputs } from '@/components/Filters/DateCustomRangeInputs';
 import { formatFrDateRangeLabel, isDateFilterActive } from '@/utils/eventDateRange';
@@ -17,6 +17,7 @@ interface EventFiltersBarProps {
   onToggleAudience: (audience: string) => void;
   onResetFilters: () => void;
   availableThemes: LinkedTableRow[];
+  availableFormats: LinkedTableRow[];
 }
 
 interface FilterDropdownProps {
@@ -75,10 +76,10 @@ export function EventFiltersBar({
   availablePartners,
   onToggleAudience,
   availableThemes,
+  availableFormats,
   onResetFilters,
 }: EventFiltersBarProps) {
   const { config, helpers } = useConfig();
-  const EVENT_TYPES = (helpers.getEnumList('eventTypes') as { id: EventType }[]).map(e => e.id);
   const AUDIENCES: TargetAudience[] = ['tout-public', 'familles-enfants', 'salaries-entreprise', 'professionnels', 'scolaires'];
   const { metropole: REGIONS_METRO, domtom: REGIONS_DOMTOM } = helpers.getRegionGroups();
   
@@ -129,11 +130,12 @@ const dateFilterModes = config?.filters?.dateFilterModes || [
     });
   }
 
-  filters.types.forEach((type) => {
+  filters.types.forEach((typeId) => {
+    const format = availableFormats.find(t => t.id === typeId);
     activeTags.push({
-      key: `type-${type}`,
-      label: helpers.getEnumLabel('eventTypes', type),
-      onRemove: () => onToggleType(type),
+      key: `type-${typeId}`,
+      label: format?.name || typeId,
+      onRemove: () => onToggleType(typeId),
     });
   });
   filters.themes.forEach((themeId) => {
@@ -316,28 +318,27 @@ const dateFilterModes = config?.filters?.dateFilterModes || [
           badge={filters.types.length || undefined}
         >
           <div className="p-2 space-y-1">
-            {EVENT_TYPES.map((type) => {
-              const Icon = TYPE_ICONS[type] || Globe;
-              const color = helpers.getEnumColor(type);
+            {availableFormats.map((type) => {
+              const Icon = type?.pictoName? TYPE_ICONS[type.pictoName] : Globe;
               return (
                 <label
-                  key={type}
+                  key={type.id}
                   className="flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-primary/5 transition-colors"
                 >
                   <input
                     type="checkbox"
-                    checked={filters.types.includes(type)}
-                    onChange={() => onToggleType(type)}
+                    checked={filters.types.includes(type.id)}
+                    onChange={() => onToggleType(type.id)}
                     className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
                   />
                   <span
                     className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: color }}
+                    style={{ backgroundColor: type.colorHexa }}
                   >
                     <Icon className="w-3 h-3 text-white" />
                   </span>
-                  <span className={filters.types.includes(type) ? 'text-primary font-medium' : 'text-text-secondary'}>
-                    {helpers.getEnumLabel('eventTypes', type)}
+                  <span className={filters.types.includes(type.id) ? 'text-primary font-medium' : 'text-text-secondary'}>
+                    {type.name}
                   </span>
                 </label>
               );

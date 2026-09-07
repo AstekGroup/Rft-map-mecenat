@@ -1,9 +1,26 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, MapPin, ExternalLink, Mail, Globe, Video, Building, Accessibility, Tag, BookOpen, Handshake, Euro, Phone, Info } from 'lucide-react';
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  MapPin,
+  ExternalLink,
+  Mail,
+  Globe,
+  Video,
+  Building,
+  Accessibility,
+  Tag,
+  BookOpen,
+  Handshake,
+  Euro,
+  Phone,
+  Info
+} from 'lucide-react';
 import { useEvents } from '@/hooks';
 import { useConfig } from '@/hooks/useConfig';
 import { Loader2 } from 'lucide-react';
-import { TYPE_ICONS } from '@/components/Map/EventMarker';
+import {TYPE_ICONS} from "@/components/Map/EventMarker.tsx";
 
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -73,7 +90,7 @@ export function EventDetailPage() {
       })
     : null;
 
-  const Icon = TYPE_ICONS[event.type] || Globe;
+  const Icon = event.type?.pictoName? TYPE_ICONS[event.type.pictoName] : Globe;
 
   const isComplete = event.capacity && event.registeredCount && event.registeredCount >= event.capacity;
 
@@ -121,7 +138,7 @@ export function EventDetailPage() {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-surface-beige text-primary-dark"
               >
                 <Icon className="w-4 h-4" />
-                {helpers.getEnumLabel('eventTypes', event.type)}
+                {event.type?.name}
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-primary/10 text-primary-dark">
                 {event.modality === 'distanciel' ? (
@@ -280,7 +297,7 @@ export function EventDetailPage() {
                 Format
               </h3>
               <p className="text-text-primary font-medium">
-                {helpers.getEnumLabel('eventFormats', event.format)}
+                {event.type?.name}
               </p>
             </div>
 

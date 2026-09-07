@@ -17,12 +17,11 @@ const mockEvent: Event = {
   postalCode: '69001',
   latitude: 45.76,
   longitude: 4.83,
-  type: 'atelier-cuisine',
+  type: { id: 'atelier-cuisine', name: 'Atelier de cuisine' },
   themes: [{ id: 'autre', name: 'Autres' }],
   organizer: 'Lab IA',
   isDuringWeek: true,
   modality: 'presentiel',
-  format: 'atelier-cuisine',
   targetAudience: ['tout-public'],
   isFree: true,
 };

@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import { Event } from '@/types/event';
-import { useConfig } from '@/hooks/useConfig';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { Calendar, Clock, MapPin, BookOpen, Handshake, Globe } from 'lucide-react';
 import { Badge } from '@/components/UI';
@@ -22,14 +21,13 @@ function EventCardComponent({
   onMouseEnter,
   onMouseLeave,
 }: EventCardProps) {
-  const { helpers } = useConfig();
   const formattedDate = new Date(event.date).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'short',
   });
 
-  const Icon = TYPE_ICONS[event.type] || Globe;
-  const color = helpers.getEnumColor(event.type);
+  const Icon = event.type?.pictoName ? TYPE_ICONS[event.type.pictoName] : Globe;
+  const color = event.type?.colorHexa || "#D4DDE2";
 
   return (
     <div

@@ -1,6 +1,5 @@
 import {
-  mapThemes,
-  mapFormat,
+  mapLinkedRow,
   mapTargetAudience,
   mapModality,
   extractImageUrl,
@@ -9,101 +8,8 @@ import {
   buildOrganizerContact,
   buildAccessibilityInfo,
 } from './baserow-mapping.util';
-import { BaserowAttachment } from './baserow.types';
-
-describe('mapThemes', () => {
-  it('mappe les thèmes exacts', () => {
-    const result = mapThemes([
-      { id: 1, value: 'Cuisine végétale' },
-      { id: 2, value: 'Agriculture' },
-    ]);
-    expect(result).toEqual(['cuisine-vegetale', 'agriculture']);
-  });
-
-  it('fait une correspondance floue (heuristique)', () => {
-    expect(
-      mapThemes([
-        { id: 1, value: 'Découverte culinaire' },
-        { id: 2, value: 'Agroécologie' },
-      ]),
-    ).toEqual(['cuisine-vegetale', 'agriculture']);
-    expect(
-      mapThemes([
-        { id: 1, value: 'Nutrition santé' },
-        { id: 2, value: 'Climat' },
-      ]),
-    ).toEqual(['sante-nutrition', 'climat-environnement']);
-    expect(mapThemes([{ id: 1, value: 'Biodiversité locale' }])).toEqual([
-      'biodiversite',
-    ]);
-  });
-
-  it('retourne "autre" pour des thèmes inconnus', () => {
-    expect(mapThemes([{ id: 1, value: 'Thème mystère' }])).toEqual(['autre']);
-  });
-
-  it('retourne ["autre"] si undefined ou vide', () => {
-    expect(mapThemes(undefined)).toEqual(['autre']);
-    expect(mapThemes([])).toEqual(['autre']);
-  });
-
-  it('supprime les doublons', () => {
-    const result = mapThemes([
-      { id: 1, value: 'Cuisine végétale' },
-      { id: 2, value: 'Cuisine' },
-    ]);
-    expect(result).toEqual(['cuisine-vegetale']);
-  });
-});
-
-describe('mapFormat', () => {
-  it('retourne la correspondance exacte', () => {
-    const result = mapFormat({
-      id: 1,
-      value: 'Conférence/webinaire/table-ronde',
-    });
-    expect(result).toEqual({ format: 'conference', type: 'conference' });
-  });
-
-  it('retourne la correspondance exacte pour Atelier de cuisine', () => {
-    expect(mapFormat({ id: 1, value: 'Atelier de cuisine' })).toEqual({
-      format: 'atelier-cuisine',
-      type: 'atelier-cuisine',
-    });
-  });
-
-  it('retourne autre/autre pour une valeur inconnue', () => {
-    expect(mapFormat({ id: 1, value: 'Format inconnu XYZ' })).toEqual({
-      format: 'autre',
-      type: 'autre',
-    });
-  });
-
-  it('retourne autre/autre si undefined', () => {
-    expect(mapFormat(undefined)).toEqual({ format: 'autre', type: 'autre' });
-  });
-
-  it('ne fait plus de correspondance floue (fuzzy) pour les anciens types', () => {
-    const result = mapFormat({ id: 1, value: 'Atelier Cuisine' });
-    expect(result).toEqual({ format: 'autre', type: 'autre' });
-  });
-
-  it('mappe Festival correctement', () => {
-    expect(mapFormat({ id: 1, value: 'Festival' })).toEqual({
-      format: 'festival',
-      type: 'festival',
-    });
-  });
-
-  it('mappe Visite de jardin / potager ou cueillette vers type visite-jardin', () => {
-    expect(
-      mapFormat({ id: 1, value: 'Visite de jardin / potager ou cueillette' }),
-    ).toEqual({
-      format: 'visite-jardin',
-      type: 'visite-jardin',
-    });
-  });
-});
+import { BaserowAttachment, type BaserowRecord } from './baserow.types';
+import { LinkedTableRow } from '@make-map/types';
 
 describe('mapTargetAudience', () => {
   it('mappe "Tout public" correctement', () => {
@@ -275,9 +181,12 @@ describe('buildOrganizerContact', () => {
 
 describe('buildAccessibilityInfo', () => {
   it('joint les modalités avec une virgule', () => {
-    expect(buildAccessibilityInfo(["Rampe d'accès", 'Ascenseur'])).toBe(
-      "Rampe d'accès, Ascenseur",
-    );
+    expect(
+      buildAccessibilityInfo([
+        { id: 1, value: "Rampe d'accès" },
+        { id: 1, value: 'Ascenseur' },
+      ]),
+    ).toBe("Rampe d'accès, Ascenseur");
   });
 
   it('retourne undefined si tableau vide', () => {
@@ -286,5 +195,64 @@ describe('buildAccessibilityInfo', () => {
 
   it('retourne undefined si undefined', () => {
     expect(buildAccessibilityInfo(undefined)).toBeUndefined();
+  });
+});
+
+describe('mapLinkedRow', () => {
+  it('mappe les lignes liées en utilisant la map de ligne', () => {
+    const linkedTableRowMap = new Map<string, LinkedTableRow>([
+      ['1', { id: '1', name: 'Partner 1', logoUrl: 'logo1.png' }],
+      ['2', { id: '2', name: 'Partner 2', logoUrl: 'logo2.png' }],
+    ]);
+    const record = {
+      id: 1,
+      Partenaires: [
+        { id: 1, value: 'Partner 1' },
+        { id: 2, value: 'Partner 2' },
+      ],
+    } as BaserowRecord;
+    const result = mapLinkedRow(record, 'Partenaires', linkedTableRowMap);
+    expect(result).toEqual([
+      { id: '1', name: 'Partner 1', logoUrl: 'logo1.png' },
+      { id: '2', name: 'Partner 2', logoUrl: 'logo2.png' },
+    ]);
+  });
+
+  it('retourne un tableau vide si pas de lignes liées', () => {
+    const linkedTableRowMap = new Map<string, LinkedTableRow>([
+      ['1', { id: '1', name: 'Partner 1', logoUrl: 'logo1.png' }],
+    ]);
+    const record = {
+      id: 1,
+      Partenaires: [],
+    } as BaserowRecord;
+    const result = mapLinkedRow(record, 'Partenaires', linkedTableRowMap);
+    expect(result).toEqual([]);
+  });
+
+  it('filtre les lignes liées non trouvées', () => {
+    const linkedTableRowMap = new Map<string, LinkedTableRow>([
+      ['1', { id: '1', name: 'Partner 1', logoUrl: 'logo1.png' }],
+    ]);
+    const record = {
+      id: 1,
+      Partenaires: [
+        { id: 1, value: 'Partner 1' },
+        { id: 999, value: 'Partner Not Found' },
+      ],
+    } as BaserowRecord;
+    const result = mapLinkedRow(record, 'Partenaires', linkedTableRowMap);
+    expect(result).toEqual([
+      { id: '1', name: 'Partner 1', logoUrl: 'logo1.png' },
+    ]);
+  });
+
+  it('retourne un tableau vide si champ indéfini', () => {
+    const linkedTableRowMap = new Map<string, LinkedTableRow>([
+      ['1', { id: '1', name: 'Partner 1', logoUrl: 'logo1.png' }],
+    ]);
+    const record = {} as BaserowRecord;
+    const result = mapLinkedRow(record, 'Partenaires', linkedTableRowMap);
+    expect(result).toEqual([]);
   });
 });

@@ -230,8 +230,8 @@ export class GeocodingService {
   async batchGeocode(
     items: GeocodingItem[],
   ): Promise<Map<string, GeocodingResult | null>> {
-    const BATCH_SIZE = 8;
-    const DELAY_BETWEEN_BATCHES = 100;
+    const BATCH_SIZE = 50;
+    const DELAY_BETWEEN_BATCHES = 5;
     const results = new Map<string, GeocodingResult | null>();
 
     for (let i = 0; i < items.length; i += BATCH_SIZE) {

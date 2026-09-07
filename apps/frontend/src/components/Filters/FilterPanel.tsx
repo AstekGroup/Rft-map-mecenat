@@ -1,13 +1,12 @@
 import { EventFilters, useConfig } from '@/hooks';
-import {
-  EventType, TargetAudience, LinkedTableRow,
+import { TargetAudience, LinkedTableRow,
 } from '@/types/event';
 import { Calendar, MapPin, Tag, RotateCcw, Search, X, Hash, BookOpen, Handshake, Users, History, Globe } from 'lucide-react';
 import { Button } from '@/components/UI';
 import { FilterAccordion } from './FilterAccordion';
-import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { DateCustomRangeInputs } from '@/components/Filters/DateCustomRangeInputs';
 import { isDateFilterActive } from '@/utils/eventDateRange';
+import {TYPE_ICONS} from "@/components/Map/EventMarker.tsx";
 
 interface FilterPanelProps {
   filters: EventFilters;
@@ -25,6 +24,7 @@ interface FilterPanelProps {
     duringWeek: number;
   };
   availableThemes: LinkedTableRow[];
+  availableFormats: LinkedTableRow[];
 }
 
 export function FilterPanel({
@@ -38,9 +38,9 @@ export function FilterPanel({
   onToggleAudience,
   onResetFilters,
   availableThemes,
+  availableFormats,
 }: FilterPanelProps) {
   const { config, helpers } = useConfig();
-  const EVENT_TYPES = (helpers.getEnumList('eventTypes') as { id: EventType }[]).map(e => e.id);
   const AUDIENCES: TargetAudience[] = ['tout-public', 'familles-enfants', 'salaries-entreprise', 'professionnels', 'scolaires'];
   const { metropole: REGIONS_METRO, domtom: REGIONS_DOMTOM } = helpers.getRegionGroups();
   
@@ -159,6 +159,7 @@ export function FilterPanel({
         )}
 
         {/* Filtre par type avec pictos */}
+        {availableFormats.length > 0 && (
         <FilterAccordion
           title="Type d'événement"
           icon={<Tag className="w-4 h-4" />}
@@ -166,34 +167,34 @@ export function FilterPanel({
           badge={filters.types.length}
         >
           <div className="space-y-2">
-            {EVENT_TYPES.map((type) => {
-              const Icon = TYPE_ICONS[type] || Globe;
-              const color = helpers.getEnumColor(type);
+            {availableFormats.map((type) => {
+              const Icon =  type.pictoName? TYPE_ICONS[type.pictoName] : Globe;
               return (
                 <label
-                  key={type}
+                  key={type.id}
                   className="flex items-center gap-3 cursor-pointer group"
                 >
                   <input
                     type="checkbox"
-                    checked={filters.types.includes(type)}
-                    onChange={() => onToggleType(type)}
+                    checked={filters.types.includes(type.id)}
+                    onChange={() => onToggleType(type.id)}
                     className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
                   />
                   <div
                     className="w-6 h-6 rounded-md flex items-center justify-center"
-                    style={{ backgroundColor: color }}
+                    style={{ backgroundColor: type.colorHexa }}
                   >
                     <Icon className="w-3.5 h-3.5 text-white" />
                   </div>
                   <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-                    {helpers.getEnumLabel('eventTypes', type)}
+                    {type?.name}
                   </span>
                 </label>
               );
             })}
           </div>
         </FilterAccordion>
+        )}
 
         {/* Filtre par thématique */}
         {availableThemes.length > 0 && (

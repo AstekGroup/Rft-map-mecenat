@@ -6,8 +6,19 @@ import type { Event, LinkedTableRow } from '@/types/event';
 
 vi.mock('@/services/api');
 
+const mockType: LinkedTableRow = {
+  id: 'atelier-cuisine',
+  name: 'Atelier Cuisine',
+};
+
+const mockType2: LinkedTableRow = {
+  id: 'conference',
+  name: 'Conference',
+};
+
+
 function makeEvent(overrides: Partial<Event> = {}): Event {
-  return {
+  const defaults: Partial<Event> = {
     id: 'rec1',
     title: 'Atelier Cuisine',
     description: 'Description',
@@ -20,33 +31,33 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
     postalCode: '75001',
     latitude: 48.8566,
     longitude: 2.3522,
-    type: 'atelier-cuisine',
+    type: mockType,
     themes: [{ id: 'autre', name: 'Autres' }],
     organizer: 'Org Test',
     isDuringWeek: true,
     modality: 'presentiel',
-    format: 'atelier-cuisine',
     targetAudience: ['tout-public'],
     isFree: true,
-    ...overrides,
   };
+  return { ...defaults, ...overrides } as Event;
 }
-
-const mockPartner: LinkedTableRow = {
-  id: 'part1',
-  name: 'Partenaire Test',
-  logoUrl: 'https://test.com/logo.png',
-};
 
 describe('useEvents', () => {
   beforeEach(() => {
     vi.mocked(api.fetchEvents).mockResolvedValue([]);
     vi.mocked(api.fetchPartners).mockResolvedValue([]);
+    vi.mocked(api.fetchThemes).mockResolvedValue([]);
+    vi.mocked(api.fetchFormats).mockResolvedValue([]);
     vi.mocked(api.eventsToGeoJSON).mockReturnValue({ type: 'FeatureCollection', features: [] });
   });
 
   it('charge les événements et partenaires au montage', async () => {
     const events = [makeEvent()];
+    const mockPartner: LinkedTableRow = {
+      id: 'part1',
+      name: 'Partenaire Test',
+      logoUrl: 'https://test.com/logo.png',
+    };
     const partners = [mockPartner];
     vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
     vi.mocked(api.fetchPartners).mockResolvedValueOnce(partners);
@@ -250,8 +261,8 @@ describe('useEvents', () => {
 
     it('filtre par type via toggleType', async () => {
       const events = [
-        makeEvent({ id: 'a', type: 'atelier-cuisine' }),
-        makeEvent({ id: 'b', type: 'conference' }),
+        makeEvent({ id: 'a', type: mockType }),
+        makeEvent({ id: 'b', type: mockType2 }),
       ];
       vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
 
@@ -263,7 +274,7 @@ describe('useEvents', () => {
       });
 
       expect(result.current.events).toHaveLength(1);
-      expect(result.current.events[0].type).toBe('conference');
+      expect(result.current.events[0].type.name).toBe('Conference');
     });
 
     it('filtre par code postal', async () => {
@@ -305,15 +316,22 @@ describe('useEvents', () => {
   describe('stats', () => {
     it('calcule les stats totales et filtrées', async () => {
       const events = [
-        makeEvent({ id: 'a', type: 'atelier-cuisine', isDuringWeek: true }),
-        makeEvent({ id: 'b', type: 'conference', isDuringWeek: false }),
-        makeEvent({ id: 'c', type: 'atelier-cuisine', isDuringWeek: true }),
+        makeEvent({ id: 'a', type: mockType, isDuringWeek: true }),
+        makeEvent({ id: 'b', type: mockType2, isDuringWeek: false }),
+        makeEvent({ id: 'c', type: mockType, isDuringWeek: true }),
       ];
+
+      const formats : LinkedTableRow[] = [
+          {id:'atelier-cuisine',name:'Atelier Cuisine'},
+          {id :'conference', name:'Conference' }
+      ]
+
       vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
+      vi.mocked(api.fetchFormats).mockResolvedValueOnce(formats);
 
       const { result } = renderHook(() => useEvents());
       await waitFor(() => expect(result.current.loading).toBe(false));
-
+      console.log('---> result.current.stats: ', result.current.stats)
       expect(result.current.stats.total).toBe(3);
       expect(result.current.stats.filtered).toBe(3);
       expect(result.current.stats.duringWeek).toBe(2);

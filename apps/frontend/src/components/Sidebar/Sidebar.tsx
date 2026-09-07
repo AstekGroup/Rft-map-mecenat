@@ -29,6 +29,7 @@ interface SidebarProps {
   };
   mapBounds?: MapBounds | null;
   availableThemes: LinkedTableRow[];
+  availableFormats: LinkedTableRow[];
 }
 
 export function Sidebar({
@@ -49,6 +50,7 @@ export function Sidebar({
   stats,
   mapBounds,
   availableThemes,
+  availableFormats,
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<'list' | 'filters'>('list');
@@ -251,6 +253,7 @@ export function Sidebar({
             onResetFilters={onResetFilters}
             stats={stats}
             availableThemes={availableThemes}
+            availableFormats={availableFormats}
           />
         )}
       </div>

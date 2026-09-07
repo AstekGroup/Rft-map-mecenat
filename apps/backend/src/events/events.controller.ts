@@ -48,6 +48,16 @@ export class EventsController {
   }
 
   /**
+   * GET /api/events/formats
+   * Retourne tous les formats.
+   */
+  @Get('formats')
+  async findAllFormats(): Promise<LinkedTableRow[]> {
+    this.logger.log('GET /api/events/formats');
+    return this.eventsService.findAllFormats();
+  }
+
+  /**
    * GET /api/events/:id
    * Retourne un événement par son ID.
    */

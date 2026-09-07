@@ -39,14 +39,14 @@ export interface BaserowRecord {
   "Date de début de l'événement"?: string;
   "Date de fin de l'événement"?: string;
   Lieu?: string;
-  Format?: BaserowSelect;
+  Formats?: BaserowSelect[];
   "Type de l'événement"?: BaserowSelect; // = Modalité (Présentiel / Distanciel)
   'Adresse du lieu'?: string;
   'Code postal du lieu'?: string;
   'Ville du lieu'?: string;
-  "Modalités spécifiques d'accès au lieu"?: string[];
+  "Modalités spécifiques d'accès au lieu"?: BaserowSelect[];
   'Lien de la visio'?: string;
-  'Modalités de visio'?: string[];
+  'Modalités de visio'?: BaserowSelect[];
   "Capacité d'accueil de l'événement"?: number;
   'Email contact événement'?: string;
   'Nom de la structure organisatrice'?: string;
@@ -65,18 +65,20 @@ export interface BaserowRecord {
   'Respect de la charte'?: boolean;
   'Réception kit communication'?: string;
   'Type de structure'?: BaserowSelect;
-  "Comment avez-vous connu La Semaine de l'IA pour Tous ?"?: string[];
+  "Comment avez-vous connu La Semaine de l'IA pour Tous ?"?: BaserowSelect[];
   'Avez-vous quelque chose à ajouter ?'?: string;
-  'Inscription NL'?: string[];
+  'Inscription NL'?: BaserowSelect[];
   Partenaires?: BaserowSelect[]; // Liaisons de lignes liées dans Baserow
   Tarif?: BaserowSelect;
   Montant?: number;
 }
 
-export interface BaserowPartnerRecord {
+export interface BaserowLinkedTableRecord {
   id: number;
   Nom: string;
   Logo?: BaserowAttachment[];
+  Picto?: BaserowSelect[];
+  Couleur?: BaserowSelect[];
 }
 
 export interface BaserowResponse<T> {

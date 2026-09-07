@@ -49,6 +49,8 @@ export interface LinkedTableRow {
   id: string;
   name: string;
   logoUrl?: string;
+  pictoName?: string;
+  colorHexa?: string;
 }
 
 export interface Event {
@@ -66,7 +68,7 @@ export interface Event {
   postalCode: string;
   latitude: number;
   longitude: number;
-  type: EventType;
+  type: LinkedTableRow;
   themes: LinkedTableRow[];
   organizer: string;
   organizerContact?: string;
@@ -77,7 +79,6 @@ export interface Event {
   venueName?: string;
   accessibilityInfo?: string;
   videoConferenceUrl?: string;
-  format: EventFormat;
   targetAudience: TargetAudience[];
   contactEmail?: string;
   contactPhone?: string;
