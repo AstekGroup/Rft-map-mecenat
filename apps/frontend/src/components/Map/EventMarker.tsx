@@ -1,10 +1,21 @@
 import { memo } from 'react';
-import { MapPin, Utensils, Apple, Mic2, HelpCircle, Map, BookOpen, Music } from 'lucide-react';
-import { EventType } from '@/types/event';
-import { useConfig } from '@/hooks/useConfig';
+import {
+  MapPin,
+  Utensils,
+  Apple,
+  Mic2,
+  HelpCircle,
+  Map,
+  BookOpen,
+  Music,
+  Calendar,
+  TrophyIcon,
+  GraduationCap, Users, Heart, PartyPopper, Briefcase
+} from 'lucide-react';
+import { LinkedTableRow} from '@/types/event';
 
 interface EventMarkerProps {
-  type: EventType;
+  type: LinkedTableRow;
   isSelected?: boolean;
   onClick: () => void;
   onMouseEnter?: () => void;
@@ -13,13 +24,22 @@ interface EventMarkerProps {
   dateLabel?: string;
 }
 
-export const TYPE_ICONS: Record<EventType, typeof MapPin> = {
-  'atelier-cuisine': Utensils,
-  'degustation': Apple,
-  'visite-jardin': Map,
-  'atelier-pedagogique': BookOpen,
-  'conference': Mic2,
-  'festival': Music,
+export const TYPE_ICONS: Record<string, typeof MapPin> = {
+  'utensils': Utensils,
+  'apple': Apple,
+  'map': Map,
+  'book-open': BookOpen,
+  'mic-vocal': Mic2,
+  'music': Music,
+  'circle-question-mark': HelpCircle,
+  'calendar': Calendar,
+  'trophy': TrophyIcon,
+  'graduation-cap': GraduationCap,
+  'users': Users,
+  'heart': Heart,
+  'map-pin': MapPin,
+  'party-popper': PartyPopper,
+  'briefcase': Briefcase,
   'autre': HelpCircle,
 };
 
@@ -32,9 +52,7 @@ function EventMarkerComponent({
   size = 'md',
   dateLabel,
 }: EventMarkerProps) {
-  const { helpers } = useConfig();
-  const Icon = TYPE_ICONS[type] || HelpCircle;
-  const color = helpers.getEnumColor(type);
+  const Icon = type?.pictoName? TYPE_ICONS[type.pictoName] : HelpCircle;
   const isSmall = size === 'sm';
 
   return (
@@ -42,7 +60,7 @@ function EventMarkerComponent({
       <div
         className={`event-marker animate-scale-in ${isSelected ? 'ring-2 ring-white scale-125' : ''}`}
         style={{
-          backgroundColor: color,
+          backgroundColor: type?.colorHexa,
           width: isSmall ? '16px' : '32px',
           height: isSmall ? '16px' : '32px',
         }}
@@ -57,7 +75,7 @@ function EventMarkerComponent({
       {dateLabel && (
         <div
           className="px-1.5 py-0.5 rounded-full text-white text-[10px] font-semibold leading-none shadow-sm whitespace-nowrap pointer-events-none"
-          style={{ backgroundColor: color }}
+          style={{ backgroundColor: type.colorHexa }}
           onClick={onClick}
         >
           {dateLabel}

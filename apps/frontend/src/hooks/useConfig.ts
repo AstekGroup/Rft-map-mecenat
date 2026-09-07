@@ -2,9 +2,7 @@ import { createContext, useContext } from 'react';
 import type { AppConfig } from '@/types/event';
 
 export interface ConfigHelpers {
-  getEnumLabel: (category: keyof AppConfig['enums'], id: string) => string;
-  getEnumColor: (id: string) => string;
-  getEnumList: (category: keyof AppConfig['enums']) => AppConfig['enums'][keyof AppConfig['enums']];
+  getEnumLabel: (category: keyof typeof ENUM_MAP, id: string) => string;
   getText: (section: string, key: string) => string;
   getRegionGroups: () => { metropole: string[]; domtom: string[] };
 }
@@ -38,29 +36,44 @@ const FALLBACK_LABELS: Record<string, string> = {
   'climat-environnement': 'Climat & environnement',
 };
 
-const FALLBACK_COLORS: Record<string, string> = {
-  'atelier-cuisine': '#3BAE5D',
-  degustation: '#F4C542',
-  'visite-jardin': '#A7D7B5',
-  'atelier-pedagogique': '#1F7A3E',
-  conference: '#E46A5D',
-  festival: '#FF8C00',
-  autre: '#D9D9D9',
-};
-
-const FALLBACK_REGIONS = [
-  'Auvergne-Rhône-Alpes', 'Bourgogne-Franche-Comté', 'Bretagne',
-  'Centre-Val de Loire', 'Corse', 'Grand Est', 'Hauts-de-France',
-  'Île-de-France', 'Normandie', 'Nouvelle-Aquitaine', 'Occitanie',
-  'Pays de la Loire', "Provence-Alpes-Côte d'Azur",
-  'Guadeloupe', 'Martinique', 'Guyane', 'La Réunion', 'Mayotte',
+const REGIONS = [
+  { id: "Auvergne-Rhône-Alpes", group: "metropole" },
+  { id: "Bourgogne-Franche-Comté", group: "metropole" },
+  { id: "Bretagne", group: "metropole" },
+  { id: "Centre-Val de Loire", group: "metropole" },
+  { id: "Corse", group: "metropole" },
+  { id: "Grand Est", group: "metropole" },
+  { id: "Hauts-de-France", group: "metropole" },
+  { id: "Île-de-France", group: "metropole" },
+  { id: "Normandie", group: "metropole" },
+  { id: "Nouvelle-Aquitaine", group: "metropole" },
+  { id: "Occitanie", group: "metropole" },
+  { id: "Pays de la Loire", group: "metropole" },
+  { id: "Provence-Alpes-Côte d'Azur", group: "metropole" },
+  { id: "Guadeloupe", group: "domtom" },
+  { id: "Martinique", group: "domtom" },
+  { id: "Guyane", group: "domtom" },
+  { id: "La Réunion", group: "domtom" },
+  { id: "Mayotte", group: "domtom" }
 ];
 
-const DOMTOM = ['Guadeloupe', 'Martinique', 'Guyane', 'La Réunion', 'Mayotte'];
+const ENUM_MAP = {
+  targetAudiences: [
+    { id: "tout-public", label: "Tout public" },
+    { id: "familles-enfants", label: "Famille / enfants" },
+    { id: "salaries-entreprise", label: "Salariés d'une entreprise" },
+    { id: "professionnels", label: "Professionnels" },
+    { id: "scolaires", label: "Scolaires" }
+  ],
+      modalities: [
+    { id: "presentiel", label: "En présentiel" },
+    { id: "distanciel", label: "En ligne" }
+  ]
+};
 
 export function buildHelpers(config: AppConfig | null): ConfigHelpers {
-  const enumMap = (cat: keyof AppConfig['enums']): Record<string, string> => {
-    const items = config?.enums?.[cat];
+  const enumMap = (cat: keyof typeof ENUM_MAP): Record<string, string> => {
+    const items = ENUM_MAP[cat];
     if (!items) return {};
     const map: Record<string, string> = {};
     for (const item of items as any[]) {
@@ -69,27 +82,11 @@ export function buildHelpers(config: AppConfig | null): ConfigHelpers {
     return map;
   };
 
-  const colorMap = (): Record<string, string> => {
-    const items = config?.enums?.eventTypes;
-    if (!items) return {};
-    const map: Record<string, string> = {};
-    for (const item of items as any[]) {
-      if (item.color) map[item.id] = item.color;
-    }
-    return map;
-  };
 
   return {
     getEnumLabel(category, id) {
       const map = enumMap(category);
       return map[id] || FALLBACK_LABELS[id] || id;
-    },
-    getEnumColor(id) {
-      const map = colorMap();
-      return map[id] || FALLBACK_COLORS[id] || '#3BAE5D';
-    },
-    getEnumList(category) {
-      return config?.enums?.[category] || [];
     },
     getText(section, key) {
       const texts = (config?.texts as any)?.[section];
@@ -97,19 +94,13 @@ export function buildHelpers(config: AppConfig | null): ConfigHelpers {
       return key;
     },
     getRegionGroups() {
-      if (config?.regions) {
-        const metropole: string[] = [];
-        const domtom: string[] = [];
-        for (const r of config.regions) {
-          if (r.group === 'domtom') domtom.push(r.id);
-          else metropole.push(r.id);
-        }
-        return { metropole, domtom };
+      const metropole: string[] = [];
+      const domtom: string[] = [];
+      for (const r of REGIONS) {
+        if (r.group === 'domtom') domtom.push(r.id);
+        else metropole.push(r.id);
       }
-      return {
-        metropole: FALLBACK_REGIONS.filter(r => !DOMTOM.includes(r)),
-        domtom: DOMTOM,
-      };
+      return { metropole, domtom };
     },
   };
 }

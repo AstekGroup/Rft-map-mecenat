@@ -15,12 +15,11 @@ const mockEvent: Event = {
   postalCode: '75001',
   latitude: 48.8566,
   longitude: 2.3522,
-  type: 'conference',
+  type: { id: 'conference', name: 'conference' },
   themes: [{ id: 'autre', name: 'Autres' }],
   organizer: 'Association Test',
   isDuringWeek: true,
   modality: 'presentiel',
-  format: 'conference',
   targetAudience: ['tout-public'],
   isFree: true,
 };
@@ -35,14 +34,14 @@ describe('EventsService', () => {
   let service: EventsService;
   let baserowService: jest.Mocked<BaserowService>;
 
-beforeEach(() => {
-      baserowService = {
-        fetchEvents: jest.fn(),
-        fetchLinkedTableRow: jest.fn(),
-      } as unknown as jest.Mocked<BaserowService>;
+  beforeEach(() => {
+    baserowService = {
+      fetchEvents: jest.fn(),
+      fetchLinkedTableRow: jest.fn(),
+    } as unknown as jest.Mocked<BaserowService>;
 
-      service = new EventsService(baserowService);
-    });
+    service = new EventsService(baserowService);
+  });
 
   describe('findAll', () => {
     it('appelle BaserowService au premier appel (cache miss)', async () => {

@@ -1,16 +1,14 @@
-import { EventType } from '@/types/event';
-import { useConfig } from '@/hooks/useConfig';
+import {LinkedTableRow} from '@/types/event';
 
 interface BadgeProps {
-  type: EventType;
+  type: LinkedTableRow;
   size?: 'sm' | 'md';
   variant?: 'default' | 'highlight';
 }
 
 export function Badge({ type, size = 'md', variant = 'default' }: BadgeProps) {
-  const { helpers } = useConfig();
-  const color = helpers.getEnumColor(type);
-  const label = helpers.getEnumLabel('eventTypes', type);
+  const color = type?.colorHexa;
+  const label = type?.name;
 
   const sizes = {
     sm: 'px-2 py-0.5 text-xs',

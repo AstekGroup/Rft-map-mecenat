@@ -80,10 +80,6 @@ export class AppConfigService implements OnModuleInit {
     return this.safe.baserow.mappingHints || {};
   }
 
-  get enums() {
-    return this.safe.enums;
-  }
-
   get theme() {
     return this.safe.theme;
   }

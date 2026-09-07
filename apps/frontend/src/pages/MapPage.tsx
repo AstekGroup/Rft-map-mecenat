@@ -30,6 +30,7 @@ export function MapPage() {
     toggleAudience,
     stats,
     availableThemes,
+    availableFormats,
   } = useEvents();
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -146,6 +147,7 @@ export function MapPage() {
         onMapFlyToReady={(flyToFn) => { mapFlyToRef.current = flyToFn; }}
         onBoundsChange={setMapBounds}
       />
+      {/*
 
       {/* Sidebar - visible sur desktop, toggle sur mobile */}
       <div className="hidden sm:block">
@@ -167,6 +169,7 @@ export function MapPage() {
           stats={stats}
           mapBounds={mapBounds}
           availableThemes={availableThemes}
+          availableFormats={availableFormats}
         />
       </div>
 
@@ -194,6 +197,7 @@ export function MapPage() {
             stats={stats}
             mapBounds={mapBounds}
             availableThemes={availableThemes}
+            availableFormats={availableFormats}
           />
         </div>
       )}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Event, EventType, TargetAudience } from '@/types/event';
+import { Event, TargetAudience } from '@/types/event';
 import { useEvents } from '@/hooks';
 import { MapView } from '@/components/Map';
 import { Sidebar } from '@/components/Sidebar';
@@ -22,6 +22,7 @@ function App() {
     toggleAudience,
     stats,
     availableThemes,
+    availableFormats,
   } = useEvents();
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -84,7 +85,7 @@ function App() {
         filters={filters}
         onUpdateFilters={updateFilters}
         onToggleRegion={toggleRegion}
-        onToggleType={(type) => toggleType(type as EventType)}
+        onToggleType={toggleType}
         onToggleTheme={toggleTheme}
         onTogglePartner={togglePartner}
         availablePartners={availablePartners}
@@ -96,6 +97,7 @@ function App() {
         onHoverEvent={setHoveredEvent}
         stats={stats}
         availableThemes={availableThemes}
+        availableFormats={availableFormats}
       />
 
       {/* Badge compteur mobile */}

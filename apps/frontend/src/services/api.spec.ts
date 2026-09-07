@@ -15,12 +15,11 @@ const mockEvent: Event = {
   postalCode: '75001',
   latitude: 48.8566,
   longitude: 2.3522,
-  type: 'atelier-cuisine',
+  type: {id: 'atelier-cuisine', name: 'Atelier cuisine'},
   themes: [{ id: 'autre', name: 'Autres' }],
   organizer: 'Org Test',
   isDuringWeek: true,
   modality: 'presentiel',
-  format: 'atelier-cuisine',
   targetAudience: ['tout-public'],
   isFree: true,
 };

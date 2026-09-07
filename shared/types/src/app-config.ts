@@ -1,16 +1,3 @@
-export interface AppConfigEnumItem {
-  id: string;
-  label: string;
-  color?: string;
-}
-
-import { LinkedTableRow } from './event';
-
-export interface AppConfigRegion {
-  id: string;
-  group: 'metropole' | 'domtom';
-}
-
 export interface AppConfigTheme {
   colors: Record<string, string>;
   fonts: {
@@ -65,14 +52,6 @@ export interface AppConfig {
     locale?: string;
   };
   theme: AppConfigTheme;
-  enums: {
-    eventTypes: AppConfigEnumItem[];
-    eventFormats: AppConfigEnumItem[];
-    targetAudiences: AppConfigEnumItem[];
-    modalities: AppConfigEnumItem[];
-  };
-
-  regions: AppConfigRegion[];
   texts: AppConfigTexts;
   filters: AppConfigFilters;
   baserow: {
@@ -81,6 +60,4 @@ export interface AppConfig {
     mapping: Record<string, Record<string, string | Record<string, string>>>;
     mappingHints?: Record<string, Record<string, string>>;
   };
-  map?: AppConfigMap;
-  availableThemes?: LinkedTableRow[];
 }

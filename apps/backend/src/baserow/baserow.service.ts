@@ -4,10 +4,9 @@ import type { Event, LinkedTableRow } from '@make-map/types';
 import type {
   BaserowRecord,
   BaserowResponse,
-  BaserowPartnerRecord,
+  BaserowLinkedTableRecord,
 } from './baserow.types';
 import {
-  mapFormat,
   mapTargetAudience,
   mapModality,
   extractImageUrl,
@@ -15,6 +14,7 @@ import {
   parseDateTime,
   buildOrganizerContact,
   buildAccessibilityInfo,
+  mapLinkedRow,
 } from './baserow-mapping.util';
 import { GeocodingService } from '../geocoding/geocoding.service';
 import { AppConfigService } from '../config/config.service';
@@ -48,6 +48,9 @@ export class BaserowService {
       'BASEROW_THEMATIQUES_TABLE',
     );
 
+    // 2. Récupérer les formats
+    const formatsMap = await this.fetchLinkedTableMap('BASEROW_FORMATS_TABLE');
+
     // 3. Récupérer les enregistrements bruts
     const records = await this.fetchRecords(devMode);
     this.logger.log(
@@ -56,7 +59,7 @@ export class BaserowService {
 
     // 3. Transformer sans géocodage
     const partialEvents = records.map((r) =>
-      this.transformRecord(r, partnersMap, themesMap),
+      this.transformRecord(r, partnersMap, themesMap, formatsMap),
     );
 
     // 4. Préparer le batch geocoding (seulement pour les événements présentiels)
@@ -152,13 +155,21 @@ export class BaserowService {
         }
 
         const data =
-          (await response.json()) as BaserowResponse<BaserowPartnerRecord>;
+          (await response.json()) as BaserowResponse<BaserowLinkedTableRecord>;
 
         for (const record of data.results) {
           linkedTableMap.set(String(record.id), {
             id: String(record.id),
             name: record.Nom,
             logoUrl: extractImageUrl(record.Logo),
+            pictoName:
+              record.Picto && record.Picto.length > 0
+                ? record.Picto[0].value
+                : undefined,
+            colorHexa:
+              record.Couleur && record.Couleur.length > 0
+                ? record.Couleur[0].value
+                : undefined,
           });
         }
 
@@ -259,6 +270,7 @@ export class BaserowService {
     record: BaserowRecord,
     partnersMap: Map<string, LinkedTableRow>,
     thematiquesMap: Map<string, LinkedTableRow>,
+    formatsMap: Map<string, LinkedTableRow>,
   ): Event {
     const fm = this.fm;
 
@@ -269,16 +281,9 @@ export class BaserowService {
       record[fm.endDate || "Date de fin de l'événement"],
     );
 
-    const formatMap = this.mm?.format as
-      | Record<string, { format: string; type: string }>
-      | undefined;
     const modalityMap = this.mm?.modality as Record<string, string> | undefined;
     const audienceMap = this.mm?.audience as Record<string, string> | undefined;
 
-    const { format, type } = mapFormat(
-      record[fm.format || 'Format'],
-      formatMap as any,
-    );
     const modality = mapModality(
       record[fm.modality || "Type de l'événement"],
       modalityMap as any,
@@ -289,10 +294,19 @@ export class BaserowService {
       audienceMap as any,
       this.appConfig.get()?.baserow.mappingHints?.audience as any,
     );
+    const format = mapLinkedRow(record, fm.format || 'Formats', formatsMap);
 
-    const themes: LinkedTableRow[] = (record[fm.theme || 'Thématiques'] || [])
-      .map((linkedRow: any) => thematiquesMap.get(String(linkedRow.id)))
-      .filter((p): p is LinkedTableRow => !!p);
+    const themes = mapLinkedRow(
+      record,
+      fm.theme || 'Thématiques',
+      thematiquesMap,
+    );
+
+    const partners = mapLinkedRow(
+      record,
+      fm.partnerField || 'Partenaires',
+      partnersMap,
+    );
 
     const imageUrl = extractImageUrl(
       record[fm.image || "Visuel de l'évènement"],
@@ -316,12 +330,6 @@ export class BaserowService {
     const fallbackRegion =
       this.geocodingService.getRegionFromPostalCode(postalCode);
 
-    const partners: LinkedTableRow[] = (
-      record[fm.partnerField || 'Partenaires'] || []
-    )
-      .map((linkedRow: any) => partnersMap.get(String(linkedRow.id)))
-      .filter((p): p is LinkedTableRow => !!p);
-
     return {
       id: String(record.id),
       title: record[fm.title || "Nom de l'événement"] || 'Événement sans titre',
@@ -337,7 +345,7 @@ export class BaserowService {
       postalCode,
       latitude: 0,
       longitude: 0,
-      type,
+      type: format[0],
       themes,
       organizer:
         record[fm.organizer || 'Nom de la structure organisatrice'] || '',
@@ -352,7 +360,6 @@ export class BaserowService {
       accessibilityInfo,
       videoConferenceUrl:
         record[fm.videoConferenceUrl || 'Lien de la visio'] || undefined,
-      format,
       targetAudience,
       contactEmail:
         record[fm.contactEmail || 'Email contact événement'] ||
