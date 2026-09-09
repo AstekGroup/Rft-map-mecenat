@@ -7,7 +7,6 @@ import type {
   BaserowLinkedTableRecord,
 } from './baserow.types';
 import {
-  mapTargetAudience,
   mapModality,
   extractImageUrl,
   computeIsDuringWeek,
@@ -48,21 +47,24 @@ export class BaserowService {
       'BASEROW_THEMATIQUES_TABLE',
     );
 
-    // 2. Récupérer les formats
+    // 3. Récupérer les formats
     const formatsMap = await this.fetchLinkedTableMap('BASEROW_FORMATS_TABLE');
 
-    // 3. Récupérer les enregistrements bruts
+    // 4. Récupérer l'audience (public cible)'
+    const publicsMap = await this.fetchLinkedTableMap('BASEROW_PUBLICS_TABLE');
+
+    // 5. Récupérer les enregistrements bruts
     const records = await this.fetchRecords(devMode);
     this.logger.log(
       `${records.length} enregistrements récupérés depuis Baserow`,
     );
 
-    // 3. Transformer sans géocodage
+    // 6. Transformer sans géocodage
     const partialEvents = records.map((r) =>
-      this.transformRecord(r, partnersMap, themesMap, formatsMap),
+      this.transformRecord(r, partnersMap, themesMap, formatsMap, publicsMap),
     );
 
-    // 4. Préparer le batch geocoding (seulement pour les événements présentiels)
+    // 7. Préparer le batch geocoding (seulement pour les événements présentiels)
     const itemsToGeocode = partialEvents
       .filter((e) => e.modality === 'presentiel' && (e.address || e.city))
       .map((e) => ({
@@ -74,11 +76,11 @@ export class BaserowService {
 
     this.logger.log(`Géocodage de ${itemsToGeocode.length} adresses...`);
 
-    // 5. Géocoder en batch
+    // 8. Géocoder en batch
     const geocodingResults =
       await this.geocodingService.batchGeocode(itemsToGeocode);
 
-    // 6. Fusionner les résultats
+    // 9. Fusionner les résultats
     const events: Event[] = partialEvents.map((event) => {
       const geo = geocodingResults.get(event.id);
       if (geo) {
@@ -271,6 +273,7 @@ export class BaserowService {
     partnersMap: Map<string, LinkedTableRow>,
     thematiquesMap: Map<string, LinkedTableRow>,
     formatsMap: Map<string, LinkedTableRow>,
+    publicsMap: Map<string, LinkedTableRow>,
   ): Event {
     const fm = this.fm;
 
@@ -282,19 +285,19 @@ export class BaserowService {
     );
 
     const modalityMap = this.mm?.modality as Record<string, string> | undefined;
-    const audienceMap = this.mm?.audience as Record<string, string> | undefined;
 
     const modality = mapModality(
       record[fm.modality || "Type de l'événement"],
       modalityMap as any,
-      this.appConfig.get()?.baserow.mappingHints?.modality as any,
     );
-    const targetAudience = mapTargetAudience(
-      record[fm.audience || 'Public'],
-      audienceMap as any,
-      this.appConfig.get()?.baserow.mappingHints?.audience as any,
-    );
+
     const format = mapLinkedRow(record, fm.format || 'Formats', formatsMap);
+
+    const targetAudience = mapLinkedRow(
+      record,
+      fm.audience || 'Publics',
+      publicsMap,
+    );
 
     const themes = mapLinkedRow(
       record,

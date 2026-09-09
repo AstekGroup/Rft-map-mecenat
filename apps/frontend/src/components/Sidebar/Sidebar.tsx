@@ -16,7 +16,7 @@ interface SidebarProps {
   onToggleTheme: (themeId: string) => void;
   onTogglePartner: (partnerId: string) => void;
   availablePartners: LinkedTableRow[];
-  onToggleAudience: (audience: string) => void;
+  onToggleAudience: (audienceId: string) => void;
   onResetFilters: () => void;
   selectedEvent: Event | null;
   onSelectEvent: (event: Event | null) => void;
@@ -30,6 +30,7 @@ interface SidebarProps {
   mapBounds?: MapBounds | null;
   availableThemes: LinkedTableRow[];
   availableFormats: LinkedTableRow[];
+  availablePublics: LinkedTableRow[];
 }
 
 export function Sidebar({
@@ -51,6 +52,7 @@ export function Sidebar({
   mapBounds,
   availableThemes,
   availableFormats,
+  availablePublics,
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<'list' | 'filters'>('list');
@@ -254,6 +256,7 @@ export function Sidebar({
             stats={stats}
             availableThemes={availableThemes}
             availableFormats={availableFormats}
+            availablePublics={availablePublics}
           />
         )}
       </div>

@@ -25,6 +25,7 @@ export function EventsListPage() {
     stats,
     availableThemes,
     availableFormats,
+    availablePublics,
   } = useEvents();
 
   const searchParamsKey = searchParams.toString();
@@ -145,6 +146,7 @@ export function EventsListPage() {
         onResetFilters={handleResetFilters}
         availableThemes={availableThemes}
         availableFormats={availableFormats}
+        availablePublics={availablePublics}
       />
       
       {/* Event list grid with pagination */}

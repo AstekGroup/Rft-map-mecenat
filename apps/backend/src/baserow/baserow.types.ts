@@ -59,8 +59,8 @@ export interface BaserowRecord {
   'Téléphone inscription'?: string;
   "Modération de l'événement"?: string;
   'Visibilité sur la cartographie'?: string;
-  Public?: BaserowSelect[];
-  Thématique?: BaserowSelect[];
+  Publics?: BaserowSelect[];
+  Thématiques?: BaserowSelect[];
   "Visuel de l'évènement"?: BaserowAttachment[];
   'Respect de la charte'?: boolean;
   'Réception kit communication'?: string;

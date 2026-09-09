@@ -22,7 +22,7 @@ const mockEvent: Event = {
   organizer: 'Lab IA',
   isDuringWeek: true,
   modality: 'presentiel',
-  targetAudience: ['tout-public'],
+  targetAudience: [{ id: 'tout-public', name: 'tout-public' }],
   isFree: true,
 };
 
@@ -30,6 +30,21 @@ const mockPartner: LinkedTableRow = {
   id: 'part1',
   name: 'Partenaire Test',
   logoUrl: 'https://test.com/logo.png',
+};
+
+const mockTheme: LinkedTableRow = {
+  id: 'theme1',
+  name: 'Thème Test',
+};
+
+const mockFormat: LinkedTableRow = {
+  id: 'format1',
+  name: 'Format Test',
+};
+
+const mockPublic: LinkedTableRow = {
+  id: 'public1',
+  name: 'Public Test',
 };
 
 describe('EventsController', () => {
@@ -40,6 +55,9 @@ describe('EventsController', () => {
     eventsService = {
       findAll: jest.fn(),
       findAllPartners: jest.fn(),
+      findAllThemes: jest.fn(),
+      findAllFormats: jest.fn(),
+      findAllPublics: jest.fn(),
       findOne: jest.fn(),
     } as unknown as jest.Mocked<EventsService>;
 
@@ -82,6 +100,36 @@ describe('EventsController', () => {
       const result = await controller.findAllPartners();
       expect(eventsService.findAllPartners).toHaveBeenCalled();
       expect(result).toEqual([mockPartner]);
+    });
+  });
+
+  describe('findAllThemes', () => {
+    it('appelle findAllThemes du service', async () => {
+      eventsService.findAllThemes.mockResolvedValueOnce([mockTheme]);
+
+      const result = await controller.findAllThemes();
+      expect(eventsService.findAllThemes).toHaveBeenCalled();
+      expect(result).toEqual([mockTheme]);
+    });
+  });
+
+  describe('findAllFormats', () => {
+    it('appelle findAllFormats du service', async () => {
+      eventsService.findAllFormats.mockResolvedValueOnce([mockFormat]);
+
+      const result = await controller.findAllFormats();
+      expect(eventsService.findAllFormats).toHaveBeenCalled();
+      expect(result).toEqual([mockFormat]);
+    });
+  });
+
+  describe('findAllPublics', () => {
+    it('appelle findAllPublics du service', async () => {
+      eventsService.findAllPublics.mockResolvedValueOnce([mockPublic]);
+
+      const result = await controller.findAllPublics();
+      expect(eventsService.findAllPublics).toHaveBeenCalled();
+      expect(result).toEqual([mockPublic]);
     });
   });
 

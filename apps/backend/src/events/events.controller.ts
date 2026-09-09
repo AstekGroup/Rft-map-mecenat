@@ -58,6 +58,16 @@ export class EventsController {
   }
 
   /**
+   * GET /api/events/publics
+   * Retourne l'audience (public cible).
+   */
+  @Get('publics')
+  async findAllPublics(): Promise<LinkedTableRow[]> {
+    this.logger.log('GET /api/events/publics');
+    return this.eventsService.findAllPublics();
+  }
+
+  /**
    * GET /api/events/:id
    * Retourne un événement par son ID.
    */
