@@ -16,6 +16,7 @@ const mockType2: LinkedTableRow = {
   name: 'Conference',
 };
 
+const eventWithAudience = makeEvent({ id: 'a', targetAudience: [{ id: 'public1', name: 'Public 1' }] });
 
 function makeEvent(overrides: Partial<Event> = {}): Event {
   const defaults: Partial<Event> = {
@@ -36,7 +37,7 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
     organizer: 'Org Test',
     isDuringWeek: true,
     modality: 'presentiel',
-    targetAudience: ['tout-public'],
+    targetAudience: [{ id: 'tout-public', name:'tout-public'}],
     isFree: true,
   };
   return { ...defaults, ...overrides } as Event;
@@ -309,6 +310,73 @@ describe('useEvents', () => {
       expect(result.current.events).toHaveLength(1);
 
       act(() => { result.current.resetFilters(); });
+      expect(result.current.events).toHaveLength(2);
+    });
+
+    it('filtre par thématique via toggleTheme', async () => {
+      const eventWithTheme = makeEvent({ id: 'a', themes: [{ id: 'theme1', name: 'Thème 1' }] });
+      const eventWithoutTheme = makeEvent({ id: 'b', themes: [] });
+      const events = [eventWithTheme, eventWithoutTheme];
+      vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
+
+      const { result } = renderHook(() => useEvents());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      act(() => {
+        result.current.toggleTheme('theme1');
+      });
+
+      expect(result.current.events).toHaveLength(1);
+      expect(result.current.events[0].id).toBe('a');
+      expect(result.current.events[0].themes.some(t => t.id === 'theme1')).toBe(true);
+    });
+
+    it('toggleTheme déselectionne une thématique déjà sélectionnée', async () => {
+      const eventWithTheme = makeEvent({ id: 'a', themes: [{ id: 'theme1', name: 'Thème 1' }] });
+      const eventWithoutTheme = makeEvent({ id: 'b', themes: [] });
+      const events = [eventWithTheme, eventWithoutTheme];
+      vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
+
+      const { result } = renderHook(() => useEvents());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      act(() => { result.current.toggleTheme('theme1'); });
+      expect(result.current.events).toHaveLength(1);
+
+      act(() => { result.current.toggleTheme('theme1'); });
+      expect(result.current.events).toHaveLength(2);
+    });
+
+    it('filtre par public cible via toggleAudience', async () => {
+
+      const eventWithoutAudience = makeEvent({ id: 'b', targetAudience: [] });
+      const events = [eventWithAudience, eventWithoutAudience];
+      vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
+
+      const { result } = renderHook(() => useEvents());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      act(() => {
+        result.current.toggleAudience('public1');
+      });
+
+      expect(result.current.events).toHaveLength(1);
+      expect(result.current.events[0].id).toBe('a');
+      expect(result.current.events[0].targetAudience.some(a => a.id === 'public1')).toBe(true);
+    });
+
+    it('toggleAudience déselectionne un public cible déjà sélectionné', async () => {
+      const eventWithoutAudience = makeEvent({ id: 'b', targetAudience: [] });
+      const events = [eventWithAudience, eventWithoutAudience];
+      vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
+
+      const { result } = renderHook(() => useEvents());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      act(() => { result.current.toggleAudience('public1'); });
+      expect(result.current.events).toHaveLength(1);
+
+      act(() => { result.current.toggleAudience('public1'); });
       expect(result.current.events).toHaveLength(2);
     });
   });

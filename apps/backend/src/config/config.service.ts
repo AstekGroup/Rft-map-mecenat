@@ -68,18 +68,6 @@ export class AppConfigService implements OnModuleInit {
     return this.config;
   }
 
-  baserowField(field: string): string {
-    return this.safe.baserow.fieldMapping[field] || field;
-  }
-
-  get baserowMapping(): AppConfig['baserow'] {
-    return this.safe.baserow;
-  }
-
-  get baserowMappingHints() {
-    return this.safe.baserow.mappingHints || {};
-  }
-
   get theme() {
     return this.safe.theme;
   }

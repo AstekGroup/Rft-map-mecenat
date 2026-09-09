@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Event, TargetAudience, EventsGeoJSON, LinkedTableRow } from '@/types/event';
-import {fetchEvents, fetchPartners, eventsToGeoJSON, fetchThemes, fetchFormats} from '@/services/api';
+import { Event, EventsGeoJSON, LinkedTableRow } from '@/types/event';
+import {fetchEvents, fetchPartners, eventsToGeoJSON, fetchThemes, fetchFormats, fetchPublics} from '@/services/api';
 import type { DateFilterMode } from '@/utils/eventDateRange';
 import { eventIntersectsYmdRange } from '@/utils/eventDateRange';
 
@@ -14,8 +14,8 @@ export interface EventFilters {
   regions: string[];
   types: string[]; // IDs des formats (LinkedTableRow)
   themes: string[]; // IDs des thèmes (LinkedTableRow)
-  partners: string[]; // Partner IDs
-  audiences: TargetAudience[];
+  partners: string[]; // Partner IDs (LinkedTableRow)
+  audiences: string[];// IDs du public cible (LinkedTableRow)
   postalCode: string;
   modality: 'all' | 'presentiel' | 'distanciel';
   showPastEvents: boolean;
@@ -41,6 +41,7 @@ export function useEvents() {
   const [availablePartners, setAvailablePartners] = useState<LinkedTableRow[]>([]);
   const [availableThemes, setAvailableThemes] = useState<LinkedTableRow[]>([]);
   const [availableFormats, setAvailableFormats] = useState<LinkedTableRow[]>([]);
+  const [availablePublics, setAvailablePublics] = useState<LinkedTableRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [filters, setFilters] = useState<EventFilters>(initialFilters);
@@ -53,18 +54,20 @@ export function useEvents() {
         setLoading(true);
         setError(null);
         
-        // Charger événements et partenaires en parallèle
-        const [eventsData, partnersData, themesData, formatsData] = await Promise.all([
+        // Charger événements et les autres datas pour les filtres
+        const [eventsData, partnersData, themesData, formatsData, publicsData] = await Promise.all([
           fetchEvents(devMode),
           fetchPartners(),
           fetchThemes(),
-          fetchFormats()
+          fetchFormats(),
+          fetchPublics(),
         ]);
         
         setEvents(eventsData);
         setAvailablePartners(partnersData);
         setAvailableThemes(themesData);
-        setAvailableFormats(formatsData)
+        setAvailableFormats(formatsData);
+        setAvailablePublics(publicsData);
       } catch (err) {
         console.error('[useEvents] Erreur lors du chargement:', err);
         setError(err instanceof Error ? err : new Error('Erreur lors du chargement des données'));
@@ -135,8 +138,12 @@ export function useEvents() {
         if (!hasMatchingPartner) return false;
       }
 
-      // Filtre public cible
-      if (filters.audiences.length > 0 && !filters.audiences.some(a => event.targetAudience.includes(a))) return false;
+      // Filtre public cible (audience)
+      if (filters.audiences.length > 0) {
+        if (!event.targetAudience || event.targetAudience.length === 0) return false;
+        const hasMatchingAudience = event.targetAudience.some(audience => audience && filters.audiences.includes(audience.id));
+        if (!hasMatchingAudience) return false;
+      }
 
       // Filtre code postal
       if (filters.postalCode) {
@@ -206,12 +213,12 @@ export function useEvents() {
     }));
   };
 
-  const toggleAudience = (audience: TargetAudience) => {
+  const toggleAudience = (audienceId: string) => {
     setFilters(prev => ({
       ...prev,
-      audiences: prev.audiences.includes(audience)
-        ? prev.audiences.filter(a => a !== audience)
-        : [...prev.audiences, audience],
+      audiences: prev.audiences.includes(audienceId)
+        ? prev.audiences.filter(a => a !== audienceId)
+        : [...prev.audiences, audienceId],
     }));
   };
 
@@ -260,5 +267,6 @@ export function useEvents() {
     toggleDevMode,
     availableThemes,
     availableFormats,
+    availablePublics,
   };
 }

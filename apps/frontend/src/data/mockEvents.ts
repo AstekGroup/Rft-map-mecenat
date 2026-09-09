@@ -1,4 +1,4 @@
-import { Event, EventType, TargetAudience, EventsGeoJSON, GeoJSONEvent, EventModality, EVENT_TYPES_ALL, EventTheme, LinkedTableRow } from '@/types/event';
+import { Event, EventsGeoJSON, GeoJSONEvent, EventModality, LinkedTableRow } from '@/types/event';
 
 // Coordonnées des principales villes françaises par région
 const CITIES: Record<string, { name: string; lat: number; lng: number; department: string; postalCode: string }[]> = {
@@ -121,9 +121,58 @@ const CITIES: Record<string, { name: string; lat: number; lng: number; departmen
   ],
 };
 
+/** Types d’événement affichés en tag / filtres (La Grande Semaine Végétale). */
+type EventType =
+    | 'atelier-cuisine'
+    | 'degustation'
+    | 'visite-jardin'
+    | 'atelier-pedagogique'
+    | 'conference'
+    | 'festival'
+    | 'autre';
+
+/** Ordre des cases à cocher filtres et clés de `stats.byType`. */
+const EVENT_TYPES_ALL: EventType[] = [
+  'atelier-cuisine',
+  'degustation',
+  'visite-jardin',
+  'atelier-pedagogique',
+  'conference',
+  'festival',
+  'autre',
+];
+
+ type TargetAudience =
+    | 'tout-public'
+    | 'familles-enfants'
+    | 'salaries-entreprise'
+    | 'professionnels'
+    | 'scolaires';
+
+ type EventTheme =
+    | 'cuisine-vegetale'
+    | 'sante-nutrition'
+    | 'biodiversite'
+    | 'agriculture'
+    | 'climat-environnement'
+    | 'autre';
+
 const EVENT_TYPES: EventType[] = [...EVENT_TYPES_ALL];
 
 const TARGET_AUDIENCES: TargetAudience[] = ['tout-public', 'familles-enfants', 'salaries-entreprise', 'professionnels', 'scolaires'];
+
+const AUDIENCE_LABELS: Record<TargetAudience, string> = {
+  'tout-public': 'Tout public',
+  'familles-enfants': 'Familles/enfants',
+  'salaries-entreprise': 'Salaries d\'entreprise',
+  'professionnels': 'Professionnels',
+  'scolaires': 'Scolaires',
+};
+
+const AUDIENCE_TO_LINKED: LinkedTableRow[] = TARGET_AUDIENCES.map(id => ({
+  id,
+  name: AUDIENCE_LABELS[id],
+}));
 
 const VENUE_NAMES = [
   'Marché municipal',
@@ -303,9 +352,9 @@ function generateEndDateTime(date: string, time: string): { endDate: string; end
 }
 
 // Sélectionner plusieurs audiences cibles aléatoirement
-function getRandomTargetAudiences(): TargetAudience[] {
+function getRandomTargetAudiences(): LinkedTableRow[] {
   const count = 1 + Math.floor(Math.random() * 2);
-  const shuffled = [...TARGET_AUDIENCES].sort(() => Math.random() - 0.5);
+  const shuffled = [...AUDIENCE_TO_LINKED].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
 }
 
@@ -399,4 +448,3 @@ export function eventsToGeoJSON(events: Event[]): EventsGeoJSON {
 
 // Export des événements mockés
 export const MOCK_EVENTS = generateMockEvents(1500);
-export const MOCK_GEOJSON = eventsToGeoJSON(MOCK_EVENTS);

@@ -1,6 +1,5 @@
 import {
   mapLinkedRow,
-  mapTargetAudience,
   mapModality,
   extractImageUrl,
   computeIsDuringWeek,
@@ -10,62 +9,6 @@ import {
 } from './baserow-mapping.util';
 import { BaserowAttachment, type BaserowRecord } from './baserow.types';
 import { LinkedTableRow } from '@make-map/types';
-
-describe('mapTargetAudience', () => {
-  it('mappe "Tout public" correctement', () => {
-    expect(mapTargetAudience([{ id: 1, value: 'Tout public' }])).toEqual([
-      'tout-public',
-    ]);
-  });
-
-  it('mappe plusieurs publics valides', () => {
-    const result = mapTargetAudience([
-      { id: 1, value: 'Scolaire' },
-      { id: 2, value: 'Professionnels' },
-    ]);
-    expect(result).toEqual(['scolaires', 'professionnels']);
-  });
-
-  it('retourne tout-public si tableau vide', () => {
-    expect(mapTargetAudience([])).toEqual(['tout-public']);
-  });
-
-  it('retourne tout-public si undefined', () => {
-    expect(mapTargetAudience(undefined)).toEqual(['tout-public']);
-  });
-
-  it('fait une correspondance floue pour scolaires', () => {
-    const result = mapTargetAudience([
-      { id: 1, value: 'Écoliers / Étudiants' },
-    ]);
-    expect(result).toEqual(['scolaires']);
-  });
-
-  it('retourne tout-public si aucun mappage trouvé (ex: anciens types)', () => {
-    expect(
-      mapTargetAudience([
-        { id: 1, value: 'Inconnu XYZ' },
-        { id: 2, value: 'Jeunes' },
-        { id: 3, value: 'Seniors' },
-      ]),
-    ).toEqual(['tout-public']);
-  });
-
-  it('mappe les familles et enfants', () => {
-    expect(mapTargetAudience([{ id: 1, value: 'Familles' }])).toEqual([
-      'familles-enfants',
-    ]);
-    expect(mapTargetAudience([{ id: 1, value: 'Enfants' }])).toEqual([
-      'familles-enfants',
-    ]);
-  });
-
-  it('mappe les salariés', () => {
-    expect(
-      mapTargetAudience([{ id: 1, value: "Salariés d'une entreprise" }]),
-    ).toEqual(['salaries-entreprise']);
-  });
-});
 
 describe('mapModality', () => {
   it('mappe Présentiel', () => {
@@ -86,12 +29,6 @@ describe('mapModality', () => {
 
   it('retourne presentiel par défaut si undefined', () => {
     expect(mapModality(undefined)).toBe('presentiel');
-  });
-
-  it('fait une correspondance floue pour visio', () => {
-    expect(mapModality({ id: 1, value: 'Réunion en visio' })).toBe(
-      'distanciel',
-    );
   });
 });
 

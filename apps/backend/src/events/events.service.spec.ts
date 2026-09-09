@@ -20,7 +20,7 @@ const mockEvent: Event = {
   organizer: 'Association Test',
   isDuringWeek: true,
   modality: 'presentiel',
-  targetAudience: ['tout-public'],
+  targetAudience: [{ id: 'tout-public', name: 'tout-public' }],
   isFree: true,
 };
 

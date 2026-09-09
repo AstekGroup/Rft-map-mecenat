@@ -1,49 +1,5 @@
-/** Types d’événement affichés en tag / filtres (La Grande Semaine Végétale). */
-export type EventType =
-  | 'atelier-cuisine'
-  | 'degustation'
-  | 'visite-jardin'
-  | 'atelier-pedagogique'
-  | 'conference'
-  | 'festival'
-  | 'autre';
-
-/** Ordre des cases à cocher filtres et clés de `stats.byType`. */
-export const EVENT_TYPES_ALL: EventType[] = [
-  'atelier-cuisine',
-  'degustation',
-  'visite-jardin',
-  'atelier-pedagogique',
-  'conference',
-  'festival',
-  'autre',
-];
-
-export type EventFormat = 
-  | 'atelier-cuisine' 
-  | 'degustation' 
-  | 'visite-jardin' 
-  | 'atelier-pedagogique' 
-  | 'conference' 
-  | 'festival'
-  | 'autre';
-
-export type TargetAudience = 
-  | 'tout-public' 
-  | 'familles-enfants' 
-  | 'salaries-entreprise' 
-  | 'professionnels' 
-  | 'scolaires';
 
 export type EventModality = 'presentiel' | 'distanciel';
-
-export type EventTheme =
-  | 'cuisine-vegetale'
-  | 'sante-nutrition'
-  | 'biodiversite'
-  | 'agriculture'
-  | 'climat-environnement'
-  | 'autre';
 
 export interface LinkedTableRow {
   id: string;
@@ -79,7 +35,7 @@ export interface Event {
   venueName?: string;
   accessibilityInfo?: string;
   videoConferenceUrl?: string;
-  targetAudience: TargetAudience[];
+  targetAudience: LinkedTableRow[];
   contactEmail?: string;
   contactPhone?: string;
   organizerWebsite?: string;

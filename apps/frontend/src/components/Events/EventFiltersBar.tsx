@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { EventFilters, useConfig } from '@/hooks';
-import { TargetAudience, LinkedTableRow } from '@/types/event';
+import { LinkedTableRow } from '@/types/event';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { DateCustomRangeInputs } from '@/components/Filters/DateCustomRangeInputs';
 import { formatFrDateRangeLabel, isDateFilterActive } from '@/utils/eventDateRange';
@@ -18,6 +18,7 @@ interface EventFiltersBarProps {
   onResetFilters: () => void;
   availableThemes: LinkedTableRow[];
   availableFormats: LinkedTableRow[];
+  availablePublics: LinkedTableRow[];
 }
 
 interface FilterDropdownProps {
@@ -77,10 +78,10 @@ export function EventFiltersBar({
   onToggleAudience,
   availableThemes,
   availableFormats,
+  availablePublics,
   onResetFilters,
 }: EventFiltersBarProps) {
   const { config, helpers } = useConfig();
-  const AUDIENCES: TargetAudience[] = ['tout-public', 'familles-enfants', 'salaries-entreprise', 'professionnels', 'scolaires'];
   const { metropole: REGIONS_METRO, domtom: REGIONS_DOMTOM } = helpers.getRegionGroups();
   
 const dateFilterModes = config?.filters?.dateFilterModes || [
@@ -164,11 +165,12 @@ const dateFilterModes = config?.filters?.dateFilterModes || [
     });
   }
 
-  filters.audiences.forEach((audience) => {
+  filters.audiences.forEach((audienceId) => {
+    const audience = availablePublics.find(p => p.id === audienceId);
     activeTags.push({
-      key: `audience-${audience}`,
-      label: helpers.getEnumLabel('targetAudiences', audience),
-      onRemove: () => onToggleAudience(audience),
+      key: `audience-${audienceId}`,
+      label: audience?.name || audienceId,
+      onRemove: () => onToggleAudience(audienceId),
     });
   });
 
@@ -377,19 +379,19 @@ const dateFilterModes = config?.filters?.dateFilterModes || [
           badge={filters.audiences.length || undefined}
         >
           <div className="p-2 space-y-1">
-            {AUDIENCES.map((audience) => (
+            {availablePublics.map((audience) => (
               <label
-                key={audience}
+                key={audience.id}
                 className="flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-primary/5 transition-colors"
               >
                 <input
                   type="checkbox"
-                  checked={filters.audiences.includes(audience)}
-                  onChange={() => onToggleAudience(audience)}
+                  checked={filters.audiences.includes(audience.id)}
+                  onChange={() => onToggleAudience(audience.id)}
                   className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
                 />
-                <span className={filters.audiences.includes(audience) ? 'text-primary font-medium' : 'text-text-secondary'}>
-                  {helpers.getEnumLabel('targetAudiences', audience)}
+                <span className={filters.audiences.includes(audience.id) ? 'text-primary font-medium' : 'text-text-secondary'}>
+                  {audience.name}
                 </span>
               </label>
             ))}
