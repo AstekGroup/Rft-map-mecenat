@@ -58,6 +58,5 @@ export interface AppConfig {
     moderationVisibleValue: string;
     fieldMapping: Record<string, string>;
     mapping: Record<string, Record<string, string | Record<string, string>>>;
-    mappingHints?: Record<string, Record<string, string>>;
   };
 }

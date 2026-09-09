@@ -1,5 +1,4 @@
 import type {
-  TargetAudience,
   EventModality,
   LinkedTableRow,
 } from '@make-map/types';
@@ -9,45 +8,11 @@ import type {
   BaserowRecord,
 } from './baserow.types';
 
-// ============================================================
-// Default mapping maps (surchargeables via AppConfig)
-// ============================================================
-
-const DEFAULT_AUDIENCE_MAP: Record<string, TargetAudience> = {
-  'Tout public': 'tout-public',
-  Familles: 'familles-enfants',
-  'Famille / enfants': 'familles-enfants',
-  Scolaire: 'scolaires',
-  'Ecoliers / Etudiants': 'scolaires',
-  'Écoliers / Étudiants': 'scolaires',
-  Professionnels: 'professionnels',
-  "Salariés d'une entreprise": 'salaries-entreprise',
-  Salariés: 'salaries-entreprise',
-};
-
-const DEFAULT_AUDIENCE_HINTS: Record<string, TargetAudience> = {
-  'tout public': 'tout-public',
-  famille: 'familles-enfants',
-  enfant: 'familles-enfants',
-  colier: 'scolaires',
-  tudiant: 'scolaires',
-  scolaire: 'scolaires',
-  salari: 'salaries-entreprise',
-  entreprise: 'salaries-entreprise',
-  pro: 'professionnels',
-};
-
 const DEFAULT_MODALITY_MAP: Record<string, EventModality> = {
   Présentiel: 'presentiel',
   Distanciel: 'distanciel',
   'En ligne': 'distanciel',
   Hybride: 'presentiel',
-};
-
-const DEFAULT_MODALITY_HINTS: Record<string, EventModality> = {
-  distanciel: 'distanciel',
-  'en ligne': 'distanciel',
-  visio: 'distanciel',
 };
 
 // ============================================================
@@ -68,58 +33,19 @@ export function mapLinkedRow(
 }
 
 // ============================================================
-// Mapping Public
-// ============================================================
-
-export function mapTargetAudience(
-  baserowPublic: BaserowSelect[] | undefined,
-  audienceMap?: Record<string, TargetAudience>,
-  audienceHints?: Record<string, TargetAudience>,
-): TargetAudience[] {
-  const map = audienceMap || DEFAULT_AUDIENCE_MAP;
-  const hints = audienceHints || DEFAULT_AUDIENCE_HINTS;
-
-  if (!baserowPublic || baserowPublic.length === 0) return ['tout-public'];
-
-  const mapped = baserowPublic
-    .map((p) => {
-      const exact = map[p.value];
-      if (exact) return exact;
-
-      const lower = p.value.toLowerCase();
-      for (const [keyword, audience] of Object.entries(hints)) {
-        if (lower.includes(keyword)) return audience;
-      }
-
-      return null;
-    })
-    .filter((a): a is TargetAudience => a !== null);
-
-  return mapped.length > 0 ? mapped : ['tout-public'];
-}
-
-// ============================================================
 // Mapping Modalité
 // ============================================================
 
 export function mapModality(
   baserowType: BaserowSelect | undefined,
   modalityMap?: Record<string, EventModality>,
-  modalityHints?: Record<string, EventModality>,
 ): EventModality {
   const map = modalityMap || DEFAULT_MODALITY_MAP;
-  const hints = modalityHints || DEFAULT_MODALITY_HINTS;
 
   if (!baserowType) return 'presentiel';
 
   const exact = map[baserowType.value];
   if (exact) return exact;
-
-  const lower = baserowType.value.toLowerCase();
-  for (const [keyword, mod] of Object.entries(hints)) {
-    if (lower.includes(keyword)) return mod;
-  }
-
   return 'presentiel';
 }
 

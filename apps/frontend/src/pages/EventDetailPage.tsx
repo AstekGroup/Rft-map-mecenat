@@ -309,10 +309,10 @@ export function EventDetailPage() {
               <div className="flex flex-wrap gap-1">
                 {event.targetAudience.map((audience) => (
                   <span
-                    key={audience}
+                    key={audience.id}
                     className="text-sm bg-primary/5 text-primary-dark px-2.5 py-1 rounded-full border border-primary/10"
                   >
-                    {helpers.getEnumLabel('targetAudiences', audience)}
+                    {audience.name}
                   </span>
                 ))}
               </div>

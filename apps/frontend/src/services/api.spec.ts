@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchEvents, fetchEventById, fetchPartners, eventsToGeoJSON } from './api';
+import { fetchEvents, fetchEventById, fetchPartners, fetchThemes, fetchFormats, fetchPublics, eventsToGeoJSON } from './api';
 import type { Event, LinkedTableRow } from '@/types/event';
 
 const mockEvent: Event = {
@@ -20,7 +20,7 @@ const mockEvent: Event = {
   organizer: 'Org Test',
   isDuringWeek: true,
   modality: 'presentiel',
-  targetAudience: ['tout-public'],
+  targetAudience: [{ id: 'autre', name:'tout-public'}],
   isFree: true,
 };
 
@@ -28,6 +28,21 @@ const mockPartner: LinkedTableRow = {
   id: 'part1',
   name: 'Partenaire Test',
   logoUrl: 'https://test.com/logo.png',
+};
+
+const mockTheme: LinkedTableRow = {
+  id: 'theme1',
+  name: 'Thème Test',
+};
+
+const mockFormat: LinkedTableRow = {
+  id: 'format1',
+  name: 'Format Test',
+};
+
+const mockPublic: LinkedTableRow = {
+  id: 'public1',
+  name: 'Public Test',
 };
 
 describe('fetchEvents', () => {
@@ -102,6 +117,87 @@ describe('fetchPartners', () => {
     } as Response);
 
     await expect(fetchPartners()).rejects.toThrow('Erreur API: 500');
+  });
+});
+
+describe('fetchThemes', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn());
+  });
+
+  it('retourne les thématiques en cas de succès', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => [mockTheme],
+    } as Response);
+
+    const result = await fetchThemes();
+    expect(result).toEqual([mockTheme]);
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/api/events/themes'));
+  });
+
+  it('lève une erreur si la réponse n\'est pas ok', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error',
+    } as Response);
+
+    await expect(fetchThemes()).rejects.toThrow('Erreur API: 500');
+  });
+});
+
+describe('fetchFormats', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn());
+  });
+
+  it('retourne les formats en cas de succès', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => [mockFormat],
+    } as Response);
+
+    const result = await fetchFormats();
+    expect(result).toEqual([mockFormat]);
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/api/events/formats'));
+  });
+
+  it('lève une erreur si la réponse n\'est pas ok', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error',
+    } as Response);
+
+    await expect(fetchFormats()).rejects.toThrow('Erreur API: 500');
+  });
+});
+
+describe('fetchPublics', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn());
+  });
+
+  it('retourne le public cible en cas de succès', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => [mockPublic],
+    } as Response);
+
+    const result = await fetchPublics();
+    expect(result).toEqual([mockPublic]);
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/api/events/publics'));
+  });
+
+  it('lève une erreur si la réponse n\'est pas ok', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error',
+    } as Response);
+
+    await expect(fetchPublics()).rejects.toThrow('Erreur API: 500');
   });
 });
 

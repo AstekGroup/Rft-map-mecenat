@@ -22,6 +22,7 @@ export class EventsService {
   private partnersCache: CachedLinkedTable | null = null;
   private themesCache: CachedLinkedTable | null = null;
   private formatsCache: CachedLinkedTable | null = null;
+  private publicsCache: CachedLinkedTable | null = null;
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   constructor(private readonly baserowService: BaserowService) {}
@@ -109,6 +110,26 @@ export class EventsService {
     );
     this.formatsCache = { values: formats, timestamp: Date.now() };
     return formats;
+  }
+
+  /**
+   * Récupère tous les publics cible (avec cache TTL).
+   */
+  async findAllPublics(): Promise<LinkedTableRow[]> {
+    if (
+      this.publicsCache &&
+      Date.now() - this.publicsCache.timestamp < this.CACHE_TTL
+    ) {
+      return this.publicsCache.values;
+    }
+
+    this.logger.log(`Cache miss publics, chargement depuis Baserow...`);
+
+    const publics = await this.baserowService.fetchLinkedTableRow(
+      'BASEROW_PUBLICS_TABLE',
+    );
+    this.publicsCache = { values: publics, timestamp: Date.now() };
+    return publics;
   }
 
   /**

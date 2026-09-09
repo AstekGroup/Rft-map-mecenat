@@ -1,6 +1,5 @@
 import { EventFilters, useConfig } from '@/hooks';
-import { TargetAudience, LinkedTableRow,
-} from '@/types/event';
+import { LinkedTableRow} from '@/types/event';
 import { Calendar, MapPin, Tag, RotateCcw, Search, X, Hash, BookOpen, Handshake, Users, History, Globe } from 'lucide-react';
 import { Button } from '@/components/UI';
 import { FilterAccordion } from './FilterAccordion';
@@ -25,6 +24,7 @@ interface FilterPanelProps {
   };
   availableThemes: LinkedTableRow[];
   availableFormats: LinkedTableRow[];
+  availablePublics: LinkedTableRow[];
 }
 
 export function FilterPanel({
@@ -39,9 +39,9 @@ export function FilterPanel({
   onResetFilters,
   availableThemes,
   availableFormats,
+  availablePublics,
 }: FilterPanelProps) {
   const { config, helpers } = useConfig();
-  const AUDIENCES: TargetAudience[] = ['tout-public', 'familles-enfants', 'salaries-entreprise', 'professionnels', 'scolaires'];
   const { metropole: REGIONS_METRO, domtom: REGIONS_DOMTOM } = helpers.getRegionGroups();
   
   const dateFilterModes = config?.filters?.dateFilterModes || [
@@ -213,7 +213,7 @@ export function FilterPanel({
                 <input
                   type="checkbox"
                   checked={filters.themes.includes(theme.id)}
-                  onChange={() => onToggleTheme(theme.id as any)}
+                  onChange={() => onToggleTheme(theme.id)}
                   className="w-4 h-4 text-accent-pink border-primary/30 rounded focus:ring-accent-pink"
                 />
                 <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
@@ -226,6 +226,7 @@ export function FilterPanel({
         )}
 
         {/* Filtre par public cible */}
+        {availablePublics.length > 0 && (
         <FilterAccordion
           title="Public cible"
           icon={<Users className="w-4 h-4" />}
@@ -233,24 +234,25 @@ export function FilterPanel({
           badge={filters.audiences.length}
         >
           <div className="space-y-2">
-            {AUDIENCES.map((audience) => (
+            {availablePublics?.map((audience) => (
               <label
-                key={audience}
+                key={audience.id}
                 className="flex items-center gap-3 cursor-pointer group"
               >
                 <input
                   type="checkbox"
-                  checked={filters.audiences.includes(audience)}
-                  onChange={() => onToggleAudience(audience)}
+                  checked={filters.audiences.includes(audience.id)}
+                  onChange={() => onToggleAudience(audience.id)}
                   className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
                 />
                 <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-                  {helpers.getEnumLabel('targetAudiences', audience)}
+                  {audience.name}
                 </span>
               </label>
             ))}
           </div>
         </FilterAccordion>
+        )}
 
         {/* Filtre par code postal */}
         <FilterAccordion

@@ -31,6 +31,7 @@ export function MapPage() {
     stats,
     availableThemes,
     availableFormats,
+    availablePublics,
   } = useEvents();
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -170,6 +171,7 @@ export function MapPage() {
           mapBounds={mapBounds}
           availableThemes={availableThemes}
           availableFormats={availableFormats}
+          availablePublics={availablePublics}
         />
       </div>
 
@@ -198,6 +200,7 @@ export function MapPage() {
             mapBounds={mapBounds}
             availableThemes={availableThemes}
             availableFormats={availableFormats}
+            availablePublics={availablePublics}
           />
         </div>
       )}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Event, TargetAudience } from '@/types/event';
+import { Event } from '@/types/event';
 import { useEvents } from '@/hooks';
 import { MapView } from '@/components/Map';
 import { Sidebar } from '@/components/Sidebar';
@@ -23,6 +23,7 @@ function App() {
     stats,
     availableThemes,
     availableFormats,
+    availablePublics,
   } = useEvents();
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -89,7 +90,7 @@ function App() {
         onToggleTheme={toggleTheme}
         onTogglePartner={togglePartner}
         availablePartners={availablePartners}
-        onToggleAudience={(audience) => toggleAudience(audience as TargetAudience)}
+        onToggleAudience={toggleAudience}
         onResetFilters={resetFilters}
         selectedEvent={selectedEvent}
         onSelectEvent={setSelectedEvent}
@@ -98,6 +99,7 @@ function App() {
         stats={stats}
         availableThemes={availableThemes}
         availableFormats={availableFormats}
+        availablePublics={availablePublics}
       />
 
       {/* Badge compteur mobile */}

@@ -72,6 +72,18 @@ export async function fetchFormats(): Promise<LinkedTableRow[]> {
 }
 
 /**
+ * Récupère tout le public cible depuis le backend.
+ */
+export async function fetchPublics(): Promise<LinkedTableRow[]> {
+  const response = await fetch(`${API_BASE}/api/events/publics`);
+  if (!response.ok) {
+    throw new Error(`Erreur API: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
  * Récupère un événement par son ID depuis le backend.
  */
 export async function fetchEventById(id: string): Promise<Event> {
