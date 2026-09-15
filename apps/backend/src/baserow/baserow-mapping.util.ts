@@ -1,7 +1,4 @@
-import type {
-  EventModality,
-  LinkedTableRow,
-} from '@make-map/types';
+import type { EventModality, LinkedTableRow } from '@make-map/types';
 import type {
   BaserowAttachment,
   BaserowSelect,

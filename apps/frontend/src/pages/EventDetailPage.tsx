@@ -151,7 +151,7 @@ export function EventDetailPage() {
               {event.isDuringWeek && (
                 <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary-dark px-3 py-1.5 rounded-full text-sm font-medium">
                   <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                  La Grande Semaine Végétale
+                  {helpers.getText('home', 'mainTitle')}
                 </span>
               )}
               {isComplete && (

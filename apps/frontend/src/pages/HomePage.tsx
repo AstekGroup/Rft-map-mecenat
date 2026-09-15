@@ -86,9 +86,9 @@ export function HomePage() {
   );
 
   const editionYear = config?.app?.eventDates?.weekStart?.split('-')[0];
-  const heroTitle = helpers.getText('home', 'heroTitle');
+  const mainTitle = helpers.getText('home', 'mainTitle');
   const editionLabel = helpers.getText('home', 'editionLabel');
-  const heroDescription = helpers.getText('home', 'heroDescription');
+  const mainDescription = helpers.getText('home', 'mainDescription');
   const ctaText = helpers.getText('home', 'ctaText');
   const sectionPresentiel = helpers.getText('home', 'sectionPresentiel');
   const nearbySubtitle = helpers.getText('home', 'nearbySubtitle');
@@ -102,14 +102,14 @@ export function HomePage() {
       <div className="bg-primary text-white py-16 px-4">
         <div className="max-w-5xl mx-auto text-center">
           <h1 className="font-poppins text-4xl md:text-5xl font-bold mb-4">
-            {heroTitle}
+            {mainTitle}
           </h1>
           <p className="text-xl md:text-2xl text-white/90 mb-2 flex items-center justify-center gap-2">
             <Calendar className="w-6 h-6" />
             {editionLabel} {editionYear}
           </p>
           <p className="text-lg text-white/80 max-w-2xl mx-auto mt-4 font-body">
-            {heroDescription}
+            {mainDescription}
           </p>
           <div className="mt-8">
             <Link
