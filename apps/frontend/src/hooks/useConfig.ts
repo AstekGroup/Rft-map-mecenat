@@ -58,14 +58,7 @@ const REGIONS = [
 ];
 
 const ENUM_MAP = {
-  targetAudiences: [
-    { id: "tout-public", label: "Tout public" },
-    { id: "familles-enfants", label: "Famille / enfants" },
-    { id: "salaries-entreprise", label: "Salariés d'une entreprise" },
-    { id: "professionnels", label: "Professionnels" },
-    { id: "scolaires", label: "Scolaires" }
-  ],
-      modalities: [
+  modalities: [
     { id: "presentiel", label: "En présentiel" },
     { id: "distanciel", label: "En ligne" }
   ]

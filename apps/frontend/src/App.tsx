@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Event } from '@/types/event';
-import { useEvents } from '@/hooks';
+import {useConfig, useEvents} from '@/hooks';
 import { MapView } from '@/components/Map';
 import { Sidebar } from '@/components/Sidebar';
 import { Loader2 } from 'lucide-react';
@@ -28,6 +28,9 @@ function App() {
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [hoveredEvent, setHoveredEvent] = useState<Event | null>(null);
+  const {helpers} = useConfig();
+
+  const mainTitle = helpers.getText('home','mainTitle')
 
   // État de chargement
   if (loading) {
@@ -39,7 +42,7 @@ function App() {
             Chargement des événements...
           </p>
           <p className="text-text-secondary text-sm mt-2 font-inter">
-            Découvrez La Grande Semaine Végétale
+            Découvrez {mainTitle}
           </p>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Event, LinkedTableRow } from '@/types/event';
-import { EventFilters } from '@/hooks';
+import {EventFilters, useConfig} from '@/hooks';
 import { EventCard } from './EventCard';
 import { FilterPanel } from '@/components/Filters/FilterPanel';
 import { ChevronLeft, ChevronRight, Filter, List, MapIcon } from 'lucide-react';
@@ -54,6 +54,7 @@ export function Sidebar({
   availableFormats,
   availablePublics,
 }: SidebarProps) {
+  const { helpers } = useConfig();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<'list' | 'filters'>('list');
 
@@ -265,7 +266,7 @@ export function Sidebar({
       <div className="p-4 bg-white border-t border-primary/10">
         <div className="flex items-center justify-between text-sm">
           <span className="text-text-secondary">
-            <span className="font-semibold text-primary">{stats.duringWeek}</span> pour La Grande Semaine Végétale
+            <span className="font-semibold text-primary">{stats.duringWeek}</span> pour {helpers.getText('home', 'mainTitle')}
           </span>
           {filtersActiveBadge && (
             <button

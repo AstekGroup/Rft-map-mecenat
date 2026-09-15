@@ -68,7 +68,7 @@ export function EventPopup({ event, onClose, onViewDetails }: EventPopupProps) {
         {event.isDuringWeek && (
           <div className="inline-flex items-center gap-1.5 bg-primary/10 text-primary-dark px-2.5 py-1 rounded-full text-xs font-medium">
             <span className="w-2 h-2 bg-primary rounded-full animate-pulse-soft" />
-            La Grande Semaine Végétale
+            {helpers.getText('home', 'mainTitle')}
           </div>
         )}
         

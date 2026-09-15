@@ -3,6 +3,7 @@ import { Event } from '@/types/event';
 import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { Calendar, Clock, MapPin, BookOpen, Handshake, Globe } from 'lucide-react';
 import { Badge } from '@/components/UI';
+import {useConfig} from "@/hooks";
 
 interface EventCardProps {
   event: Event;
@@ -21,6 +22,7 @@ function EventCardComponent({
   onMouseEnter,
   onMouseLeave,
 }: EventCardProps) {
+  const {helpers} = useConfig();
   const formattedDate = new Date(event.date).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'short',
@@ -126,7 +128,7 @@ function EventCardComponent({
           {event.isDuringWeek && (
             <div className="mt-2 inline-flex items-center gap-1 text-xs text-primary font-medium">
               <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse-soft" />
-              La Grande Semaine Végétale
+              {helpers.getText('home', 'mainTitle')}
             </div>
           )}
         </div>
