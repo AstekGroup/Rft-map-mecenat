@@ -284,12 +284,7 @@ export class BaserowService {
       record[fm.endDate || "Date de fin de l'événement"],
     );
 
-    const modalityMap = this.mm?.modality as Record<string, string> | undefined;
-
-    const modality = mapModality(
-      record[fm.modality || "Type de l'événement"],
-      modalityMap as any,
-    );
+    const modality = mapModality(record[fm.modality || "Type de l'événement"]);
 
     const format = mapLinkedRow(record, fm.format || 'Formats', formatsMap);
 

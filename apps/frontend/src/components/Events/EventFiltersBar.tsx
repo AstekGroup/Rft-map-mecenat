@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { EventFilters, useConfig } from '@/hooks';
 import { LinkedTableRow } from '@/types/event';
-import { TYPE_ICONS } from '@/components/Map/EventMarker';
+import {checkIconColor, getIcon} from '@/utils/iconResolver';
 import { DateCustomRangeInputs } from '@/components/Filters/DateCustomRangeInputs';
 import { formatFrDateRangeLabel, isDateFilterActive } from '@/utils/eventDateRange';
 import { ChevronDown, RotateCcw, X, Search, MapPin, Globe, Handshake, History } from 'lucide-react';
@@ -315,13 +315,15 @@ const dateFilterModes = config?.filters?.dateFilterModes || [
         )}
         
         {/* Type filter with icons */}
+        {availableFormats.length > 0 && (
         <FilterDropdown
           label="Type d'événement"
           badge={filters.types.length || undefined}
         >
           <div className="p-2 space-y-1">
             {availableFormats.map((type) => {
-              const Icon = type?.pictoName? TYPE_ICONS[type.pictoName] : Globe;
+              const Icon = getIcon(type?.pictoName, Globe);
+              const typeColor = checkIconColor(type.colorHexa, "#D4DDE2");
               return (
                 <label
                   key={type.id}
@@ -335,7 +337,7 @@ const dateFilterModes = config?.filters?.dateFilterModes || [
                   />
                   <span
                     className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: type.colorHexa }}
+                    style={{ backgroundColor: typeColor }}
                   >
                     <Icon className="w-3 h-3 text-white" />
                   </span>
@@ -347,8 +349,10 @@ const dateFilterModes = config?.filters?.dateFilterModes || [
             })}
           </div>
         </FilterDropdown>
+        )}
 
         {/* Thématiques filter */}
+        {availableFormats.length > 0 && (
         <FilterDropdown
           label="Thématiques"
           badge={filters.themes.length || undefined}
@@ -372,8 +376,10 @@ const dateFilterModes = config?.filters?.dateFilterModes || [
             ))}
           </div>
         </FilterDropdown>
+        )}
         
         {/* Audience filter */}
+        {availablePublics.length > 0 && (
         <FilterDropdown
           label="Public cible"
           badge={filters.audiences.length || undefined}
@@ -397,6 +403,7 @@ const dateFilterModes = config?.filters?.dateFilterModes || [
             ))}
           </div>
         </FilterDropdown>
+        )}
 
         {/* Postal code filter */}
         {filters.modality !== 'distanciel' && (

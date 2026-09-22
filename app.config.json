@@ -35,8 +35,8 @@
       "iconRef": "https://lagrandesemainevegetale.fr/favicon.ico"
     },
     "home": {
-      "heroTitle": "La Grande Semaine Végétale",
-      "heroDescription": "Découvrez des ateliers cuisine, des dégustations et des rencontres partout en France pour promouvoir une alimentation végétale accessible et gourmande.",
+      "mainTitle": "La Grande Semaine Végétale",
+      "mainDescription": "Découvrez des ateliers cuisine, des dégustations et des rencontres partout en France pour promouvoir une alimentation végétale accessible et gourmande.",
       "ctaText": "Voir la carte des événements",
       "ctaTextShort": "Découvrir les événements",
       "editionLabel": "Édition",
@@ -51,7 +51,7 @@
   "filters": {
     "dateFilterModes": [
       { "mode": "all", "label": "Toutes les dates" },
-      { "mode": "during-week", "label": "Pendant La Grande Semaine Végétale !" },
+      { "mode": "during-week", "label": "Pendant La Grande Semaine Végétale" },
       { "mode": "custom", "label": "Dates personnalisées" }
     ]
   },
@@ -63,10 +63,10 @@
       "description": "Description",
       "startDate": "Date de début de l'événement",
       "endDate": "Date de fin de l'événement",
-      "format": "Formats",
+      "format": "Format",
       "modality": "Type de l'événement",
-      "audience": "Publics",
-      "theme": "Thématiques",
+      "audience": "Public",
+      "theme": "Thématique",
       "image": "Visuel de l'évènement",
       "address": "Adresse du lieu",
       "postalCode": "Code postal du lieu",
@@ -88,14 +88,6 @@
       "partnerField": "Partenaires",
       "moderation": "Modération de l'événement",
       "visibility": "Visibilité sur la cartographie"
-    },
-    "mapping": {
-      "modality": {
-        "Présentiel": "presentiel",
-        "Distanciel": "distanciel",
-        "En ligne": "distanciel",
-        "Hybride": "presentiel"
-      }
     }
   }
 }

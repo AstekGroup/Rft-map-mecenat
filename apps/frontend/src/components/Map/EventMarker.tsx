@@ -1,18 +1,7 @@
 import { memo } from 'react';
-import {
-  MapPin,
-  Utensils,
-  Apple,
-  Mic2,
-  HelpCircle,
-  Map,
-  BookOpen,
-  Music,
-  Calendar,
-  TrophyIcon,
-  GraduationCap, Users, Heart, PartyPopper, Briefcase
-} from 'lucide-react';
 import { LinkedTableRow} from '@/types/event';
+import {checkIconColor, getIcon} from "@/utils/iconResolver.ts";
+import {HelpCircle} from "lucide-react";
 
 interface EventMarkerProps {
   type: LinkedTableRow;
@@ -24,25 +13,6 @@ interface EventMarkerProps {
   dateLabel?: string;
 }
 
-export const TYPE_ICONS: Record<string, typeof MapPin> = {
-  'utensils': Utensils,
-  'apple': Apple,
-  'map': Map,
-  'book-open': BookOpen,
-  'mic-vocal': Mic2,
-  'music': Music,
-  'circle-question-mark': HelpCircle,
-  'calendar': Calendar,
-  'trophy': TrophyIcon,
-  'graduation-cap': GraduationCap,
-  'users': Users,
-  'heart': Heart,
-  'map-pin': MapPin,
-  'party-popper': PartyPopper,
-  'briefcase': Briefcase,
-  'autre': HelpCircle,
-};
-
 function EventMarkerComponent({
   type,
   isSelected = false,
@@ -52,7 +22,8 @@ function EventMarkerComponent({
   size = 'md',
   dateLabel,
 }: EventMarkerProps) {
-  const Icon = type?.pictoName? TYPE_ICONS[type.pictoName] : HelpCircle;
+  const Icon = getIcon(type?.pictoName, HelpCircle);
+  const typeColor = checkIconColor(type?.colorHexa, "#D4DDE2");
   const isSmall = size === 'sm';
 
   return (
@@ -60,7 +31,7 @@ function EventMarkerComponent({
       <div
         className={`event-marker animate-scale-in ${isSelected ? 'ring-2 ring-white scale-125' : ''}`}
         style={{
-          backgroundColor: type?.colorHexa,
+          backgroundColor: typeColor,
           width: isSmall ? '16px' : '32px',
           height: isSmall ? '16px' : '32px',
         }}
@@ -75,7 +46,7 @@ function EventMarkerComponent({
       {dateLabel && (
         <div
           className="px-1.5 py-0.5 rounded-full text-white text-[10px] font-semibold leading-none shadow-sm whitespace-nowrap pointer-events-none"
-          style={{ backgroundColor: type.colorHexa }}
+          style={{ backgroundColor: typeColor }}
           onClick={onClick}
         >
           {dateLabel}
