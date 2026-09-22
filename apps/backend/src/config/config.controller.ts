@@ -7,6 +7,6 @@ export class AppConfigController {
 
   @Get()
   getConfig() {
-    return this.appConfig.get();
+    return { ...this.appConfig.get(), baserow: {} };
   }
 }

@@ -35,9 +35,8 @@ export function mapLinkedRow(
 
 export function mapModality(
   baserowType: BaserowSelect | undefined,
-  modalityMap?: Record<string, EventModality>,
 ): EventModality {
-  const map = modalityMap || DEFAULT_MODALITY_MAP;
+  const map = DEFAULT_MODALITY_MAP;
 
   if (!baserowType) return 'presentiel';
 

@@ -5,14 +5,14 @@ import { useEvents } from '@/hooks';
 import { useConfig } from '@/hooks/useConfig';
 import { Event } from '@/types/event';
 import { Loader2 } from 'lucide-react';
-import {TYPE_ICONS} from "@/components/Map/EventMarker.tsx";
+import {checkIconColor, getIcon} from "@/utils/iconResolver.ts";
 
 function MiniEventCard({ event }: { event: Event }) {
   const { config } = useConfig();
-  const Icon = event.type?.pictoName ? TYPE_ICONS[event.type.pictoName] : Globe;
-  const typeColor = event.type?.colorHexa || "#D4DDE2";
+  const Icon = getIcon(event.type?.pictoName, Globe);
+  const typeColor = checkIconColor(event.type?.colorHexa, "#D4DDE2");
   const editionYear = config?.app?.eventDates?.weekStart?.split('-')[0];
-  const weekBadgeText = editionYear ? `${config.app.shortName} ${editionYear}` : 'LGSV 2026';
+  const weekBadgeText = editionYear ? `${config.app.shortName} ${editionYear}` : `${editionYear}`;
   const formattedDate = new Date(event.date).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'long',

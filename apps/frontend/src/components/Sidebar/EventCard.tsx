@@ -1,9 +1,9 @@
 import { memo } from 'react';
 import { Event } from '@/types/event';
-import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { Calendar, Clock, MapPin, BookOpen, Handshake, Globe } from 'lucide-react';
 import { Badge } from '@/components/UI';
 import {useConfig} from "@/hooks";
+import {checkIconColor, getIcon} from "@/utils/iconResolver.ts";
 
 interface EventCardProps {
   event: Event;
@@ -28,8 +28,8 @@ function EventCardComponent({
     month: 'short',
   });
 
-  const Icon = event.type?.pictoName ? TYPE_ICONS[event.type.pictoName] : Globe;
-  const color = event.type?.colorHexa || "#D4DDE2";
+  const Icon = getIcon(event?.type?.pictoName, Globe);
+  const color = checkIconColor(event.type?.colorHexa, "#D4DDE2");
 
   return (
     <div

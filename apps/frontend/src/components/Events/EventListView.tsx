@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Event } from '@/types/event';
-import { TYPE_ICONS } from '@/components/Map/EventMarker';
 import { Pagination } from '@/components/UI/Pagination';
-import {Calendar, Clock, Users, Accessibility, MapPin, Video, BookOpen} from 'lucide-react';
+import {Calendar, Clock, Users, Accessibility, MapPin, Video, BookOpen, HelpCircle} from 'lucide-react';
+import {checkIconColor, getIcon} from "@/utils/iconResolver.ts";
 
 const ITEMS_PER_PAGE = 24;
 
@@ -64,8 +64,8 @@ export function EventListView({ events }: EventListViewProps) {
       <div className="flex-1 overflow-y-auto p-4">
         <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {paginatedEvents.map((event) => {
-            const Icon = event.type?.pictoName ? TYPE_ICONS[event.type.pictoName] : TYPE_ICONS['autre'];
-            const typeColor = event.type?.colorHexa || "#D4DDE2";
+            const Icon = getIcon(event.type?.pictoName, HelpCircle);
+            const typeColor = checkIconColor(event.type?.colorHexa, "#D4DDE2");
             
             return (
               <Link

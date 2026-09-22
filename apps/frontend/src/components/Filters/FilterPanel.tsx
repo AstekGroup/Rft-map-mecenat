@@ -5,7 +5,7 @@ import { Button } from '@/components/UI';
 import { FilterAccordion } from './FilterAccordion';
 import { DateCustomRangeInputs } from '@/components/Filters/DateCustomRangeInputs';
 import { isDateFilterActive } from '@/utils/eventDateRange';
-import {TYPE_ICONS} from "@/components/Map/EventMarker.tsx";
+import {checkIconColor, getIcon} from "@/utils/iconResolver.ts";
 
 interface FilterPanelProps {
   filters: EventFilters;
@@ -168,7 +168,8 @@ export function FilterPanel({
         >
           <div className="space-y-2">
             {availableFormats.map((type) => {
-              const Icon =  type.pictoName? TYPE_ICONS[type.pictoName] : Globe;
+              const Icon =  getIcon(type.pictoName, Globe);
+              const typeColor = checkIconColor(type.colorHexa, "#D4DDE2");
               return (
                 <label
                   key={type.id}
@@ -182,7 +183,7 @@ export function FilterPanel({
                   />
                   <div
                     className="w-6 h-6 rounded-md flex items-center justify-center"
-                    style={{ backgroundColor: type.colorHexa }}
+                    style={{ backgroundColor: typeColor }}
                   >
                     <Icon className="w-3.5 h-3.5 text-white" />
                   </div>

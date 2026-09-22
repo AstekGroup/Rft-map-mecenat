@@ -20,7 +20,7 @@ import {
 import { useEvents } from '@/hooks';
 import { useConfig } from '@/hooks/useConfig';
 import { Loader2 } from 'lucide-react';
-import {TYPE_ICONS} from "@/components/Map/EventMarker.tsx";
+import {getIcon} from "@/utils/iconResolver.ts";
 
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -90,7 +90,7 @@ export function EventDetailPage() {
       })
     : null;
 
-  const Icon = event.type?.pictoName? TYPE_ICONS[event.type.pictoName] : Globe;
+  const Icon = getIcon(event.type?.pictoName, Globe);
 
   const isComplete = event.capacity && event.registeredCount && event.registeredCount >= event.capacity;
 
