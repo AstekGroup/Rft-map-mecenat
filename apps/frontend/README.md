@@ -2,7 +2,7 @@
 
 Application React pour afficher les événements de **La Grande Semaine Végétale** sur une carte interactive de France.
 
-**Assistants IA** : [AGENTS.md](./AGENTS.md) dans ce dossier (détail local) ; index global [AGENTS.md](../../AGENTS.md). Cette app consomme le backend NestJS, pas Airtable en direct.
+**Assistants IA** : [AGENTS.md](./AGENTS.md) dans ce dossier (détail local) ; index global [AGENTS.md](../../AGENTS.md). Cette app consomme le backend NestJS, pas Baserow en direct.
 
 ## Aperçu
 
@@ -62,11 +62,11 @@ src/
 │   ├── EventsListPage.tsx  # Liste des événements
 │   └── EventDetailPage.tsx # Détail d'un événement
 ├── services/
-│   ├── api.ts              # Service API Airtable + fallback mock
+│   ├── api.ts              # Service API backend + fallback mock
 │   ├── geocoding.ts        # Géocodage via api-adresse.data.gouv.fr
-│   └── airtableMapping.ts  # Mapping champs Airtable → types internes
+│   └── baserowMapping.ts  # Mapping champs Baserow → types internes
 ├── data/
-│   └── mockEvents.ts  # Données mockées (fallback si Airtable non configuré)
+│   └── mockEvents.ts  # Données mockées (fallback si backend non configuré)
 ├── types/
 │   └── event.ts       # Types TypeScript
 └── styles/
@@ -75,22 +75,22 @@ src/
 
 ## Design System
 
-Couleurs selon [lgsv-design.yml](../../resources/lgsv-design.yml) :
+Couleurs :
+Chargées à partir du fichier de config app.config.json (theme.colors)
 
-| Couleur | Hex | Usage |
-|---------|-----|-------|
-| Vert Principal | `#3BAE5D` | Boutons, CTAs, accents |
-| Vert Foncé | `#1F7A3E` | Titres, hovers |
-| Vert Clair | `#A7D7B5` | Fonds, cartes |
-| Beige | `#F2EDE4` | Fonds secondaires |
-| Texte Sombre | `#2E2E2E` | Corps de texte |
+| Config | Usage |
+|---------|-------|
+| primary | Boutons, CTAs, accents |
+| primary-dark | Titres, hovers |
+| primary-light | Fonds, cartes |
 
 Typographie :
-- **Primaire** : Inter
-- **Secondaire** : Poppins
-## Configuration API Airtable
+Chargées à partir du fichier de config app.config.json (theme.fonts)
 
-L'application se connecte à une base Airtable pour récupérer les événements. En l'absence de configuration, elle utilise les données mockées (fallback automatique).
+
+## Configuration API Backend
+
+L'application se connecte au backend NestJS pour récupérer les événements. En l'absence de configuration, elle utilise les données mockées (fallback automatique).
 
 ### Variables d'environnement
 
@@ -101,19 +101,14 @@ cp .env.example .env
 ```
 
 ```env
-# MapTiler (carte)
-VITE_MAPTILER_KEY=votre_cle_maptiler
-
-# Airtable (données événements)
-VITE_AIRTABLE_API_KEY=votre_personal_access_token
-VITE_AIRTABLE_BASE_ID=votre_base_id      # commence par "app"
-VITE_AIRTABLE_TABLE_ID=votre_table_id    # commence par "tbl"
+# Backend (données événements)
+VITE_API_URL=http://localhost:3000
 ```
 
 ### Architecture du pipeline de données
 
-1. **Fetch** : Récupération paginée depuis Airtable (GET uniquement, lecture seule)
-2. **Mapping** : Transformation des champs français Airtable vers le modèle Event interne
+1. **Fetch** : Récupération paginée depuis le backend (GET uniquement, lecture seule)
+2. **Mapping** : Transformation des champs français Baserow vers le modèle Event interne
 3. **Géocodage** : Conversion des adresses en coordonnées GPS via api-adresse.data.gouv.fr (API BAN, gratuite)
 4. **Cache** : Les résultats de géocodage sont mis en cache dans localStorage (7 jours)
 5. **Filtre** : Par défaut, seuls les événements validés et visibles sur la cartographie sont récupérés

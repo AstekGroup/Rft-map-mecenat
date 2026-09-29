@@ -200,14 +200,14 @@ export class BaserowService {
   private async fetchRecords(devMode: boolean): Promise<BaserowRecord[]> {
     const apiToken = this.configService.get<string>('BASEROW_API_TOKEN');
     const apiUrl = this.configService.get<string>('BASEROW_API_URL');
-    const tableId = this.configService.get<string>('BASEROW_TABLE_ID');
+    const tableId = this.configService.get<string>('BASEROW_EVENT_TABLE_ID');
     const moderationFieldId = this.configService.get<string>(
       'BASEROW_MODERATION_FIELD_ID',
     );
 
     if (!apiToken || !apiUrl || !tableId) {
       throw new Error(
-        'Configuration Baserow manquante. Vérifiez BASEROW_API_TOKEN, BASEROW_API_URL et BASEROW_TABLE_ID.',
+        'Configuration Baserow manquante. Vérifiez BASEROW_API_TOKEN, BASEROW_API_URL et BASEROW_EVENT_TABLE_ID.',
       );
     }
 
