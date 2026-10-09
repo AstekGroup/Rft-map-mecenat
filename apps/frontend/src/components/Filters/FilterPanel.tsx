@@ -1,10 +1,12 @@
 import { EventFilters, useConfig } from '@/hooks';
 import { LinkedTableRow} from '@/types/event';
-import { Calendar, MapPin, Tag, RotateCcw, Search, X, Hash, BookOpen, Handshake, Users, History, Globe } from 'lucide-react';
+import { Calendar, MapPin, Tag, RotateCcw, Search, X, Hash, BookOpen, Handshake, Users, Globe } from 'lucide-react';
 import { Button } from '@/components/UI';
 import { FilterAccordion } from './FilterAccordion';
+import { PastEventsToggle } from './PastEventsToggle';
 import { DateCustomRangeInputs } from '@/components/Filters/DateCustomRangeInputs';
 import { isDateFilterActive } from '@/utils/eventDateRange';
+import { countActiveFilters } from '@/utils/eventFilters';
 import {checkIconColor, getIcon} from "@/utils/iconResolver.ts";
 
 interface FilterPanelProps {
@@ -49,15 +51,7 @@ export function FilterPanel({
     { mode: 'during-week', label: 'Pendant la semaine de ...' },
     { mode: 'custom', label: 'Dates personnalisées' },
   ];
-  const hasActiveFilters =
-    filters.search ||
-    filters.postalCode ||
-    filters.regions.length > 0 ||
-    filters.types.length > 0 ||
-    filters.themes.length > 0 ||
-    filters.partners.length > 0 ||
-    filters.audiences.length > 0 ||
-    isDateFilterActive(filters.dateFilter, filters.dateFrom);
+  const hasActiveFilters = countActiveFilters(filters) > 0;
 
   return (
     <div className="flex flex-col h-full font-inter">
@@ -69,7 +63,7 @@ export function FilterPanel({
             type="text"
             value={filters.search}
             onChange={(e) => onUpdateFilters({ search: e.target.value })}
-            placeholder="Rechercher..."
+            placeholder="Rechercher un événement par titre"
             className="w-full pl-9 pr-9 py-2.5 bg-white border border-primary/20 rounded-lg text-sm text-text-primary placeholder:text-text-secondary/70 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
           />
           {filters.search && (
@@ -345,28 +339,10 @@ export function FilterPanel({
 
       {/* Toggle événements passés */}
       <div className="px-4 py-3 border-t border-primary/10">
-        <label className="flex items-center gap-3 cursor-pointer group">
-          <button
-            role="switch"
-            aria-checked={filters.showPastEvents}
-            onClick={() => onUpdateFilters({ showPastEvents: !filters.showPastEvents })}
-            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 ${
-              filters.showPastEvents ? 'bg-primary' : 'bg-primary/20'
-            }`}
-          >
-            <span
-              className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                filters.showPastEvents ? 'translate-x-4' : 'translate-x-0.5'
-              }`}
-            />
-          </button>
-          <div className="flex items-center gap-2">
-            <History className="w-4 h-4 text-text-secondary" />
-            <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-              Afficher les événements passés
-            </span>
-          </div>
-        </label>
+        <PastEventsToggle
+          checked={filters.showPastEvents}
+          onChange={() => onUpdateFilters({ showPastEvents: !filters.showPastEvents })}
+        />
       </div>
 
       {/* Bouton réinitialiser */}
