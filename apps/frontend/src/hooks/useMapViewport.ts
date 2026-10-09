@@ -1,13 +1,11 @@
 import { useState, useCallback } from 'react';
 import type { ViewState } from 'react-map-gl';
 
-// Centre de la France métropolitaine
-const FRANCE_CENTER = {
+export const FRANCE_DEFAULT_VIEW = {
   longitude: 2.2137,
   latitude: 46.2276,
-};
-
-const INITIAL_ZOOM = 5.5;
+  zoom: 5.5,
+} as const;
 
 export interface MapViewport extends ViewState {
   width?: number;
@@ -16,9 +14,9 @@ export interface MapViewport extends ViewState {
 
 export function useMapViewport() {
   const [viewport, setViewport] = useState<MapViewport>({
-    longitude: FRANCE_CENTER.longitude,
-    latitude: FRANCE_CENTER.latitude,
-    zoom: INITIAL_ZOOM,
+    longitude: FRANCE_DEFAULT_VIEW.longitude,
+    latitude: FRANCE_DEFAULT_VIEW.latitude,
+    zoom: FRANCE_DEFAULT_VIEW.zoom,
     bearing: 0,
     pitch: 0,
     padding: { top: 0, bottom: 0, left: 0, right: 0 },
@@ -44,9 +42,9 @@ export function useMapViewport() {
   const resetView = useCallback(() => {
     setViewport(prev => ({
       ...prev,
-      longitude: FRANCE_CENTER.longitude,
-      latitude: FRANCE_CENTER.latitude,
-      zoom: INITIAL_ZOOM,
+      longitude: FRANCE_DEFAULT_VIEW.longitude,
+      latitude: FRANCE_DEFAULT_VIEW.latitude,
+      zoom: FRANCE_DEFAULT_VIEW.zoom,
     }));
   }, []);
 
