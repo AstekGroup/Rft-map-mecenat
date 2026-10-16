@@ -1,0 +1,556 @@
+#!/usr/bin/env node
+/**
+ * Seed Baserow LOCAL pour l'audit et le dev (outil de dev, JAMAIS en production).
+ *
+ * - Crée (idempotent) un compte admin, une base "LGSV test", 5 tables
+ *   (Événements, Partenaires, Thématiques, Formats, Publics) et leurs champs.
+ * - Vide puis recharge les lignes : le résultat est reproductible à chaque exécution.
+ * - Écrit apps/backend/.env (gitignoré) avec les IDs de tables, de champ et le jeton.
+ * - Écrit scripts/seed-baserow/out/schema.json (schéma réel créé).
+ *
+ * Le noms des champs suivent `app.config.json > baserow.fieldMapping` (vérité d'exécution).
+ * NB : exception assumée à la règle "Baserow en lecture seule" : cette règle concerne
+ * le BACKEND de l'application, pas cet outil de dev qui cible une instance Docker locale.
+ *
+ * Usage :
+ *   node scripts/seed-baserow/seed.mjs [--bulk=1500] [--url=http://localhost:8088] [--no-env]
+ */
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { deflateSync } from 'node:zlib';
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+const args = Object.fromEntries(
+  process.argv.slice(2).map((a) => {
+    const [k, v] = a.replace(/^--/, '').split('=');
+    return [k, v ?? true];
+  }),
+);
+const BASE = (args.url || process.env.BASEROW_LOCAL_URL || 'http://localhost:8088').replace(/\/$/, '');
+const BULK = parseInt(args.bulk || '0', 10);
+const ADMIN = {
+  name: 'Admin LGSV',
+  email: process.env.BASEROW_LOCAL_EMAIL || 'admin@lgsv.local',
+  password: process.env.BASEROW_LOCAL_PASSWORD || 'Lgsv-Local-2026!',
+};
+const DB_NAME = 'LGSV test';
+
+// Noms de champs : repris de app.config.json (fieldMapping) pour rester alignés avec le backend.
+const appConfig = JSON.parse(readFileSync(resolve(ROOT, 'app.config.json'), 'utf8'));
+const FM = appConfig.baserow.fieldMapping;
+const MODERATION_OK = appConfig.baserow.moderationVisibleValue; // "Accepté"
+
+// ---------------------------------------------------------------- HTTP
+let jwt = null;
+async function api(method, path, body, { token = 'jwt', raw = false } = {}) {
+  const headers = {};
+  if (token === 'jwt' && jwt) headers.Authorization = `JWT ${jwt}`;
+  let payload;
+  if (body instanceof FormData) payload = body;
+  else if (body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+    payload = JSON.stringify(body);
+  }
+  const res = await fetch(`${BASE}${path}`, { method, headers, body: payload });
+  const text = await res.text();
+  let json;
+  try {
+    json = text ? JSON.parse(text) : null;
+  } catch {
+    json = text;
+  }
+  if (raw) return { status: res.status, json };
+  if (!res.ok) {
+    throw new Error(`${method} ${path} -> ${res.status} ${typeof json === 'string' ? json : JSON.stringify(json)}`);
+  }
+  return json;
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const log = (...a) => console.log('[seed]', ...a);
+
+async function waitReady() {
+  for (let i = 0; i < 120; i++) {
+    try {
+      const r = await fetch(`${BASE}/api/_health/`);
+      if (r.ok) return;
+    } catch {
+      /* pas prêt */
+    }
+    if (i % 5 === 0) log(`Baserow pas prêt (${BASE}), attente...`);
+    await sleep(5000);
+  }
+  throw new Error(`Baserow injoignable sur ${BASE}`);
+}
+
+async function authenticate() {
+  const signup = await api(
+    'POST',
+    '/api/user/',
+    { ...ADMIN, language: 'fr', authenticate: true },
+    { token: null, raw: true },
+  );
+  if (signup.status === 200) {
+    jwt = signup.json.access_token ?? signup.json.token;
+    log('Compte admin créé');
+    return;
+  }
+  const login = await api(
+    'POST',
+    '/api/user/token-auth/',
+    { email: ADMIN.email, password: ADMIN.password },
+    { token: null },
+  );
+  jwt = login.access_token ?? login.token;
+  log('Connecté avec le compte admin existant');
+}
+
+// ---------------------------------------------------------------- Schéma
+async function ensureWorkspaceAndDb() {
+  const workspaces = await api('GET', '/api/workspaces/');
+  let workspace = workspaces[0];
+  if (!workspace) {
+    workspace = await api('POST', '/api/workspaces/', { name: 'LGSV' });
+    log('Workspace "LGSV" créé');
+  }
+  const apps = await api('GET', `/api/applications/workspace/${workspace.id}/`);
+  let db = apps.find((a) => a.type === 'database' && a.name === DB_NAME);
+  if (!db) {
+    db = await api('POST', `/api/applications/workspace/${workspace.id}/`, {
+      name: DB_NAME,
+      type: 'database',
+    });
+    log(`Base "${DB_NAME}" créée`);
+  }
+  return { workspace, db };
+}
+
+async function ensureTable(db, name, primaryName) {
+  const tables = await api('GET', `/api/database/tables/database/${db.id}/`);
+  let table = tables.find((t) => t.name === name);
+  if (!table) {
+    table = await api('POST', `/api/database/tables/database/${db.id}/`, {
+      name,
+      data: [[primaryName]],
+      first_row_header: true,
+    });
+    log(`Table "${name}" créée`);
+  }
+  let fields = await api('GET', `/api/database/fields/table/${table.id}/`);
+  const primary = fields.find((f) => f.primary);
+  if (primary && primary.name !== primaryName) {
+    await api('PATCH', `/api/database/fields/${primary.id}/`, { name: primaryName });
+    fields = await api('GET', `/api/database/fields/table/${table.id}/`);
+  }
+  return { table, fields };
+}
+
+async function ensureField(ctx, def) {
+  const existing = ctx.fields.find((f) => f.name === def.name);
+  if (existing) return existing;
+  const created = await api('POST', `/api/database/fields/table/${ctx.table.id}/`, def);
+  ctx.fields.push(created);
+  return created;
+}
+
+const opts = (values, color = 'light-blue') => values.map((value) => ({ value, color }));
+
+// ---------------------------------------------------------------- Images PNG générées
+function crc32(buf) {
+  let c;
+  let crc = 0xffffffff;
+  for (let n = 0; n < buf.length; n++) {
+    c = (crc ^ buf[n]) & 0xff;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    crc = (crc >>> 8) ^ c;
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+function chunk(type, data) {
+  const len = Buffer.alloc(4);
+  len.writeUInt32BE(data.length);
+  const td = Buffer.concat([Buffer.from(type), data]);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(td));
+  return Buffer.concat([len, td, crc]);
+}
+function makePng(w, h, [r, g, b]) {
+  const row = Buffer.alloc(1 + w * 3);
+  for (let x = 0; x < w; x++) {
+    row[1 + x * 3] = r;
+    row[2 + x * 3] = g;
+    row[3 + x * 3] = b;
+  }
+  const raw = Buffer.concat(Array.from({ length: h }, () => row));
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(w, 0);
+  ihdr.writeUInt32BE(h, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 2;
+  return Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    chunk('IHDR', ihdr),
+    chunk('IDAT', deflateSync(raw)),
+    chunk('IEND', Buffer.alloc(0)),
+  ]);
+}
+async function uploadImage(name, w, h, rgb) {
+  const form = new FormData();
+  form.append('file', new Blob([makePng(w, h, rgb)], { type: 'image/png' }), name);
+  const res = await api('POST', '/api/user-files/upload-file/', form);
+  return { name: res.name, visible_name: name };
+}
+
+// ---------------------------------------------------------------- Référentiels
+const FORMATS = [
+  ['Atelier de cuisine', 'ChefHat', '#E8793A'],
+  ['Dégustation ou menu végétal', 'Utensils', '#3BAE5D'],
+  ['Visite de jardin / potager ou cueillette', 'Sprout', '#7BB661'],
+  ['Atelier pédagogique ou formation', 'GraduationCap', '#4A90D9'],
+  ['Conférence/webinaire/table-ronde', 'Mic', '#9B59B6'],
+  ['Festival', 'PartyPopper', '#E74C8C'],
+  ['Autres', 'Sparkles', '#C9C3C1'],
+  // Cas limites référentiel : picto inexistant + couleur invalide, puis sans picto ni couleur
+  ['[TEST] Format picto/couleur invalides', 'IconeQuiNexistePas', 'rouge'],
+  ['[TEST] Format sans picto ni couleur', null, null],
+];
+const PUBLICS = [
+  ['Tout public', 'Users', '#3BAE5D'],
+  ['Familles / enfants', 'Baby', '#F5A623'],
+  ["Salariés d'une entreprise", 'Briefcase', '#4A90D9'],
+  ['Professionnels', 'Building2', '#9B59B6'],
+  ['Scolaires', 'School', '#E74C3C'],
+];
+const THEMES = [
+  ['Cuisine végétale', 'Carrot', '#E8793A'],
+  ['Santé & nutrition', 'HeartPulse', '#E74C3C'],
+  ['Biodiversité', 'Bug', '#7BB661'],
+  ['Agriculture', 'Tractor', '#8E6B3E'],
+  ['Climat & environnement', 'Leaf', '#2E8B57'],
+];
+const PARTNERS = [
+  ['Association Légumineuses & Co', [255, 190, 120]],
+  ['Ferme du Vert Bocage', [140, 200, 130]],
+  ['Fédération des Cuisiniers Végétaux', [240, 130, 130]],
+  ['Ville de Nantes', [130, 170, 230]],
+  ['Collectif Alimentation Durable', [200, 160, 220]],
+  ['[TEST] Partenaire sans logo', null],
+];
+const ACCESS = ['Accessible PMR', 'Boucle auditive', 'Parking à proximité', 'Transports en commun'];
+
+// ---------------------------------------------------------------- Lieux (adresses réelles)
+const CITIES = [
+  ['Paris', '75011', 'rue Oberkampf'], ['Lyon', '69002', 'rue de la République'],
+  ['Marseille', '13001', 'rue de la République'], ['Toulouse', '31000', 'rue d\'Alsace-Lorraine'],
+  ['Nantes', '44000', 'rue Crébillon'], ['Bordeaux', '33000', 'rue Sainte-Catherine'],
+  ['Lille', '59000', 'rue Faidherbe'], ['Strasbourg', '67000', 'rue des Grandes Arcades'],
+  ['Rennes', '35000', 'rue de Nemours'], ['Montpellier', '34000', 'rue de la Loge'],
+  ['Nice', '06000', 'avenue Jean Médecin'], ['Grenoble', '38000', 'rue Lafayette'],
+  ['Dijon', '21000', 'rue de la Liberté'], ['Clermont-Ferrand', '63000', 'rue du Onze Novembre'],
+  ['Rouen', '76000', 'rue du Gros Horloge'], ['Tours', '37000', 'rue Nationale'],
+  ['Besançon', '25000', 'Grande Rue'], ['Brest', '29200', 'rue de Siam'],
+  ['Limoges', '87000', 'rue Jean Jaurès'], ['Amiens', '80000', 'rue des Trois Cailloux'],
+  ['Metz', '57000', 'rue Serpenoise'], ['Orléans', '45000', 'rue Jeanne d\'Arc'],
+  ['Perpignan', '66000', 'rue de la Loge'], ['Poitiers', '86000', 'rue Gambetta'],
+  ['Saint-Denis', '97400', 'rue de Paris'], ['Fort-de-France', '97200', 'rue Victor Hugo'],
+  ['Pointe-à-Pitre', '97110', 'rue Frébault'], ['Cayenne', '97300', 'avenue du Général de Gaulle'],
+  ['Mamoudzou', '97600', 'rue du Commerce'], ['Ajaccio', '20000', 'cours Napoléon'],
+];
+
+// ---------------------------------------------------------------- PRNG déterministe
+function rng(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// ---------------------------------------------------------------- Événements de test
+// Dates en UTC (Z). Semaine configurée : weekStart..weekEnd dans app.config.json.
+const D = (iso) => iso; // lisibilité
+const hand = () => [
+  { k: 'E01', t: 'Atelier cuisine de légumineuses (cas nominal, tous champs)', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public', 'Familles / enfants'], th: ['Cuisine végétale', 'Santé & nutrition'], part: ['Association Légumineuses & Co', 'Ville de Nantes'], city: 'Nantes', num: 3, start: D('2026-09-22T16:00:00Z'), end: D('2026-09-22T18:30:00Z'), modality: 'Présentiel', img: [120, 200, 120], reg: true, cap: 25, tarif: 'Gratuit', access: ['Accessible PMR', 'Parking à proximité'], venue: 'Maison de quartier' },
+  { k: 'E02', t: 'Webinaire : manger végétal au quotidien (en ligne)', mod: MODERATION_OK, fmt: ['Conférence/webinaire/table-ronde'], pub: ['Tout public'], th: ['Santé & nutrition'], modality: 'Distanciel', visio: 'https://visio.example.org/lgsv-webinaire', start: D('2026-09-23T17:00:00Z'), end: D('2026-09-23T18:00:00Z'), tarif: 'Gratuit' },
+  { k: 'E03', t: 'Dégustation hybride (présentiel + visio)', mod: MODERATION_OK, fmt: ['Dégustation ou menu végétal'], pub: ['Professionnels'], th: ['Cuisine végétale'], modality: 'Hybride', city: 'Lyon', num: 12, visio: 'https://visio.example.org/hybride', start: D('2026-09-24T10:00:00Z'), end: D('2026-09-24T12:00:00Z') },
+  { k: 'E04', t: 'Festival multi-jours (22 au 26 septembre)', mod: MODERATION_OK, fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité', 'Agriculture'], part: ['Ferme du Vert Bocage'], modality: 'Présentiel', city: 'Rennes', num: 7, start: D('2026-09-22T08:00:00Z'), end: D('2026-09-26T20:00:00Z'), img: [230, 130, 170] },
+  { k: 'E05', t: 'Atelier hors semaine (juin 2026)', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Scolaires'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Toulouse', num: 5, start: D('2026-06-10T09:00:00Z'), end: D('2026-06-10T11:00:00Z') },
+  { k: 'E06', t: 'Conférence après la semaine (novembre 2026)', mod: MODERATION_OK, fmt: ['Conférence/webinaire/table-ronde'], pub: ['Professionnels'], th: ['Climat & environnement'], modality: 'Présentiel', city: 'Lille', num: 2, start: D('2026-11-05T18:00:00Z'), end: D('2026-11-05T20:00:00Z') },
+  { k: 'E07', t: 'Atelier créole végétal (La Réunion)', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Saint-Denis', num: 4, start: D('2026-09-23T04:00:00Z'), end: D('2026-09-23T07:00:00Z') },
+  { k: 'E08', t: 'Visite de potager (Martinique)', mod: MODERATION_OK, fmt: ['Visite de jardin / potager ou cueillette'], pub: ['Familles / enfants'], th: ['Agriculture'], modality: 'Présentiel', city: 'Fort-de-France', num: 9, start: D('2026-09-25T13:00:00Z'), end: D('2026-09-25T15:00:00Z') },
+  { k: 'E09', t: 'Dégustation (Guyane)', mod: MODERATION_OK, fmt: ['Dégustation ou menu végétal'], pub: ['Tout public'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Cayenne', num: 1, start: D('2026-09-26T14:00:00Z'), end: D('2026-09-26T16:00:00Z') },
+  { k: 'E10', t: 'Atelier (Guadeloupe)', mod: MODERATION_OK, fmt: ['Atelier pédagogique ou formation'], pub: ['Scolaires'], th: ['Santé & nutrition'], modality: 'Présentiel', city: 'Pointe-à-Pitre', num: 6, start: D('2026-09-22T13:00:00Z'), end: D('2026-09-22T15:00:00Z') },
+  { k: 'E11', t: 'Rencontre (Mayotte)', mod: MODERATION_OK, fmt: ['Autres'], pub: ['Tout public'], th: ['Agriculture'], modality: 'Présentiel', city: 'Mamoudzou', num: 2, start: D('2026-09-27T06:00:00Z'), end: D('2026-09-27T09:00:00Z') },
+  { k: 'E12', t: 'Cueillette (Corse)', mod: MODERATION_OK, fmt: ['Visite de jardin / potager ou cueillette'], pub: ['Familles / enfants'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Ajaccio', num: 8, start: D('2026-09-24T08:00:00Z'), end: D('2026-09-24T11:00:00Z') },
+  { k: 'E13', t: 'Adresse invalide (géocodage doit échouer)', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', rawAddr: ['zzzz qqqq 999 impasse introuvable', '00000', 'Nullepart-sur-Mer'], start: D('2026-09-23T10:00:00Z') },
+  { k: 'E14', t: 'Adresse vide, seulement ville + code postal', mod: MODERATION_OK, fmt: ['Dégustation ou menu végétal'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', rawAddr: ['', '34000', 'Montpellier'], start: D('2026-09-24T10:00:00Z') },
+  { k: 'E15', t: 'Sans format (champ lié vide)', mod: MODERATION_OK, fmt: [], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Bordeaux', num: 4, start: D('2026-09-25T10:00:00Z') },
+  { k: 'E16', t: 'Sans date de début', mod: MODERATION_OK, fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Strasbourg', num: 3, start: null, end: null },
+  { k: 'E17', t: '', mod: MODERATION_OK, fmt: ['Autres'], pub: ['Tout public'], th: [], modality: 'Présentiel', city: 'Dijon', num: 3, start: D('2026-09-25T09:00:00Z') },
+  { k: 'E18', t: 'Atelier payant (15 EUR)', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Professionnels'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Grenoble', num: 5, tarif: 'Payant', montant: 15, start: D('2026-09-26T09:00:00Z') },
+  { k: 'E19', t: 'Gratuit implicite (tarif et montant vides)', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Tours', num: 6, start: D('2026-09-26T09:00:00Z') },
+  { k: 'E20', t: 'Sans image ni description', mod: MODERATION_OK, fmt: ['Autres'], pub: ['Tout public'], th: [], modality: 'Présentiel', city: 'Limoges', num: 2, desc: '', start: D('2026-09-27T09:00:00Z') },
+  { k: 'E21', t: 'Titre très long avec caractères spéciaux <b>gras</b> & "guillemets" — ' + 'très long '.repeat(18), mod: MODERATION_OK, fmt: ['Conférence/webinaire/table-ronde'], pub: ['Tout public'], th: ['Santé & nutrition'], modality: 'Présentiel', city: 'Amiens', num: 4, desc: '<script>alert("xss")</script> Description longue. ' + 'Lorem ipsum dolor sit amet. '.repeat(60), start: D('2026-09-23T09:00:00Z') },
+  { k: 'E22', t: 'Multi thèmes, publics et partenaires', mod: MODERATION_OK, fmt: ['Festival'], pub: ['Tout public', 'Familles / enfants', 'Scolaires', 'Professionnels'], th: ['Cuisine végétale', 'Santé & nutrition', 'Biodiversité', 'Agriculture', 'Climat & environnement'], part: ['Association Légumineuses & Co', 'Ferme du Vert Bocage', 'Fédération des Cuisiniers Végétaux', '[TEST] Partenaire sans logo'], modality: 'Présentiel', city: 'Metz', num: 2, start: D('2026-09-25T09:00:00Z'), img: [100, 150, 220] },
+  { k: 'E23', t: 'Contact : e-mail animateur uniquement (repli)', mod: MODERATION_OK, fmt: ['Atelier pédagogique ou formation'], pub: ['Scolaires'], th: ['Santé & nutrition'], modality: 'Présentiel', city: 'Orléans', num: 9, noContactEmail: true, start: D('2026-09-24T14:00:00Z') },
+  { k: 'E24', t: 'Avec lien d\'inscription', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Poitiers', num: 3, reg: true, start: D('2026-09-23T14:00:00Z') },
+  { k: 'E25', t: 'Capacité 0 et accès multi-modalités', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Perpignan', num: 4, cap: 0, access: ACCESS, start: D('2026-09-23T09:00:00Z') },
+  { k: 'E26', t: 'Date de fin AVANT la date de début', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Brest', num: 4, start: D('2026-09-25T18:00:00Z'), end: D('2026-09-24T09:00:00Z') },
+  { k: 'E27', t: 'Fuseau horaire : 22h30 UTC = 00h30 Paris le 22/09', mod: MODERATION_OK, fmt: ['Dégustation ou menu végétal'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Paris', num: 20, start: D('2026-09-21T22:30:00Z'), end: D('2026-09-22T01:00:00Z') },
+  { k: 'E28', t: 'Format de test (picto/couleur invalides)', mod: MODERATION_OK, fmt: ['[TEST] Format picto/couleur invalides'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Marseille', num: 14, start: D('2026-09-24T09:00:00Z') },
+  { k: 'E29', t: 'Format de test (sans picto ni couleur)', mod: MODERATION_OK, fmt: ['[TEST] Format sans picto ni couleur'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Nice', num: 11, start: D('2026-09-24T09:00:00Z') },
+  { k: 'E30', t: 'Doublon de titre', mod: MODERATION_OK, fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Rouen', num: 3, start: D('2026-09-24T09:00:00Z') },
+  { k: 'E31', t: 'Doublon de titre', mod: MODERATION_OK, fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Clermont-Ferrand', num: 3, start: D('2026-09-24T09:00:00Z') },
+  { k: 'R01', t: '[REFUSÉ] Événement refusé par la modération', mod: 'Refusé', fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Paris', num: 1, start: D('2026-09-24T09:00:00Z') },
+  { k: 'R02', t: '[REFUSÉ] Autre événement refusé', mod: 'Refusé', fmt: ['Autres'], pub: ['Tout public'], th: [], modality: 'Distanciel', start: D('2026-09-25T09:00:00Z') },
+  { k: 'P01', t: '[EN ATTENTE] À modérer 1', mod: 'En attente', fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Lyon', num: 40, start: D('2026-09-24T09:00:00Z') },
+  { k: 'P02', t: '[EN ATTENTE] À modérer 2', mod: 'En attente', fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Nantes', num: 40, start: D('2026-09-24T09:00:00Z') },
+  { k: 'P03', t: '[MODÉRATION VIDE] Soumis par le formulaire, non traité', mod: null, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Toulouse', num: 40, start: D('2026-09-24T09:00:00Z') },
+];
+
+function bulk(n) {
+  const rand = rng(42);
+  const pick = (arr) => arr[Math.floor(rand() * arr.length)];
+  const some = (arr, max) => {
+    const c = 1 + Math.floor(rand() * max);
+    return [...arr].sort(() => rand() - 0.5).slice(0, c);
+  };
+  const subjects = ['pois chiches', 'lentilles', 'haricots rouges', 'tofu maison', 'seitan', 'soja', 'légumes d\'automne', 'cuisine bio', 'zéro déchet', 'potager', 'pâtisserie sans œuf'];
+  const kinds = ['Atelier', 'Dégustation', 'Rencontre', 'Conférence', 'Visite', 'Stand', 'Projection'];
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const [city] = pick(CITIES);
+    const r = rand();
+    const mod = r < 0.8 ? MODERATION_OK : r < 0.92 ? 'En attente' : 'Refusé';
+    const online = rand() < 0.12;
+    const day = rand() < 0.75 ? 21 + Math.floor(rand() * 7) : 1 + Math.floor(rand() * 28);
+    const month = day >= 21 && day <= 27 && rand() < 0.99 ? 9 : pick([6, 7, 8, 10, 11]);
+    const hour = 7 + Math.floor(rand() * 13);
+    const start = `2026-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:00:00Z`;
+    out.push({
+      k: `B${i}`,
+      t: `${pick(kinds)} ${pick(subjects)} #${i + 1}`,
+      mod,
+      fmt: [pick(FORMATS.slice(0, 7))[0]],
+      pub: some(PUBLICS.map((p) => p[0]), 2),
+      th: some(THEMES.map((p) => p[0]), 2),
+      modality: online ? 'Distanciel' : 'Présentiel',
+      visio: online ? 'https://visio.example.org/bulk' : undefined,
+      city: online ? undefined : city,
+      num: 1 + Math.floor(rand() * 6),
+      start,
+      end: `2026-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour + 2).padStart(2, '0')}:00:00Z`,
+      tarif: rand() < 0.8 ? 'Gratuit' : 'Payant',
+      montant: undefined,
+    });
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------- Main
+async function main() {
+  await waitReady();
+  await authenticate();
+  const { workspace, db } = await ensureWorkspaceAndDb();
+
+  // --- Tables (référentiels d'abord)
+  const T = {};
+  T.formats = await ensureTable(db, 'Formats', 'Nom');
+  T.publics = await ensureTable(db, 'Publics', 'Nom');
+  T.themes = await ensureTable(db, 'Thématiques', 'Nom');
+  T.partners = await ensureTable(db, 'Partenaires', 'Nom');
+  T.events = await ensureTable(db, 'Événements', FM.title);
+
+  const pictosOf = (list) => [...new Set(list.map((r) => r[1]).filter(Boolean))];
+  const colorsOf = (list) => [...new Set(list.map((r) => r[2]).filter(Boolean))];
+  const refFields = {};
+  for (const [key, list] of [['formats', FORMATS], ['publics', PUBLICS], ['themes', THEMES]]) {
+    const picto = await ensureField(T[key], { name: 'Picto', type: 'multiple_select', select_options: opts(pictosOf(list), 'light-green') });
+    const couleur = await ensureField(T[key], { name: 'Couleur', type: 'multiple_select', select_options: opts(colorsOf(list), 'light-orange') });
+    refFields[key] = { picto, couleur };
+  }
+  await ensureField(T.partners, { name: 'Logo', type: 'file' });
+
+  // --- Champs des événements (noms = fieldMapping, sauf champs "formulaire" additionnels)
+  const E = T.events;
+  const linkField = (name, tableId) => ensureField(E, { name, type: 'link_row', link_row_table_id: tableId, has_related_field: false });
+  const f = {};
+  f.description = await ensureField(E, { name: FM.description, type: 'long_text' });
+  f.start = await ensureField(E, { name: FM.startDate, type: 'date', date_format: 'ISO', date_include_time: true, date_time_format: '24' });
+  f.end = await ensureField(E, { name: FM.endDate, type: 'date', date_format: 'ISO', date_include_time: true, date_time_format: '24' });
+  f.format = await linkField(FM.format, T.formats.table.id);
+  f.modality = await ensureField(E, { name: FM.modality, type: 'single_select', select_options: opts(['Présentiel', 'Distanciel', 'Hybride']) });
+  f.audience = await linkField(FM.audience, T.publics.table.id);
+  f.theme = await linkField(FM.theme, T.themes.table.id);
+  f.partners = await linkField(FM.partnerField, T.partners.table.id);
+  f.image = await ensureField(E, { name: FM.image, type: 'file' });
+  f.address = await ensureField(E, { name: FM.address, type: 'text' });
+  f.postalCode = await ensureField(E, { name: FM.postalCode, type: 'text' });
+  f.city = await ensureField(E, { name: FM.city, type: 'text' });
+  f.organizer = await ensureField(E, { name: FM.organizer, type: 'text' });
+  f.firstName = await ensureField(E, { name: FM.organizerFirstName, type: 'text' });
+  f.lastName = await ensureField(E, { name: FM.organizerLastName, type: 'text' });
+  f.registrationUrl = await ensureField(E, { name: FM.registrationUrl, type: 'text' });
+  f.venue = await ensureField(E, { name: FM.venueName, type: 'text' });
+  f.access = await ensureField(E, { name: FM.accessModalities, type: 'multiple_select', select_options: opts(ACCESS, 'light-gray') });
+  f.visio = await ensureField(E, { name: FM.videoConferenceUrl, type: 'text' });
+  f.contactEmail = await ensureField(E, { name: FM.contactEmail, type: 'text' });
+  f.contactEmailFallback = await ensureField(E, { name: FM.contactEmailFallback, type: 'text' });
+  f.phone = await ensureField(E, { name: FM.contactPhone, type: 'text' });
+  f.website = await ensureField(E, { name: FM.organizerWebsite, type: 'text' });
+  f.capacity = await ensureField(E, { name: FM.capacity, type: 'number', number_decimal_places: 0 });
+  f.tarif = await ensureField(E, { name: FM.tariff, type: 'single_select', select_options: opts(['Gratuit', 'Payant']) });
+  f.price = await ensureField(E, { name: FM.price, type: 'number', number_decimal_places: 2 });
+  f.moderation = await ensureField(E, { name: FM.moderation, type: 'single_select', select_options: opts([MODERATION_OK, 'Refusé', 'En attente'], 'light-red') });
+  f.visibility = await ensureField(E, { name: FM.visibility, type: 'single_select', select_options: opts(['Oui', 'Non']) });
+  // Champs "formulaire" présents dans BaserowRecord mais non utilisés par le mapping (doivent être ignorés)
+  await ensureField(E, { name: 'Respect de la charte', type: 'boolean' });
+  await ensureField(E, { name: 'Avez-vous quelque chose à ajouter ?', type: 'long_text' });
+  await ensureField(E, { name: "Téléphone de l'animateur", type: 'text' });
+
+  const optId = (field, value) => {
+    const o = field.select_options.find((x) => x.value === value);
+    if (!o) throw new Error(`Option "${value}" absente du champ "${field.name}"`);
+    return o.id;
+  };
+
+  // --- Vider (événements d'abord : ils référencent les autres tables)
+  async function clear(ctx) {
+    for (;;) {
+      const page = await api('GET', `/api/database/rows/table/${ctx.table.id}/?size=200`);
+      if (!page.results.length) break;
+      await api('POST', `/api/database/rows/table/${ctx.table.id}/batch-delete/`, { items: page.results.map((r) => r.id) });
+    }
+  }
+  for (const ctx of [T.events, T.partners, T.themes, T.publics, T.formats]) await clear(ctx);
+
+  async function insert(ctx, items) {
+    const ids = [];
+    for (let i = 0; i < items.length; i += 100) {
+      const res = await api('POST', `/api/database/rows/table/${ctx.table.id}/batch/?user_field_names=true`, { items: items.slice(i, i + 100) });
+      ids.push(...res.items.map((r) => r.id));
+    }
+    return ids;
+  }
+
+  // --- Référentiels
+  const idByName = {};
+  for (const [key, list] of [['formats', FORMATS], ['publics', PUBLICS], ['themes', THEMES]]) {
+    const items = list.map(([name, picto, color]) => ({
+      Nom: name,
+      Picto: picto ? [optId(refFields[key].picto, picto)] : [],
+      Couleur: color ? [optId(refFields[key].couleur, color)] : [],
+    }));
+    const ids = await insert(T[key], items);
+    list.forEach(([name], i) => (idByName[`${key}:${name}`] = ids[i]));
+  }
+  const partnerItems = [];
+  for (const [name, rgb] of PARTNERS) {
+    partnerItems.push({ Nom: name, Logo: rgb ? [await uploadImage(`logo-${partnerItems.length}.png`, 200, 200, rgb)] : [] });
+  }
+  const pIds = await insert(T.partners, partnerItems);
+  PARTNERS.forEach(([name], i) => (idByName[`partners:${name}`] = pIds[i]));
+
+  // --- Événements
+  const events = [...hand(), ...bulk(BULK)];
+  const imageCache = new Map();
+  const getImage = async (rgb) => {
+    const key = rgb.join(',');
+    if (!imageCache.has(key)) imageCache.set(key, await uploadImage(`visuel-${key}.png`, 600, 400, rgb));
+    return imageCache.get(key);
+  };
+  const rows = [];
+  for (const [idx, e] of events.entries()) {
+    let address = '';
+    let postal = '';
+    let city = '';
+    if (e.rawAddr) [address, postal, city] = e.rawAddr;
+    else if (e.city) {
+      const c = CITIES.find((x) => x[0] === e.city);
+      address = `${e.num} ${c[2]}`;
+      postal = c[1];
+      city = c[0];
+    }
+    const row = {
+      [FM.title]: e.t,
+      [FM.description]: e.desc ?? (e.t ? `Description de test pour « ${e.t.slice(0, 60)} ». Rejoignez-nous pour découvrir l'alimentation végétale.` : ''),
+      [FM.startDate]: e.start ?? null,
+      [FM.endDate]: e.end ?? null,
+      [FM.format]: e.fmt.map((n) => idByName[`formats:${n}`]),
+      [FM.modality]: optId(f.modality, e.modality),
+      [FM.audience]: e.pub.map((n) => idByName[`publics:${n}`]),
+      [FM.theme]: e.th.map((n) => idByName[`themes:${n}`]),
+      [FM.partnerField]: (e.part || []).map((n) => idByName[`partners:${n}`]),
+      [FM.image]: e.img ? [await getImage(e.img)] : [],
+      [FM.address]: address,
+      [FM.postalCode]: postal,
+      [FM.city]: city,
+      [FM.organizer]: `Structure de test ${idx + 1}`,
+      [FM.organizerFirstName]: 'Camille',
+      [FM.organizerLastName]: 'Durand',
+      [FM.registrationUrl]: e.reg ? 'https://example.org/inscription' : '',
+      [FM.venueName]: e.venue || '',
+      [FM.accessModalities]: (e.access || []).map((v) => optId(f.access, v)),
+      [FM.videoConferenceUrl]: e.visio || '',
+      [FM.contactEmail]: e.noContactEmail ? '' : `contact${idx + 1}@example.org`,
+      [FM.contactEmailFallback]: `animateur${idx + 1}@example.org`,
+      [FM.contactPhone]: '01 02 03 04 05',
+      [FM.organizerWebsite]: 'https://example.org',
+      [FM.capacity]: e.cap ?? null,
+      [FM.tariff]: e.tarif ? optId(f.tarif, e.tarif) : null,
+      [FM.price]: e.montant != null ? String(e.montant) : null,
+      [FM.moderation]: e.mod ? optId(f.moderation, e.mod) : null,
+      [FM.visibility]: optId(f.visibility, 'Oui'),
+    };
+    rows.push(row);
+  }
+  await insert(T.events, rows);
+  log(`${rows.length} événements insérés (${hand().length} cas manuels + ${BULK} générés)`);
+
+  // --- Jeton base de données
+  let tokens = await api('GET', '/api/database/tokens/');
+  let token = tokens.find((t) => t.name === 'lgsv-backend-local');
+  if (!token) token = await api('POST', '/api/database/tokens/', { name: 'lgsv-backend-local', workspace: workspace.id });
+
+  // --- Sorties
+  const env = [
+    '# Généré par scripts/seed-baserow/seed.mjs (Baserow LOCAL uniquement)',
+    `BASEROW_API_URL=${BASE}`,
+    `BASEROW_API_TOKEN=${token.key}`,
+    `BASEROW_EVENT_TABLE_ID=${T.events.table.id}`,
+    `BASEROW_MODERATION_FIELD_ID=${f.moderation.id}`,
+    `BASEROW_PARTNERS_TABLE_ID=${T.partners.table.id}`,
+    `BASEROW_THEMATIQUES_TABLE_ID=${T.themes.table.id}`,
+    `BASEROW_FORMATS_TABLE_ID=${T.formats.table.id}`,
+    `BASEROW_PUBLICS_TABLE_ID=${T.publics.table.id}`,
+    'PORT=3000',
+    '# Local uniquement : autorise ?devMode=true (voir apps/backend/.env.example)',
+    'ALLOW_DEV_MODE=true',
+    '',
+  ].join('\n');
+  const outDir = resolve(ROOT, 'scripts/seed-baserow/out');
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(resolve(outDir, 'backend.env'), env);
+  if (!args['no-env']) {
+    const target = resolve(ROOT, 'apps/backend/.env');
+    writeFileSync(target, env);
+    log(`Écrit ${target}`);
+  }
+  const schema = {};
+  for (const [name, ctx] of Object.entries(T)) {
+    const fields = await api('GET', `/api/database/fields/table/${ctx.table.id}/`);
+    schema[name] = { tableId: ctx.table.id, name: ctx.table.name, fields: fields.map((x) => ({ id: x.id, name: x.name, type: x.type, primary: x.primary })) };
+  }
+  writeFileSync(resolve(outDir, 'schema.json'), JSON.stringify(schema, null, 2));
+  log('Terminé. Schéma : scripts/seed-baserow/out/schema.json');
+  log(`Admin : ${ADMIN.email} / ${ADMIN.password}  -  UI : ${BASE}`);
+}
+
+main().catch((err) => {
+  console.error('[seed] ERREUR', err.message);
+  process.exit(1);
+});
