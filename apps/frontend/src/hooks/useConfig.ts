@@ -31,28 +31,6 @@ export interface ConfigContextValue {
   helpers: ConfigHelpers;
 }
 
-const FALLBACK_LABELS: Record<string, string> = {
-  'atelier-cuisine': 'Atelier de cuisine',
-  degustation: 'Dégustation ou menu végétal',
-  'visite-jardin': 'Visite de jardin / potager ou cueillette',
-  'atelier-pedagogique': 'Atelier pédagogique ou formation',
-  conference: 'Conférence/webinaire/table-ronde',
-  festival: 'Festival',
-  autre: 'Autres',
-  'tout-public': 'Tout public',
-  'familles-enfants': 'Famille / enfants',
-  'salaries-entreprise': "Salariés d'une entreprise",
-  professionnels: 'Professionnels',
-  scolaires: 'Scolaires',
-  presentiel: 'En présentiel',
-  distanciel: 'En ligne',
-  'cuisine-vegetale': 'Cuisine végétale',
-  'sante-nutrition': 'Santé & nutrition',
-  biodiversite: 'Biodiversité',
-  agriculture: 'Agriculture',
-  'climat-environnement': 'Climat & environnement',
-};
-
 const REGIONS = [
   { id: "Auvergne-Rhône-Alpes", group: "metropole" },
   { id: "Bourgogne-Franche-Comté", group: "metropole" },
@@ -96,7 +74,7 @@ export function buildHelpers(config: AppConfig | null): ConfigHelpers {
   return {
     getEnumLabel(category, id) {
       const map = enumMap(category);
-      return map[id] || FALLBACK_LABELS[id] || id;
+      return map[id] || id;
     },
     getText(section, key) {
       const texts = (config?.texts as any)?.[section];
