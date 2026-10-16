@@ -186,7 +186,7 @@ function validateTheme(theme: unknown, errors: string[]): void {
     for (const [name, value] of Object.entries(theme.colors)) {
       if (typeof value !== 'string' || !HEX_COLOR.test(value)) {
         errors.push(
-          `theme.colors.${name} : couleur hexadécimale attendue, par exemple #AE3B5D (reçu : ${show(value)}).`,
+          `theme.colors.${name} : couleur hexadécimale attendue, au format #RRGGBB (reçu : ${show(value)}).`,
         );
       }
     }
