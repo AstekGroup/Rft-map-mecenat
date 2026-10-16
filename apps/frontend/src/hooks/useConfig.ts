@@ -7,7 +7,22 @@ export interface ConfigHelpers {
   getRegionGroups: () => { metropole: string[]; domtom: string[] };
   /** Badge d'édition « nom court + année » tiré de la config ; chaîne vide si la config ne les donne pas. */
   getEditionBadge: () => string;
+  /** Modes du filtre de période : ceux de la config, sinon les seuls modes génériques. */
+  getDateFilterModes: () => DateFilterModeOption[];
 }
+
+export interface DateFilterModeOption {
+  mode: string;
+  label: string;
+}
+
+// Modes dont le libellé ne dépend pas de l'événement. Le mode « pendant l'événement »
+// n'y figure pas : son libellé porte le nom de l'événement et vient de la config
+// (`filters.dateFilterModes`) ; sans lui, ce mode n'est simplement pas proposé.
+const GENERIC_DATE_FILTER_MODES: DateFilterModeOption[] = [
+  { mode: 'all', label: 'Toutes les dates' },
+  { mode: 'custom', label: 'Dates personnalisées' },
+];
 
 export interface ConfigContextValue {
   config: AppConfig | null;
@@ -93,6 +108,10 @@ export function buildHelpers(config: AppConfig | null): ConfigHelpers {
       const year = config?.app?.eventDates?.weekStart?.split('-')[0];
       const validYear = year && /^\d{4}$/.test(year) ? year : undefined;
       return [shortName, validYear].filter(Boolean).join(' ');
+    },
+    getDateFilterModes() {
+      const modes = config?.filters?.dateFilterModes;
+      return modes && modes.length > 0 ? modes : GENERIC_DATE_FILTER_MODES;
     },
     getRegionGroups() {
       const metropole: string[] = [];

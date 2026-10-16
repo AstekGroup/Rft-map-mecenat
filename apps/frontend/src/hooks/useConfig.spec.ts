@@ -15,6 +15,32 @@ function makeConfig(app: Partial<AppConfig['app']>): AppConfig {
   } as AppConfig;
 }
 
+describe('buildHelpers().getDateFilterModes', () => {
+  it('reprend les modes et libellés de la config', () => {
+    const config = {
+      ...makeConfig({}),
+      filters: {
+        dateFilterModes: [
+          { mode: 'all', label: 'Toutes les dates' },
+          { mode: 'during-week', label: 'Pendant Événement de test' },
+          { mode: 'custom', label: 'Dates personnalisées' },
+        ],
+      },
+    } as AppConfig;
+    expect(buildHelpers(config).getDateFilterModes().map((m) => m.label)).toEqual([
+      'Toutes les dates',
+      'Pendant Événement de test',
+      'Dates personnalisées',
+    ]);
+  });
+
+  it("sans modes dans la config, ne propose que les modes génériques (aucun libellé d'événement inventé)", () => {
+    const modes = buildHelpers(makeConfig({})).getDateFilterModes();
+    expect(modes.map((m) => m.mode)).toEqual(['all', 'custom']);
+    expect(buildHelpers(null).getDateFilterModes()).toEqual(modes);
+  });
+});
+
 describe('buildHelpers().getEditionBadge', () => {
   it("combine le nom court et l'année de début de la config", () => {
     expect(buildHelpers(makeConfig({})).getEditionBadge()).toBe('EDT 2027');
