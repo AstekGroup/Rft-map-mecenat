@@ -78,7 +78,6 @@ rsync -avz --delete \
     --exclude '.turbo' \
     --exclude 'dist' \
     --exclude '.git' \
-    --exclude 'apps/map-interactive' \
     --exclude '*.md' \
     --exclude '.cursor' \
     --exclude '.vscode' \
