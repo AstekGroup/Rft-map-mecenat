@@ -7,12 +7,15 @@ type PrivateFetchRecords = {
   fetchRecords(devMode: boolean): Promise<unknown[]>;
 };
 
-function buildService(env: Record<string, string | undefined>) {
+function buildService(
+  env: Record<string, string | undefined>,
+  baserowConfig: Record<string, unknown> = { moderationVisibleValue: 'Accepté' },
+) {
   const configService = {
     get: (key: string) => env[key],
   } as unknown as ConfigService;
   const appConfig = {
-    get: () => ({ baserow: { moderationVisibleValue: 'Accepté' } }),
+    get: () => ({ baserow: baserowConfig }),
   } as unknown as AppConfigService;
   return new BaserowService(
     configService,
@@ -74,6 +77,18 @@ describe('BaserowService.fetchRecords (modération)', () => {
     await service.fetchRecords(false);
     const url = fetchMock.mock.calls[0][0] as string;
     expect(url).toContain('filter__field_711__contains_word=Accept%C3%A9');
+  });
+
+  it('refuse de publier (fail-closed) si la config ne donne pas la valeur de modération visible', async () => {
+    const service = buildService(
+      { ...baseEnv, BASEROW_MODERATION_FIELD_ID: '711' },
+      {},
+    );
+
+    await expect(service.fetchRecords(false)).rejects.toThrow(
+      /moderationVisibleValue/,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('lève une erreur explicite si le champ de modération a été supprimé', async () => {

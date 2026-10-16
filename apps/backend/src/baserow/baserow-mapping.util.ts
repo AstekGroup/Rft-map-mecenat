@@ -1,16 +1,48 @@
-import type { EventModality, LinkedTableRow } from '@make-map/types';
+import type {
+  BaserowReferenceFields,
+  EventModality,
+  LinkedTableRow,
+} from '@make-map/types';
 import type {
   BaserowAttachment,
+  BaserowLinkedTableRecord,
   BaserowSelect,
   BaserowRecord,
 } from './baserow.types';
 
-const DEFAULT_MODALITY_MAP: Record<string, EventModality> = {
-  Présentiel: 'presentiel',
-  Distanciel: 'distanciel',
-  'En ligne': 'distanciel',
-  Hybride: 'presentiel',
-};
+// ============================================================
+// Mapping des tables de référence
+// ============================================================
+
+/**
+ * Transforme une ligne d'une table de référence (format, public, thématique, partenaire).
+ * Les noms de colonnes viennent de la config (`baserow.mapping.referenceFields`) ; une colonne
+ * absente donne une valeur vide (le nom manquant est signalé par l'appelant).
+ */
+export function mapReferenceRecord(
+  record: BaserowLinkedTableRecord,
+  fields: BaserowReferenceFields,
+): LinkedTableRow {
+  const name = record[fields.name];
+  const logo = record[fields.logo];
+  const picto = record[fields.picto];
+  const color = record[fields.color];
+  return {
+    id: String(record.id),
+    name: typeof name === 'string' ? name : '',
+    logoUrl: extractImageUrl(
+      Array.isArray(logo) ? (logo as BaserowAttachment[]) : undefined,
+    ),
+    pictoName: firstSelectValue(picto),
+    colorHexa: firstSelectValue(color),
+  };
+}
+
+function firstSelectValue(value: unknown): string | undefined {
+  if (!Array.isArray(value) || value.length === 0) return undefined;
+  const first = value[0] as Partial<BaserowSelect> | undefined;
+  return first?.value;
+}
 
 // ============================================================
 // Mapping LinkedRow
@@ -33,16 +65,40 @@ export function mapLinkedRow(
 // Mapping Modalité
 // ============================================================
 
+/**
+ * Traduit la valeur de la liste « modalité » de Baserow en modalité de l'application,
+ * avec la table de correspondance de la config (`baserow.mapping.modality`).
+ * Champ vide : présentiel. Valeur absente de la config : présentiel, et `onUnmapped` est appelée
+ * pour que l'appelant la signale (jamais de repli silencieux).
+ */
 export function mapModality(
   baserowType: BaserowSelect | undefined,
+  modalityMap: Record<string, EventModality>,
+  onUnmapped?: (value: string) => void,
 ): EventModality {
-  const map = DEFAULT_MODALITY_MAP;
-
   if (!baserowType) return 'presentiel';
 
-  const exact = map[baserowType.value];
-  if (exact) return exact;
+  const mapped = modalityMap[baserowType.value];
+  if (mapped) return mapped;
+
+  onUnmapped?.(baserowType.value);
   return 'presentiel';
+}
+
+// ============================================================
+// Tarif
+// ============================================================
+
+/**
+ * Un événement est gratuit si son tarif porte la valeur « gratuit » de la config
+ * (`baserow.mapping.tariffFreeValue`) ou si aucun montant n'est renseigné.
+ */
+export function isFreeTariff(
+  tariff: BaserowSelect | undefined,
+  price: unknown,
+  freeValue: string,
+): boolean {
+  return tariff?.value === freeValue || !price;
 }
 
 // ============================================================
