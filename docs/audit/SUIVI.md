@@ -38,6 +38,18 @@ Preuve = `fichier:ligne` ou commande + extrait de sortie (dans JOURNAL.md).
 | 7 | Plan de suite | **fait, révisé** (périmètre du 16/10, voir note en tête) | [07-plan-de-suite.md](07-plan-de-suite.md) | 2026-10-16 |
 | 8 | Périmètre config vs Baserow (+ filtres) | **fait** (décisions Q-F1…Q-F7 à prendre) | [08-perimetre-config-vs-baserow.md](08-perimetre-config-vs-baserow.md) | 2026-10-16 |
 
+## Plan de refonte en 9 sessions (voir [PLAN-SESSIONS.md](PLAN-SESSIONS.md))
+
+| Session | État (2026-10-16) |
+|---|---|
+| 0 GitHub CLI | **faite** : `gh` 2.102.0, connecté (`ClementTro`, droit ADMIN) |
+| 1 Base Git | **PR ouvertes, en attente de merge par le propriétaire** : #9, #10, #11, #12 (après #11), #13, #14. Preuves dans JOURNAL. |
+| 2 à 8 | non commencées |
+
+Prochaine action : merger les PR de la session 1 dans `develop` (option « Create a merge commit », #11 avant #12), puis vérifier `pnpm build` et `pnpm test` sur `develop`, supprimer `wip/audit-snapshot` **après la session 2** (elle porte les 5 `AGENTS.md`), puis PR `develop` → `main` et tag `v0.1.0`.
+
+> Les parties ci-dessous (branche `audit/bilan-refonte`, « à commiter », etc.) décrivent l'état au moment de l'audit et sont **périmées** : cette branche est supprimée et le code corrigé est dans les PR de la session 1.
+
 ## Point de mi-parcours (étapes 0 à 3, rédigé au début de la session 2)
 
 | Étape | Ce qu'on sait maintenant | Ce qui reste incertain |

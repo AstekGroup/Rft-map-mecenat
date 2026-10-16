@@ -111,3 +111,20 @@ Remplace la mention « Tests des branches non exécutés » de la section ci-des
 - Vérification réelle (backend `node dist/main` sur Baserow local, base à 36 lignes) : sans `ALLOW_DEV_MODE` → `/api/events` 32 et `?devMode=true` 32 + log `?devMode=true ignoré` ; avec `ALLOW_DEV_MODE=true` → 32 et 36 ; `BASEROW_MODERATION_FIELD_ID` absent → `HTTP 500` + log `BASEROW_MODERATION_FIELD_ID manquant : publication refusée` (avant : tout publié). Cas « champ supprimé » : couvert par test unitaire, **non rejoué en réel**.
 - Note : la base locale contient 36 lignes (les 1500 générées ont disparu après `robustness.mjs`) ; 32 acceptées = 31 + l'événement « [EN ATTENTE] À modérer 1 » passé à Accepté lors de l'étape 3.
 - Env du shell nettoyé (variables `BASEROW_*`, `PORT`, `APP_CONFIG_PATH` injectées pour les tests).
+
+## Plan de refonte — Session 0 : GitHub CLI (2026-10-16)
+
+- `gh --version` : absent. `winget install --id GitHub.cli -e` → `gh version 2.102.0`. Le PATH du terminal ouvert n'est pas rechargé (à rouvrir).
+- `gh auth status` : connecté à `github.com`, compte `ClementTro`, jeton avec `repo` et `read:org`, protocole Git `ssh` côté `gh`. `gh repo view AstekGroup/Rft-map-mecenat` : `viewerPermission: ADMIN`, branche par défaut `main`.
+- `gh pr list --state all` : PR #7 et #8 ouvertes (branches `Refonte-*`, à intégrer en session 2) ; #3, #5, #6 mergées ; #4 fermée ; #1, #2 mergées.
+
+## Plan de refonte — Session 1 : base Git (2026-10-16)
+
+- Sauvegarde : branche `wip/audit-snapshot` (commit `4b57932`, 39 fichiers), poussée. **À conserver jusqu'à la session 2** : elle contient les 5 `AGENTS.md` modifiés, volontairement non repris en session 1.
+- `git push` en HTTPS : le premier push est resté bloqué sur une demande d'identifiants (terminal non interactif). Contournement limité à la commande : `git -c credential.helper= -c "credential.helper=!gh auth git-credential" push …`. Aucun réglage git global modifié. Le droit d'écriture est confirmé (`git ls-remote --heads origin wip/audit-snapshot` → `4b57932`).
+- `develop` créée depuis `main` (`114aeb3`) et poussée. 6 branches de travail poussées, 6 PR vers `develop` : #9 `chore/gitattributes`, #10 `fix/build-types`, #11 `fix/moderation-devmode` (2 commits), #12 `chore/baserow-local` (2 commits, à merger après #11), #13 `docs/audit-refonte` (3 commits + mise à jour du suivi), #14 `chore/lockfile` (2 commits : lockfile, suppression de `package-lock.json`).
+- Choix par défaut appliqués : 5 captures commitées (1,8 Mo) ; `06-agents.diff` non repris ; `package-lock.json` supprimé.
+- Vérification d'intégration (branche jetable `develop` + 6 branches fusionnées, supprimée ensuite) : `pnpm build` `Tasks: 3 successful, 3 total` ; `pnpm test` frontend 58 passés, backend 69 passés ; `git diff` de cette fusion contre le snapshot : seulement les 5 `AGENTS.md` (reportés), `06-agents.diff` (retiré) et `PLAN-SESSIONS.md` (ajouté).
+- Limites connues constatées (inchangées) : `pnpm lint` échoue côté frontend (pas de configuration, `exit code 2`) ; le lint backend avec `--fix` a modifié des fichiers (fins de ligne) → modifications écartées via `git stash` puis supprimées ; `pnpm build` réécrit `apps/frontend/index.html` (script non idempotent, traité en session 3).
+- Dossier `astek-jnr-map COMPARATIF/` : absent du dépôt (`Test-Path` → `False`), donc hors de l'index.
+- Non fait (dépend du merge par le propriétaire) : merge des PR, suppression de `wip/audit-snapshot`, PR `develop` → `main`, tag `v0.1.0`.
