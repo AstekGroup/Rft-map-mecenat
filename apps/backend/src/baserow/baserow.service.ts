@@ -211,6 +211,15 @@ export class BaserowService {
       );
     }
 
+    // Fail-closed : sans champ de modération, on ne publie rien plutôt que
+    // de rendre publics des événements non modérés.
+    if (!devMode && !moderationFieldId) {
+      const message =
+        'BASEROW_MODERATION_FIELD_ID manquant : publication refusée (modération non vérifiable).';
+      this.logger.error(message);
+      throw new Error(message);
+    }
+
     const records: BaserowRecord[] = [];
     let page = 1;
     let hasNext = true;
@@ -239,6 +248,11 @@ export class BaserowService {
         this.logger.error(
           `Erreur Baserow API: ${response.status} ${errorBody}`,
         );
+        if (errorBody.includes('ERROR_FILTER_FIELD_NOT_FOUND')) {
+          const message = `Champ de modération introuvable dans Baserow (BASEROW_MODERATION_FIELD_ID=${moderationFieldId}) : vérifier que le champ n'a pas été supprimé ou recréé.`;
+          this.logger.error(message);
+          throw new Error(message);
+        }
         throw new Error(
           `Erreur Baserow: ${response.status} ${response.statusText}`,
         );
