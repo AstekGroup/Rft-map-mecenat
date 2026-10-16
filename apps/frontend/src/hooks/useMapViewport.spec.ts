@@ -1,8 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import { FRANCE_DEFAULT_VIEW } from '@/hooks';
 import { useMapViewport } from './useMapViewport';
 
 describe('useMapViewport', () => {
+  it('expose la vue France par défaut via le point d’entrée des hooks', () => {
+    expect(FRANCE_DEFAULT_VIEW).toEqual({
+      longitude: 2.2137,
+      latitude: 46.2276,
+      zoom: 5.5,
+    });
+  });
+
   it('initialise avec le centre de la France', () => {
     const { result } = renderHook(() => useMapViewport());
     expect(result.current.viewport.longitude).toBeCloseTo(2.2137);
