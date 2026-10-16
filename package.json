@@ -2,7 +2,7 @@
   "name": "make-map",
   "version": "0.2.0",
   "private": true,
-  "description": "Carte interactive - La Grande Semaine Végétale",
+  "description": "Carte interactive d'événements : un seul code, une config par carte",
   "scripts": {
     "dev": "turbo run dev --filter=@make-map/frontend --filter=@make-map/backend",
     "dev:all": "turbo run dev",
