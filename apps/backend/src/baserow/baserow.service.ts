@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { Event, LinkedTableRow } from '@make-map/types';
+import type {
+  BaserowFieldMapping,
+  Event,
+  LinkedTableRow,
+} from '@make-map/types';
 import type {
   BaserowRecord,
   BaserowResponse,
@@ -271,7 +275,7 @@ export class BaserowService {
     return records;
   }
 
-  private get fm(): Record<string, string> {
+  private get fm(): Partial<BaserowFieldMapping> {
     return this.appConfig.get()?.baserow.fieldMapping || {};
   }
 
