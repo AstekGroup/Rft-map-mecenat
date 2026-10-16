@@ -32,10 +32,14 @@ echo -e "${YELLOW}[1/5] Chargement des secrets...${NC}"
 
 if command -v envmap &> /dev/null && [ -f ".envmap.yaml" ]; then
     SCW_INSTANCE_IP=$(envmap get --env prod SCW_INSTANCE_IP --raw 2>/dev/null | tr -d '\001' || echo "")
-    AIRTABLE_API_KEY=$(envmap get --env prod AIRTABLE_API_KEY --raw 2>/dev/null | tr -d '\001' || echo "")
-    AIRTABLE_BASE_ID=$(envmap get --env prod AIRTABLE_BASE_ID --raw 2>/dev/null | tr -d '\001' || echo "")
-    AIRTABLE_TABLE_ID=$(envmap get --env prod AIRTABLE_TABLE_ID --raw 2>/dev/null | tr -d '\001' || echo "")
-    AIRTABLE_PARTNERS_TABLE_ID=$(envmap get --env prod AIRTABLE_PARTNERS_TABLE_ID --raw 2>/dev/null | tr -d '\001' || echo "")
+    BASEROW_API_URL=$(envmap get --env prod BASEROW_API_URL --raw 2>/dev/null | tr -d '\001' || echo "")
+    BASEROW_API_TOKEN=$(envmap get --env prod BASEROW_API_TOKEN --raw 2>/dev/null | tr -d '\001' || echo "")
+    BASEROW_EVENT_TABLE_ID=$(envmap get --env prod BASEROW_EVENT_TABLE_ID --raw 2>/dev/null | tr -d '\001' || echo "")
+    BASEROW_MODERATION_FIELD_ID=$(envmap get --env prod BASEROW_MODERATION_FIELD_ID --raw 2>/dev/null | tr -d '\001' || echo "")
+    BASEROW_PARTNERS_TABLE_ID=$(envmap get --env prod BASEROW_PARTNERS_TABLE_ID --raw 2>/dev/null | tr -d '\001' || echo "")
+    BASEROW_THEMATIQUES_TABLE_ID=$(envmap get --env prod BASEROW_THEMATIQUES_TABLE_ID --raw 2>/dev/null | tr -d '\001' || echo "")
+    BASEROW_FORMATS_TABLE_ID=$(envmap get --env prod BASEROW_FORMATS_TABLE_ID --raw 2>/dev/null | tr -d '\001' || echo "")
+    BASEROW_PUBLICS_TABLE_ID=$(envmap get --env prod BASEROW_PUBLICS_TABLE_ID --raw 2>/dev/null | tr -d '\001' || echo "")
     DOMAIN=$(envmap get --env prod DOMAIN --raw 2>/dev/null | tr -d '\001' || echo "localhost")
 fi
 
@@ -51,8 +55,8 @@ if [ -z "$SCW_INSTANCE_IP" ]; then
     exit 1
 fi
 
-if [ -z "$AIRTABLE_API_KEY" ]; then
-    echo -e "${RED}Erreur: AIRTABLE_API_KEY non défini${NC}"
+if [ -z "$BASEROW_API_TOKEN" ]; then
+    echo -e "${RED}Erreur: BASEROW_API_TOKEN non défini${NC}"
     exit 1
 fi
 
@@ -98,10 +102,14 @@ echo ""
 echo -e "${YELLOW}[3/5] Configuration des variables d'environnement...${NC}"
 
 $SSH_CMD "cat > ${REMOTE_DIR}/deploy/.env.prod << 'ENVEOF'
-AIRTABLE_API_KEY=${AIRTABLE_API_KEY}
-AIRTABLE_BASE_ID=${AIRTABLE_BASE_ID}
-AIRTABLE_TABLE_ID=${AIRTABLE_TABLE_ID}
-AIRTABLE_PARTNERS_TABLE_ID=${AIRTABLE_PARTNERS_TABLE_ID}
+BASEROW_API_URL=${BASEROW_API_URL}
+BASEROW_API_TOKEN=${BASEROW_API_TOKEN}
+BASEROW_EVENT_TABLE_ID=${BASEROW_EVENT_TABLE_ID}
+BASEROW_MODERATION_FIELD_ID=${BASEROW_MODERATION_FIELD_ID}
+BASEROW_PARTNERS_TABLE_ID=${BASEROW_PARTNERS_TABLE_ID}
+BASEROW_THEMATIQUES_TABLE_ID=${BASEROW_THEMATIQUES_TABLE_ID}
+BASEROW_FORMATS_TABLE_ID=${BASEROW_FORMATS_TABLE_ID}
+BASEROW_PUBLICS_TABLE_ID=${BASEROW_PUBLICS_TABLE_ID}
 DOMAIN=${DOMAIN:-localhost}
 CORS_ORIGIN=*
 ENVEOF"

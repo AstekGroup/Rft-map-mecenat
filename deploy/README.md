@@ -12,7 +12,7 @@ Instance Scaleway DEV1-S (2 vCPU, 2 Go RAM, ~11 EUR/mois)
 │   ├── /       -> Frontend Nginx (port 3080)
 │   └── /api/*  -> Backend NestJS (port 8080)
 ├── Frontend Nginx (fichiers statiques React)
-└── Backend NestJS (API Airtable + Geocodage)
+└── Backend NestJS (proxy Baserow + Geocodage)
 ```
 
 ## Prerequis
@@ -46,10 +46,14 @@ ssh root@$IP "curl -fsSL https://get.docker.com | sh"
 
 ```bash
 envmap set --env prod SCW_INSTANCE_IP --prompt    # IP publique de l'instance
-envmap set --env prod AIRTABLE_API_KEY --prompt    # Token Airtable
-envmap set --env prod AIRTABLE_BASE_ID --prompt    # Base ID Airtable
-envmap set --env prod AIRTABLE_TABLE_ID --prompt   # Table ID Airtable Evènements
-envmap set --env prod AIRTABLE_PARTNERS_TABLE_ID --prompt   # Table ID Airtable Têtes de réseau
+envmap set --env prod BASEROW_API_URL --prompt              # URL de l'instance Baserow
+envmap set --env prod BASEROW_API_TOKEN --prompt            # Jeton de base de données Baserow
+envmap set --env prod BASEROW_EVENT_TABLE_ID --prompt       # Table des événements
+envmap set --env prod BASEROW_MODERATION_FIELD_ID --prompt  # Champ de modération
+envmap set --env prod BASEROW_PARTNERS_TABLE_ID --prompt    # Table des partenaires
+envmap set --env prod BASEROW_THEMATIQUES_TABLE_ID --prompt # Table des thématiques
+envmap set --env prod BASEROW_FORMATS_TABLE_ID --prompt     # Table des formats
+envmap set --env prod BASEROW_PUBLICS_TABLE_ID --prompt     # Table des publics
 envmap set --env prod DOMAIN --prompt              # Domaine (ex: map.semaine-ia.fr)
 ```
 
@@ -101,10 +105,14 @@ Voir `deploy/.env.prod.example` pour la liste complete.
 
 | Variable | Description | Exemple |
 |----------|-------------|---------|
-| `AIRTABLE_API_KEY` | Token Airtable PAT | `pats...` |
-| `AIRTABLE_BASE_ID` | ID de la base Airtable | `app...` |
-| `AIRTABLE_TABLE_ID` | ID de la table Evenements | `tbl...` |
-| `AIRTABLE_PARTNERS_TABLE_ID` | ID de la table Têtes de réseau | `tbl...` |
+| `BASEROW_API_URL` | URL de l'instance Baserow | `https://baserow.example.org` |
+| `BASEROW_API_TOKEN` | Jeton de base de données Baserow | `...` |
+| `BASEROW_EVENT_TABLE_ID` | ID de la table des événements | `123` |
+| `BASEROW_MODERATION_FIELD_ID` | ID du champ de modération | `456` |
+| `BASEROW_PARTNERS_TABLE_ID` | ID de la table des partenaires | `124` |
+| `BASEROW_THEMATIQUES_TABLE_ID` | ID de la table des thématiques | `125` |
+| `BASEROW_FORMATS_TABLE_ID` | ID de la table des formats | `126` |
+| `BASEROW_PUBLICS_TABLE_ID` | ID de la table des publics | `127` |
 | `DOMAIN` | Nom de domaine | `map.semaine-ia.fr` |
 | `CORS_ORIGIN` | Origines CORS autorisees | `*` |
 
