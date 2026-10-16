@@ -4,6 +4,7 @@ import { LinkedTableRow } from '@/types/event';
 import {checkIconColor, getIcon} from '@/utils/iconResolver';
 import { DateCustomRangeInputs } from '@/components/Filters/DateCustomRangeInputs';
 import { formatFrDateRangeLabel, isDateFilterActive } from '@/utils/eventDateRange';
+import { countActiveFilters } from '@/utils/eventFilters';
 import { ChevronDown, RotateCcw, X, Search, MapPin, Globe, Handshake, History } from 'lucide-react';
 
 interface EventFiltersBarProps {
@@ -90,16 +91,7 @@ const dateFilterModes = config?.filters?.dateFilterModes || [
   { mode: 'custom', label: 'Dates personnalisées' },
 ];
 
-  const hasActiveFilters =
-    filters.search ||
-    filters.postalCode ||
-    filters.regions.length > 0 ||
-    filters.types.length > 0 ||
-    filters.themes.length > 0 ||
-    filters.partners.length > 0 ||
-    filters.audiences.length > 0 ||
-    isDateFilterActive(filters.dateFilter, filters.dateFrom) ||
-    filters.modality !== 'all';
+  const hasActiveFilters = countActiveFilters(filters) > 0;
 
   // Collecte des tags actifs
   const activeTags: { key: string; label: string; onRemove: () => void }[] = [];
@@ -193,7 +185,7 @@ const dateFilterModes = config?.filters?.dateFilterModes || [
             type="text"
             value={filters.search}
             onChange={(e) => onUpdateFilters({ search: e.target.value })}
-            placeholder="Rechercher par titre, description, ville..."
+            placeholder="Rechercher un événement par titre"
             className="w-full pl-10 pr-10 py-2.5 bg-white border border-primary/20 rounded-xl text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-inter"
           />
           {filters.search && (

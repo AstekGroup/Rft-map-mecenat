@@ -127,10 +127,10 @@ describe('useEvents', () => {
       expect(result.current.events[0].id).toBe('a');
     });
 
-    it('filtre par recherche textuelle (ville)', async () => {
+    it('ne recherche pas dans la ville ou la description', async () => {
       const events = [
-        makeEvent({ id: 'a', city: 'Paris' }),
-        makeEvent({ id: 'b', city: 'Lyon' }),
+        makeEvent({ id: 'a', title: 'Atelier', city: 'Lyon', description: 'Cuisine' }),
+        makeEvent({ id: 'b', title: 'Cuisine végétale', city: 'Paris' }),
       ];
       vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
 
@@ -141,8 +141,14 @@ describe('useEvents', () => {
         result.current.updateFilters({ search: 'Lyon' });
       });
 
+      expect(result.current.events).toHaveLength(0);
+
+      act(() => {
+        result.current.updateFilters({ search: 'Cuisine' });
+      });
+
       expect(result.current.events).toHaveLength(1);
-      expect(result.current.events[0].city).toBe('Lyon');
+      expect(result.current.events[0].id).toBe('b');
     });
 
     it('filtre par modalité', async () => {
