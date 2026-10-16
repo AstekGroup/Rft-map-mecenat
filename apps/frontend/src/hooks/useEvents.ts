@@ -98,7 +98,13 @@ export function useEvents() {
       // Filtre recherche
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
-        const matchesSearch = event.title.toLowerCase().includes(searchLower);
+        const matchesSearch = 
+          event.title.toLowerCase().includes(searchLower) ||
+          event.description.toLowerCase().includes(searchLower) ||
+          event.city.toLowerCase().includes(searchLower) ||
+          event.organizer.toLowerCase().includes(searchLower) ||
+          event.region.toLowerCase().includes(searchLower) ||
+          (event.venueName && event.venueName.toLowerCase().includes(searchLower));
         if (!matchesSearch) return false;
       }
 

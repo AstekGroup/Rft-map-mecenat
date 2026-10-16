@@ -185,7 +185,7 @@ const dateFilterModes = config?.filters?.dateFilterModes || [
             type="text"
             value={filters.search}
             onChange={(e) => onUpdateFilters({ search: e.target.value })}
-            placeholder="Rechercher un événement par titre"
+            placeholder="Rechercher par titre, description, ville..."
             className="w-full pl-10 pr-10 py-2.5 bg-white border border-primary/20 rounded-xl text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-inter"
           />
           {filters.search && (

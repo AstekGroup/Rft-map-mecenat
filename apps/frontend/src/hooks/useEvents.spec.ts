@@ -127,10 +127,17 @@ describe('useEvents', () => {
       expect(result.current.events[0].id).toBe('a');
     });
 
-    it('ne recherche pas dans la ville ou la description', async () => {
+    it.each([
+      ['titre', 'Zumba', { title: 'Zumba du jeudi' }],
+      ['description', 'compostage', { description: 'Atelier de compostage' }],
+      ['ville', 'Lyon', { city: 'Lyon' }],
+      ['organisateur', 'Association Verte', { organizer: 'Association Verte' }],
+      ['région', 'Bretagne', { region: 'Bretagne' }],
+      ['lieu', 'Halle Tony', { venueName: 'Halle Tony Garnier' }],
+    ] as const)('recherche multi-champs : trouve par %s', async (_champ, recherche, overrides) => {
       const events = [
-        makeEvent({ id: 'a', title: 'Atelier', city: 'Lyon', description: 'Cuisine' }),
-        makeEvent({ id: 'b', title: 'Cuisine végétale', city: 'Paris' }),
+        makeEvent({ id: 'cible', ...overrides }),
+        makeEvent({ id: 'autre', title: 'Autre', description: 'Rien', city: 'Nantes', organizer: 'Org', region: 'Pays de la Loire', venueName: 'Salle' }),
       ];
       vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
 
@@ -138,17 +145,29 @@ describe('useEvents', () => {
       await waitFor(() => expect(result.current.loading).toBe(false));
 
       act(() => {
-        result.current.updateFilters({ search: 'Lyon' });
-      });
-
-      expect(result.current.events).toHaveLength(0);
-
-      act(() => {
-        result.current.updateFilters({ search: 'Cuisine' });
+        result.current.updateFilters({ search: recherche });
       });
 
       expect(result.current.events).toHaveLength(1);
-      expect(result.current.events[0].id).toBe('b');
+      expect(result.current.events[0].id).toBe('cible');
+    });
+
+    it('recherche multi-champs : ignore la casse et ne renvoie rien sans correspondance', async () => {
+      const events = [makeEvent({ id: 'a', city: 'Lyon' })];
+      vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
+
+      const { result } = renderHook(() => useEvents());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      act(() => {
+        result.current.updateFilters({ search: 'lYoN' });
+      });
+      expect(result.current.events).toHaveLength(1);
+
+      act(() => {
+        result.current.updateFilters({ search: 'introuvable' });
+      });
+      expect(result.current.events).toHaveLength(0);
     });
 
     it('filtre par modalité', async () => {
