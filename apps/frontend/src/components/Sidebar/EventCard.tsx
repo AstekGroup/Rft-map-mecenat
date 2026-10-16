@@ -23,6 +23,7 @@ function EventCardComponent({
   onMouseLeave,
 }: EventCardProps) {
   const {helpers} = useConfig();
+  const editionBadge = helpers.getEditionBadge();
   const formattedDate = new Date(event.date).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'short',
@@ -125,10 +126,10 @@ function EventCardComponent({
           </div>
 
           {/* Badge « pendant l'événement » (nom depuis la config) */}
-          {event.isDuringWeek && (
+          {event.isDuringWeek && editionBadge && (
             <div className="mt-2 inline-flex items-center gap-1 text-xs text-primary font-medium">
               <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse-soft" />
-              {helpers.getText('home', 'mainTitle')}
+              {editionBadge}
             </div>
           )}
         </div>
