@@ -40,3 +40,6 @@ coverage/
 .playwright-mcp/
 
 .gemini/
+
+# index.html est généré par apps/frontend/scripts/update-index-html.cjs depuis index.template.html
+apps/frontend/index.html
