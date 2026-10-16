@@ -12,20 +12,10 @@ export function EventsListPage() {
     events,
     loading,
     error,
-    filters,
-    updateFilters,
-    resetFilters,
-    toggleRegion,
-    toggleType,
-    toggleTheme,
-    togglePartner,
-    availablePartners,
-    toggleAudience,
+    controls,
     stats,
-    availableThemes,
-    availableFormats,
-    availablePublics,
   } = useEvents();
+  const { filters, onUpdateFilters: updateFilters, onResetFilters: resetFilters } = controls;
 
   const searchParamsKey = searchParams.toString();
 
@@ -134,18 +124,11 @@ export function EventsListPage() {
       
       {/* Filters bar with integrated Search and Modality Switcher */}
       <EventFiltersBar
-        filters={filters}
-        onUpdateFilters={handleUpdateFilters}
-        onToggleRegion={toggleRegion}
-        onToggleType={toggleType}
-        onToggleTheme={toggleTheme}
-        onTogglePartner={togglePartner}
-        availablePartners={availablePartners}
-        onToggleAudience={toggleAudience}
-        onResetFilters={handleResetFilters}
-        availableThemes={availableThemes}
-        availableFormats={availableFormats}
-        availablePublics={availablePublics}
+        controls={{
+          ...controls,
+          onUpdateFilters: handleUpdateFilters,
+          onResetFilters: handleResetFilters,
+        }}
       />
       
       {/* Event list grid with pagination */}
