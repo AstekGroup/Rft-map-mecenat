@@ -6,12 +6,16 @@ import type {
   LinkedTableRow,
 } from '@make-map/types';
 import type {
+  BaserowAttachment,
   BaserowRecord,
   BaserowResponse,
   BaserowLinkedTableRecord,
+  BaserowSelect,
 } from './baserow.types';
 import {
   mapModality,
+  isFreeTariff,
+  mapReferenceRecord,
   extractImageUrl,
   computeIsDuringWeek,
   parseDateTime,
@@ -25,6 +29,8 @@ import { AppConfigService } from '../config/config.service';
 @Injectable()
 export class BaserowService {
   private readonly logger = new Logger(BaserowService.name);
+  /** Avertissements déjà émis (un seul message par cause, pas un par ligne). */
+  private readonly warned = new Set<string>();
 
   constructor(
     private readonly configService: ConfigService,
@@ -163,20 +169,22 @@ export class BaserowService {
         const data =
           (await response.json()) as BaserowResponse<BaserowLinkedTableRecord>;
 
+        const referenceFields = this.appConfig.safe.baserow.mapping.referenceFields;
+        if (
+          data.results.length > 0 &&
+          !(referenceFields.name in data.results[0])
+        ) {
+          this.warnOnce(
+            `reference-name:${tableName}`,
+            `Colonne « ${referenceFields.name} » (baserow.mapping.referenceFields.name) introuvable dans la table ${tableName} : les libellés seront vides. Vérifier le nom de la colonne dans Baserow et dans la config.`,
+          );
+        }
+
         for (const record of data.results) {
-          linkedTableMap.set(String(record.id), {
-            id: String(record.id),
-            name: record.Nom,
-            logoUrl: extractImageUrl(record.Logo),
-            pictoName:
-              record.Picto && record.Picto.length > 0
-                ? record.Picto[0].value
-                : undefined,
-            colorHexa:
-              record.Couleur && record.Couleur.length > 0
-                ? record.Couleur[0].value
-                : undefined,
-          });
+          linkedTableMap.set(
+            String(record.id),
+            mapReferenceRecord(record, referenceFields),
+          );
         }
 
         if (data.next) {
@@ -224,6 +232,16 @@ export class BaserowService {
       throw new Error(message);
     }
 
+    // Idem sans valeur « visible » dans la config : aucune valeur par défaut.
+    const moderationVisibleValue =
+      this.appConfig.get()?.baserow?.moderationVisibleValue;
+    if (!devMode && !moderationVisibleValue) {
+      const message =
+        'baserow.moderationVisibleValue absent de la config : publication refusée (valeur de modération visible inconnue).';
+      this.logger.error(message);
+      throw new Error(message);
+    }
+
     const records: BaserowRecord[] = [];
     let page = 1;
     let hasNext = true;
@@ -237,7 +255,7 @@ export class BaserowService {
       if (!devMode && moderationFieldId) {
         url.searchParams.set(
           `filter__field_${moderationFieldId}__contains_word`,
-          this.appConfig.get()?.baserow.moderationVisibleValue || 'Accepté',
+          moderationVisibleValue as string,
         );
       }
 
@@ -275,12 +293,43 @@ export class BaserowService {
     return records;
   }
 
-  private get fm(): Partial<BaserowFieldMapping> {
-    return this.appConfig.get()?.baserow.fieldMapping || {};
+  /** Journalise un avertissement une seule fois (clé = cause). */
+  private warnOnce(key: string, message: string): void {
+    if (this.warned.has(key)) return;
+    this.warned.add(key);
+    this.logger.warn(message);
   }
 
-  private get mm() {
-    return this.appConfig.get()?.baserow.mapping;
+  /**
+   * Lit la colonne associée à un rôle dans l'enregistrement. Le nom de la colonne vient
+   * uniquement de `baserow.fieldMapping` : rôle absent de la config = valeur vide + avertissement.
+   */
+  private readField<T = unknown>(
+    record: BaserowRecord,
+    role: keyof BaserowFieldMapping,
+  ): T | undefined {
+    const column = this.appConfig.safe.baserow.fieldMapping?.[role];
+    if (!column) {
+      this.warnOnce(
+        `role:${role}`,
+        `baserow.fieldMapping.${role} absent de la config : le champ est ignoré (valeur vide).`,
+      );
+      return undefined;
+    }
+    return record[column] as T | undefined;
+  }
+
+  /** Nom de la colonne d'un rôle (pour les champs de liaison, lus par `mapLinkedRow`). */
+  private columnOf(role: keyof BaserowFieldMapping): string {
+    const column = this.appConfig.safe.baserow.fieldMapping?.[role];
+    if (!column) {
+      this.warnOnce(
+        `role:${role}`,
+        `baserow.fieldMapping.${role} absent de la config : le champ est ignoré (valeur vide).`,
+      );
+      return '';
+    }
+    return column;
   }
 
   /**
@@ -293,69 +342,66 @@ export class BaserowService {
     formatsMap: Map<string, LinkedTableRow>,
     publicsMap: Map<string, LinkedTableRow>,
   ): Event {
-    const fm = this.fm;
+    const read = <T = unknown>(role: keyof BaserowFieldMapping) =>
+      this.readField<T>(record, role);
+    const text = (role: keyof BaserowFieldMapping) =>
+      (read<string>(role) || '').trim();
+    const { modality: modalityMap, tariffFreeValue } =
+      this.appConfig.safe.baserow.mapping;
 
-    const startDateTime = parseDateTime(
-      record[fm.startDate || "Date de début de l'événement"],
+    const startDateRaw = read<string>('startDate');
+    const startDateTime = parseDateTime(startDateRaw);
+    const endDateTime = parseDateTime(read<string>('endDate'));
+
+    const modality = mapModality(
+      read<BaserowSelect>('modality'),
+      modalityMap,
+      (value) =>
+        this.warnOnce(
+          `modality:${value}`,
+          `Valeur « ${value} » de la liste de choix de modalité absente de baserow.mapping.modality : traitée comme présentiel.`,
+        ),
     );
-    const endDateTime = parseDateTime(
-      record[fm.endDate || "Date de fin de l'événement"],
-    );
 
-    const modality = mapModality(record[fm.modality || "Type de l'événement"]);
-
-    const format = mapLinkedRow(record, fm.format || 'Formats', formatsMap);
-
+    const format = mapLinkedRow(record, this.columnOf('format'), formatsMap);
     const targetAudience = mapLinkedRow(
       record,
-      fm.audience || 'Publics',
+      this.columnOf('audience'),
       publicsMap,
     );
-
-    const themes = mapLinkedRow(
-      record,
-      fm.theme || 'Thématiques',
-      thematiquesMap,
-    );
-
+    const themes = mapLinkedRow(record, this.columnOf('theme'), thematiquesMap);
     const partners = mapLinkedRow(
       record,
-      fm.partnerField || 'Partenaires',
+      this.columnOf('partnerField'),
       partnersMap,
     );
 
-    const imageUrl = extractImageUrl(
-      record[fm.image || "Visuel de l'évènement"],
-    );
+    const imageUrl = extractImageUrl(read<BaserowAttachment[]>('image'));
     const { weekStart, weekEnd } = this.appConfig.eventDates;
-    const isDuringWeek = computeIsDuringWeek(
-      record[fm.startDate || "Date de début de l'événement"],
-      weekStart,
-      weekEnd,
-    );
+    const isDuringWeek = computeIsDuringWeek(startDateRaw, weekStart, weekEnd);
     const organizerContact = buildOrganizerContact(
-      record[fm.organizerFirstName || "Prénom de l'animateur"],
-      record[fm.organizerLastName || "Nom de l'animateur"],
+      read<string>('organizerFirstName'),
+      read<string>('organizerLastName'),
     );
     const accessibilityInfo = buildAccessibilityInfo(
-      record[fm.accessModalities || "Modalités spécifiques d'accès au lieu"],
+      read<BaserowSelect[]>('accessModalities'),
     );
-    const postalCode = (
-      record[fm.postalCode || 'Code postal du lieu'] || ''
-    ).trim();
+    const postalCode = text('postalCode');
     const fallbackRegion =
       this.geocodingService.getRegionFromPostalCode(postalCode);
 
+    const price = read('price');
+
     return {
       id: String(record.id),
-      title: record[fm.title || "Nom de l'événement"] || 'Événement sans titre',
-      description: record[fm.description || 'Description'] || '',
+      title: read<string>('title') || 'Événement sans titre',
+      description: read<string>('description') || '',
       date: startDateTime.date,
       time: startDateTime.time,
       endDate: endDateTime.date || undefined,
       endTime: endDateTime.time || undefined,
-      address: (record[fm.address || 'Adresse du lieu'] || '').trim(),
-      city: (record[fm.city || 'Ville du lieu'] || '').trim(),
+      address: text('address'),
+      city: text('city'),
       region: fallbackRegion,
       department: '',
       postalCode,
@@ -363,36 +409,31 @@ export class BaserowService {
       longitude: 0,
       type: format[0],
       themes,
-      organizer:
-        record[fm.organizer || 'Nom de la structure organisatrice'] || '',
+      organizer: read<string>('organizer') || '',
       organizerContact,
-      registrationUrl:
-        record[fm.registrationUrl || "Lien d'inscription à l'événement"] ||
-        undefined,
+      registrationUrl: read<string>('registrationUrl') || undefined,
       isDuringWeek,
       modality,
       imageUrl,
-      venueName: record[fm.venueName || 'Lieu'] || undefined,
+      venueName: read<string>('venueName') || undefined,
       accessibilityInfo,
-      videoConferenceUrl:
-        record[fm.videoConferenceUrl || 'Lien de la visio'] || undefined,
+      videoConferenceUrl: read<string>('videoConferenceUrl') || undefined,
       targetAudience,
       contactEmail:
-        record[fm.contactEmail || 'Email contact événement'] ||
-        record[fm.contactEmailFallback || "E-mail de l'animateur"] ||
+        read<string>('contactEmail') ||
+        read<string>('contactEmailFallback') ||
         undefined,
-      contactPhone:
-        record[fm.contactPhone || 'Téléphone inscription'] || undefined,
-      organizerWebsite:
-        record[fm.organizerWebsite || 'Site web de la structure'] || undefined,
-      capacity:
-        record[fm.capacity || "Capacité d'accueil de l'événement"] || undefined,
+      contactPhone: read<string>('contactPhone') || undefined,
+      organizerWebsite: read<string>('organizerWebsite') || undefined,
+      capacity: read<number>('capacity') || undefined,
       registeredCount: undefined,
       partners: partners.length > 0 ? partners : undefined,
-      isFree:
-        record[fm.tariff || 'Tarif']?.value === 'Gratuit' ||
-        !record[fm.price || 'Montant'],
-      price: record[fm.price || 'Montant'] || undefined,
+      isFree: isFreeTariff(
+        read<BaserowSelect>('tariff'),
+        price,
+        tariffFreeValue,
+      ),
+      price: (price as number | undefined) || undefined,
     };
   }
 }

@@ -1,6 +1,8 @@
 import {
   mapLinkedRow,
   mapModality,
+  isFreeTariff,
+  mapReferenceRecord,
   extractImageUrl,
   computeIsDuringWeek,
   parseDateTime,
@@ -8,27 +10,99 @@ import {
   buildAccessibilityInfo,
 } from './baserow-mapping.util';
 import { BaserowAttachment, type BaserowRecord } from './baserow.types';
-import { LinkedTableRow } from '@make-map/types';
+import type {
+  BaserowReferenceFields,
+  EventModality,
+  LinkedTableRow,
+} from '@make-map/types';
 
 describe('mapModality', () => {
-  it('mappe Présentiel', () => {
-    expect(mapModality({ id: 1, value: 'Présentiel' })).toBe('presentiel');
+  // Valeurs de la liste de choix : elles viennent de la config (`baserow.mapping.modality`).
+  const MODALITY_MAP: Record<string, EventModality> = {
+    'Sur place': 'presentiel',
+    'À distance': 'distanciel',
+    Mixte: 'presentiel',
+  };
+
+  it('traduit les valeurs de la config', () => {
+    expect(mapModality({ id: 1, value: 'Sur place' }, MODALITY_MAP)).toBe('presentiel');
+    expect(mapModality({ id: 1, value: 'À distance' }, MODALITY_MAP)).toBe('distanciel');
+    expect(mapModality({ id: 1, value: 'Mixte' }, MODALITY_MAP)).toBe('presentiel');
   });
 
-  it('mappe Distanciel', () => {
-    expect(mapModality({ id: 1, value: 'Distanciel' })).toBe('distanciel');
+  it('ne reconnaît pas une valeur absente de la config, la signale et retombe sur présentiel', () => {
+    const onUnmapped = jest.fn();
+    expect(mapModality({ id: 1, value: 'Présentiel' }, MODALITY_MAP, onUnmapped)).toBe('presentiel');
+    expect(onUnmapped).toHaveBeenCalledWith('Présentiel');
   });
 
-  it('mappe En ligne vers distanciel', () => {
-    expect(mapModality({ id: 1, value: 'En ligne' })).toBe('distanciel');
+  it('retourne presentiel sans signalement si le champ est vide', () => {
+    const onUnmapped = jest.fn();
+    expect(mapModality(undefined, MODALITY_MAP, onUnmapped)).toBe('presentiel');
+    expect(onUnmapped).not.toHaveBeenCalled();
+  });
+});
+
+describe('isFreeTariff', () => {
+  it('est gratuit si le tarif porte la valeur « gratuit » de la config', () => {
+    expect(isFreeTariff({ id: 1, value: 'Offert' }, 12, 'Offert')).toBe(true);
   });
 
-  it('mappe Hybride vers présentiel', () => {
-    expect(mapModality({ id: 1, value: 'Hybride' })).toBe('presentiel');
+  it("est gratuit s'il n'y a pas de montant", () => {
+    expect(isFreeTariff(undefined, undefined, 'Offert')).toBe(true);
+    expect(isFreeTariff({ id: 2, value: 'Payant' }, 0, 'Offert')).toBe(true);
   });
 
-  it('retourne presentiel par défaut si undefined', () => {
-    expect(mapModality(undefined)).toBe('presentiel');
+  it('est payant si le tarif est autre et que le montant est renseigné', () => {
+    expect(isFreeTariff({ id: 2, value: 'Payant' }, 15, 'Offert')).toBe(false);
+  });
+});
+
+describe('mapReferenceRecord', () => {
+  const FIELDS: BaserowReferenceFields = {
+    name: 'Libellé',
+    logo: 'Image',
+    picto: 'Icône',
+    color: 'Teinte',
+  };
+
+  it('lit les colonnes indiquées par la config', () => {
+    const row = mapReferenceRecord(
+      {
+        id: 7,
+        Libellé: 'Festival',
+        Icône: [{ id: 1, value: 'PartyPopper' }],
+        Teinte: [{ id: 2, value: '#E74C8C' }],
+      },
+      FIELDS,
+    );
+    expect(row).toEqual({
+      id: '7',
+      name: 'Festival',
+      logoUrl: undefined,
+      pictoName: 'PartyPopper',
+      colorHexa: '#E74C8C',
+    });
+  });
+
+  it('ignore les colonnes aux noms par défaut quand la config en désigne d\'autres', () => {
+    const row = mapReferenceRecord(
+      { id: 1, Nom: 'Ancien nom', Libellé: 'Nouveau nom' },
+      FIELDS,
+    );
+    expect(row.name).toBe('Nouveau nom');
+  });
+
+  it('retourne un nom vide si la colonne du nom est absente', () => {
+    expect(mapReferenceRecord({ id: 3, Nom: 'Perdu' }, FIELDS).name).toBe('');
+  });
+
+  it('extrait le logo de la colonne configurée', () => {
+    const row = mapReferenceRecord(
+      { id: 4, Libellé: 'Partenaire', Image: [{ url: 'https://example.com/logo.png', filename: 'logo.png' }] },
+      FIELDS,
+    );
+    expect(row.logoUrl).toBe('https://example.com/logo.png');
   });
 });
 

@@ -1,5 +1,9 @@
 /**
- * Types Baserow - Noms de champs réels en français
+ * Types Baserow.
+ *
+ * Aucun nom de colonne ici : les enregistrements sont lus avec les noms indiqués par la config
+ * (`baserow.fieldMapping`, `baserow.mapping.referenceFields`). Seuls l'identifiant de ligne et
+ * les formes des valeurs renvoyées par l'API Baserow sont connus du code.
  */
 
 export interface BaserowAttachment {
@@ -31,53 +35,17 @@ export interface BaserowSelect {
   value: string;
 }
 
+/** Ligne de la table des événements (réponse avec `user_field_names=true`). */
 export interface BaserowRecord {
   id: number;
   order?: string;
-  "Nom de l'événement"?: string;
-  Description?: string;
-  "Date de début de l'événement"?: string;
-  "Date de fin de l'événement"?: string;
-  Lieu?: string;
-  Formats?: BaserowSelect[];
-  "Type de l'événement"?: BaserowSelect; // = Modalité (Présentiel / Distanciel)
-  'Adresse du lieu'?: string;
-  'Code postal du lieu'?: string;
-  'Ville du lieu'?: string;
-  "Modalités spécifiques d'accès au lieu"?: BaserowSelect[];
-  'Lien de la visio'?: string;
-  'Modalités de visio'?: BaserowSelect[];
-  "Capacité d'accueil de l'événement"?: number;
-  'Email contact événement'?: string;
-  'Nom de la structure organisatrice'?: string;
-  'Site web de la structure'?: string;
-  "Lien d'inscription à l'événement"?: string;
-  "Prénom de l'animateur"?: string;
-  "Nom de l'animateur"?: string;
-  "E-mail de l'animateur"?: string;
-  "Téléphone de l'animateur"?: string;
-  'Téléphone inscription'?: string;
-  "Modération de l'événement"?: string;
-  'Visibilité sur la cartographie'?: string;
-  Publics?: BaserowSelect[];
-  Thématiques?: BaserowSelect[];
-  "Visuel de l'évènement"?: BaserowAttachment[];
-  'Respect de la charte'?: boolean;
-  'Réception kit communication'?: string;
-  'Type de structure'?: BaserowSelect;
-  'Avez-vous quelque chose à ajouter ?'?: string;
-  'Inscription NL'?: BaserowSelect[];
-  Partenaires?: BaserowSelect[]; // Liaisons de lignes liées dans Baserow
-  Tarif?: BaserowSelect;
-  Montant?: number;
+  [column: string]: unknown;
 }
 
+/** Ligne d'une table de référence (formats, publics, thématiques, partenaires). */
 export interface BaserowLinkedTableRecord {
   id: number;
-  Nom: string;
-  Logo?: BaserowAttachment[];
-  Picto?: BaserowSelect[];
-  Couleur?: BaserowSelect[];
+  [column: string]: unknown;
 }
 
 export interface BaserowResponse<T> {
