@@ -27,6 +27,7 @@ export function EventDetailPage() {
   const navigate = useNavigate();
   const { allEvents, loading, error } = useEvents();
   const { helpers } = useConfig();
+  const editionBadge = helpers.getEditionBadge();
   
   const event = allEvents.find(e => e.id === id);
 
@@ -148,10 +149,10 @@ export function EventDetailPage() {
                 )}
                 {helpers.getEnumLabel('modalities', event.modality)}
               </span>
-              {event.isDuringWeek && (
+              {event.isDuringWeek && editionBadge && (
                 <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary-dark px-3 py-1.5 rounded-full text-sm font-medium">
                   <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                  {helpers.getText('home', 'mainTitle')}
+                  {editionBadge}
                 </span>
               )}
               {isComplete && (
