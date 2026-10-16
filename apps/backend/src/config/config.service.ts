@@ -76,7 +76,8 @@ export class AppConfigService implements OnModuleInit {
     return this.safe.theme;
   }
 
-  get eventDates() {
-    return this.safe.app.eventDates;
+  /** Dates de l'événement ; les clés peuvent manquer si la config est incomplète (vérifié par `computeIsDuringWeek`). */
+  get eventDates(): { weekStart?: string; weekEnd?: string } {
+    return this.safe.app?.eventDates ?? {};
   }
 }
