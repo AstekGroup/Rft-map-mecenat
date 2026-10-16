@@ -12,15 +12,17 @@ Application **React 18 + Vite** : carte MapLibre, clustering Supercluster. Elle 
 
 ```bash
 pnpm dev          # Vite — http://localhost:5173
-pnpm build        # tsc -b puis vite build (+ réécriture de index.html)
+pnpm build        # génère index.html depuis index.template.html + la config, puis tsc -b et vite build
 pnpm test         # Vitest
 ```
 
-Depuis la racine : `pnpm front:dev`. Limites connues : le lint frontend n'a pas de config ESLint ; `pnpm build` réécrit `index.html` (script non idempotent).
+Depuis la racine : `pnpm front:dev`. Limite connue : le lint frontend n'a pas de config ESLint.
+
+**Une compilation par carte** : les métas de `index.html` (titre, description, Open Graph, icône) sont écrites à la compilation. Pour une autre carte : `APP_CONFIG_PATH=<chemin absolu de la config> pnpm build` (sans la variable : `app.config.json` à la racine). `index.html` est un fichier généré et ignoré par git ; on ne modifie que `index.template.html`. Un placeholder absent du modèle ou une valeur manquante dans la config fait échouer le script avec un message clair.
 
 ## Règles propres au frontend
 
-1. **Titres et noms de l'événement** (nom, nom court, année, titres d'accueil, métadonnées) : toujours depuis la config (`app.*`, `texts.*`, via `useConfig`), avec un **repli lisible** si la clé manque, jamais la clé brute. Le **wording générique de l'interface** (boutons, placeholders, libellés de contrôles) reste en dur, en français.
+1. **Titres et noms de l'événement** (nom, nom court, année, titres d'accueil, métadonnées) : toujours depuis la config (`app.*`, `texts.*`, via `useConfig`), avec un **repli lisible** si la clé manque, jamais la clé brute. Le badge « nom court + année » vient de `helpers.getEditionBadge()`, les modes de la période de `helpers.getDateFilterModes()` (le mode « pendant l'événement » n'existe que si la config le libelle). Le **wording générique de l'interface** (boutons, placeholders, libellés de contrôles) reste en dur, en français.
 2. **Aucune couleur, police ou ombre en dur.** Passer par les variables CSS `--color-*-rgb`, `--font-*` injectées par `ConfigProvider` et par les classes Tailwind (`primary`, `surface-*`, `text-*`…). Une couleur de repli doit être une constante **unique** (et non copiée dans chaque fichier).
 3. **Aucune marque ni coordonnée en dur** (nom de l'événement, logo, `contact@…`, URL du site, année) : tout vient de `app.*` / `texts.*`.
 4. **Carte et régions** (centre, zoom, bornes, territoires d'outre-mer, liste des régions) : restent dans le code, mais définis une seule fois (constante partagée, ex. `FRANCE_DEFAULT_VIEW`), jamais répétés.
@@ -45,7 +47,8 @@ Depuis la racine : `pnpm front:dev`. Limites connues : le lint frontend n'a pas 
 | `src/components/Sidebar/`, `Filters/`, `Events/` | Liste latérale, filtres, liste |
 | `src/pages/` | Routes (`HomePage`, `MapPage`, `EventsListPage`, `EventDetailPage`) |
 | `src/services/api.ts` | Client HTTP vers `VITE_API_URL` |
-| `scripts/update-index-html.cjs` | Réécrit `index.html` au build depuis la config (donc **un build par carte** pour les métas/polices) |
+| `scripts/update-index-html.cjs` | Génère `index.html` (ignoré par git) depuis `index.template.html` et la config (donc **un build par carte** pour les métas) |
+| `scripts/config-template.cjs` | Gabarits `{{...}}` de la config, version script de build (doit rester identique à `apps/backend/src/config/config-template.util.ts` ; `config-template.spec.ts` le vérifie) |
 
 ## Variables
 

@@ -38,7 +38,7 @@ Ce dépôt est **1 seul code pour N cartes** d'événements (une carte = un év�
 
 - [ ] Aucun titre, nom de marque, date, e-mail/URL, couleur ou police propre à une carte dans le code (`rg -i "lgsv|semaine|végétal|#[0-9a-f]{6}"` sur les fichiers modifiés). Le wording générique de l'interface reste en dur.
 - [ ] Aucun nom de champ Baserow ni valeur de liste de choix ajouté hors de la config ; aucun libellé de référentiel métier en dur.
-- [ ] Nouveau **titre ou nom d'événement** → clé dans `texts.*` (type `AppConfig` + `app.config.json`), avec repli lisible si la clé manque.
+- [ ] Nouveau **titre ou nom d'événement** → clé dans `texts.*` (type `AppConfig` + `app.config.json`), avec repli lisible si la clé manque. Le nom de l'événement s'écrit **une seule fois** (`app.name`) ; les autres titres le reprennent par gabarit (`"Carte - {{app.name}}"`).
 - [ ] Pas de flag `features.*` ni de `if (carte === …)`.
 - [ ] Cas dégradés couverts : donnée absente, champ renommé, config incomplète, API en erreur (pas de `Invalid Date`, pas de clé brute affichée, pas de 500 inutile).
 - [ ] Types partagés (`shared/types`) mis à jour **avant** les consommateurs ; `pnpm build` de la racine passe.
@@ -66,7 +66,7 @@ Ce dépôt est **1 seul code pour N cartes** d'événements (une carte = un év�
 | Build / lint / tests | `pnpm build` · `pnpm lint` · `pnpm test` |
 | Baserow local jetable + données de test | voir [docs/audit/02-baserow-seed.md](./docs/audit/02-baserow-seed.md) |
 
-Limites connues (preuves dans [docs/audit/01-lancement.md](./docs/audit/01-lancement.md) et [docs/audit/JOURNAL.md](./docs/audit/JOURNAL.md)) : le lint frontend n'est pas configuré ; `pnpm lint` du backend utilise `--fix` (modifie les fichiers) ; `pnpm test` ne couvre pas `shared/types` ; `pnpm build` réécrit `apps/frontend/index.html` (script non idempotent). Ne pas contourner ces échecs sans le dire.
+Limites connues (preuves dans [docs/audit/01-lancement.md](./docs/audit/01-lancement.md) et [docs/audit/JOURNAL.md](./docs/audit/JOURNAL.md)) : le lint frontend n'est pas configuré ; `pnpm lint` du backend utilise `--fix` (modifie les fichiers) ; `pnpm test` ne couvre pas `shared/types` ; `pnpm build` génère `apps/frontend/index.html` (ignoré par git) depuis `index.template.html` : le modèle n'est jamais modifié. Ne pas contourner ces échecs sans le dire.
 
 Environnement : `apps/backend/.env.example` et `apps/frontend/.env.example` (le backend lit `BASEROW_API_URL`, `BASEROW_API_TOKEN`, `BASEROW_EVENT_TABLE_ID`, `BASEROW_MODERATION_FIELD_ID`, `BASEROW_PARTNERS_TABLE_ID`, `BASEROW_THEMATIQUES_TABLE_ID`, `BASEROW_FORMATS_TABLE_ID`, `BASEROW_PUBLICS_TABLE_ID`, `PORT`, `CORS_ORIGIN`, `APP_CONFIG_PATH`, `ALLOW_DEV_MODE`).
 

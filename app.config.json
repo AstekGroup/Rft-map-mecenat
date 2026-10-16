@@ -4,7 +4,7 @@
   "app": {
     "name": "La Grande Semaine Végétale",
     "shortName": "LGSV",
-    "description": "Supper Carte interactive des événements de La Grande Semaine Végétale",
+    "description": "Carte interactive des événements de {{app.name}}",
     "eventDates": {
       "weekStart": "2026-09-21",
       "weekEnd": "2026-09-27"
@@ -28,21 +28,21 @@
 
   "texts": {
     "meta": {
-      "title": "La super Carte Interactive - La Grande Semaine Végétale",
+      "title": "La super Carte Interactive - {{app.name}}",
       "description": "Découvrez les ateliers cuisine, dégustations et événements végétaux près de chez vous",
-      "ogTitle": "Carte Interactive - La Grande Semaine Végétale",
+      "ogTitle": "Carte Interactive - {{app.name}}",
       "ogDescription": "Découvrez les ateliers cuisine, dégustations et événements végétaux près de chez vous",
       "iconRef": "https://lagrandesemainevegetale.fr/favicon.ico"
     },
     "home": {
-      "mainTitle": "La Grande Semaine Végétale",
+      "mainTitle": "{{app.name}}",
       "mainDescription": "Découvrez des ateliers cuisine, des dégustations et des rencontres partout en France pour promouvoir une alimentation végétale accessible et gourmande.",
       "ctaText": "Voir la carte des événements",
       "ctaTextShort": "Découvrir les événements",
       "editionLabel": "Édition",
       "nearbySubtitle": "Près de chez vous",
       "seeAll": "Tout voir",
-      "infoTitle": "C'est quoi La Grande Semaine Végétale ?",
+      "infoTitle": "C'est quoi {{app.name}} ?",
       "infoDescription": "Une initiative nationale pour démocratiser l'alimentation végétale. Pendant une semaine, des fermes, des restaurants, des associations et des cuisiniers se mobilisent pour vous faire découvrir de nouvelles saveurs, apprendre à cuisiner les légumineuses et comprendre les enjeux de notre alimentation.",
       "sectionPresentiel": "Événements en présentiel"
     }
@@ -51,7 +51,7 @@
   "filters": {
     "dateFilterModes": [
       { "mode": "all", "label": "Toutes les dates" },
-      { "mode": "during-week", "label": "Pendant La Grande Semaine Végétale" },
+      { "mode": "during-week", "label": "Pendant {{app.name}}" },
       { "mode": "custom", "label": "Dates personnalisées" }
     ]
   },

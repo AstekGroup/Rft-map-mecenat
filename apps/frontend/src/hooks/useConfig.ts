@@ -5,7 +5,24 @@ export interface ConfigHelpers {
   getEnumLabel: (category: keyof typeof ENUM_MAP, id: string) => string;
   getText: (section: string, key: string) => string;
   getRegionGroups: () => { metropole: string[]; domtom: string[] };
+  /** Badge d'édition « nom court + année » tiré de la config ; chaîne vide si la config ne les donne pas. */
+  getEditionBadge: () => string;
+  /** Modes du filtre de période : ceux de la config, sinon les seuls modes génériques. */
+  getDateFilterModes: () => DateFilterModeOption[];
 }
+
+export interface DateFilterModeOption {
+  mode: string;
+  label: string;
+}
+
+// Modes dont le libellé ne dépend pas de l'événement. Le mode « pendant l'événement »
+// n'y figure pas : son libellé porte le nom de l'événement et vient de la config
+// (`filters.dateFilterModes`) ; sans lui, ce mode n'est simplement pas proposé.
+const GENERIC_DATE_FILTER_MODES: DateFilterModeOption[] = [
+  { mode: 'all', label: 'Toutes les dates' },
+  { mode: 'custom', label: 'Dates personnalisées' },
+];
 
 export interface ConfigContextValue {
   config: AppConfig | null;
@@ -13,28 +30,6 @@ export interface ConfigContextValue {
   error: Error | null;
   helpers: ConfigHelpers;
 }
-
-const FALLBACK_LABELS: Record<string, string> = {
-  'atelier-cuisine': 'Atelier de cuisine',
-  degustation: 'Dégustation ou menu végétal',
-  'visite-jardin': 'Visite de jardin / potager ou cueillette',
-  'atelier-pedagogique': 'Atelier pédagogique ou formation',
-  conference: 'Conférence/webinaire/table-ronde',
-  festival: 'Festival',
-  autre: 'Autres',
-  'tout-public': 'Tout public',
-  'familles-enfants': 'Famille / enfants',
-  'salaries-entreprise': "Salariés d'une entreprise",
-  professionnels: 'Professionnels',
-  scolaires: 'Scolaires',
-  presentiel: 'En présentiel',
-  distanciel: 'En ligne',
-  'cuisine-vegetale': 'Cuisine végétale',
-  'sante-nutrition': 'Santé & nutrition',
-  biodiversite: 'Biodiversité',
-  agriculture: 'Agriculture',
-  'climat-environnement': 'Climat & environnement',
-};
 
 const REGIONS = [
   { id: "Auvergne-Rhône-Alpes", group: "metropole" },
@@ -79,12 +74,22 @@ export function buildHelpers(config: AppConfig | null): ConfigHelpers {
   return {
     getEnumLabel(category, id) {
       const map = enumMap(category);
-      return map[id] || FALLBACK_LABELS[id] || id;
+      return map[id] || id;
     },
     getText(section, key) {
       const texts = (config?.texts as any)?.[section];
       if (texts && texts[key]) return texts[key];
       return key;
+    },
+    getEditionBadge() {
+      const shortName = config?.app?.shortName?.trim();
+      const year = config?.app?.eventDates?.weekStart?.split('-')[0];
+      const validYear = year && /^\d{4}$/.test(year) ? year : undefined;
+      return [shortName, validYear].filter(Boolean).join(' ');
+    },
+    getDateFilterModes() {
+      const modes = config?.filters?.dateFilterModes;
+      return modes && modes.length > 0 ? modes : GENERIC_DATE_FILTER_MODES;
     },
     getRegionGroups() {
       const metropole: string[] = [];

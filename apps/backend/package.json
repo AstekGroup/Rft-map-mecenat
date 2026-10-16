@@ -1,7 +1,7 @@
 {
   "name": "@make-map/backend",
   "version": "0.1.0",
-  "description": "Backend API pour la carte interactive - La Grande Semaine Végétale",
+  "description": "Backend API de la carte interactive d'événements (proxy Baserow, géocodage, config de la carte)",
   "author": "ILAB Innovation Team",
   "private": true,
   "license": "UNLICENSED",

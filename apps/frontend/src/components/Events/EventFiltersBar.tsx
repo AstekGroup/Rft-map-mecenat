@@ -82,14 +82,10 @@ export function EventFiltersBar({
   availablePublics,
   onResetFilters,
 }: EventFiltersBarProps) {
-  const { config, helpers } = useConfig();
+  const { helpers } = useConfig();
   const { metropole: REGIONS_METRO, domtom: REGIONS_DOMTOM } = helpers.getRegionGroups();
   
-const dateFilterModes = config?.filters?.dateFilterModes || [
-  { mode: 'all', label: 'Toutes les dates' },
-  { mode: 'during-week', label: 'Pendant la semaine De ...' },
-  { mode: 'custom', label: 'Dates personnalisées' },
-];
+  const dateFilterModes = helpers.getDateFilterModes();
 
   const hasActiveFilters = countActiveFilters(filters) > 0;
 
@@ -117,7 +113,7 @@ const dateFilterModes = config?.filters?.dateFilterModes || [
     const duringWeekMode = dateFilterModes.find(m => m.mode === 'during-week');
     activeTags.push({
       key: 'date',
-      label: duringWeekMode?.label || 'Pendant La Semaine De ...',
+      label: duringWeekMode?.label || 'Période de l\'événement',
       onRemove: () =>
         onUpdateFilters({ dateFilter: 'all', dateFrom: '', dateTo: '' }),
     });

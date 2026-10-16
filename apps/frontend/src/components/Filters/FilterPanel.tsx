@@ -43,14 +43,10 @@ export function FilterPanel({
   availableFormats,
   availablePublics,
 }: FilterPanelProps) {
-  const { config, helpers } = useConfig();
+  const { helpers } = useConfig();
   const { metropole: REGIONS_METRO, domtom: REGIONS_DOMTOM } = helpers.getRegionGroups();
   
-  const dateFilterModes = config?.filters?.dateFilterModes || [
-    { mode: 'all', label: 'Toutes les dates' },
-    { mode: 'during-week', label: 'Pendant la semaine de ...' },
-    { mode: 'custom', label: 'Dates personnalisées' },
-  ];
+  const dateFilterModes = helpers.getDateFilterModes();
   const hasActiveFilters = countActiveFilters(filters) > 0;
 
   return (

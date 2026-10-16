@@ -65,7 +65,6 @@ export interface BaserowRecord {
   'Respect de la charte'?: boolean;
   'Réception kit communication'?: string;
   'Type de structure'?: BaserowSelect;
-  "Comment avez-vous connu La Semaine de l'IA pour Tous ?"?: BaserowSelect[];
   'Avez-vous quelque chose à ajouter ?'?: string;
   'Inscription NL'?: BaserowSelect[];
   Partenaires?: BaserowSelect[]; // Liaisons de lignes liées dans Baserow

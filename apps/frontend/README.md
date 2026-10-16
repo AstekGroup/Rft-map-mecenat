@@ -86,6 +86,22 @@ Typographie :
 Chargées à partir du fichier de config app.config.json (theme.fonts)
 
 
+## Une compilation par carte
+
+Le titre de l'onglet, la description et les métadonnées de partage (Open Graph, Twitter, icône) sont écrits dans `index.html` **à la compilation**, à partir de la config de la carte. Il faut donc **une compilation par carte** :
+
+```bash
+# Carte par défaut (app.config.json à la racine du dépôt)
+pnpm build
+
+# Autre carte : chemin absolu vers sa config
+APP_CONFIG_PATH=/chemin/vers/autre.config.json pnpm build      # PowerShell : $env:APP_CONFIG_PATH="C:\chemin\autre.config.json"; pnpm build
+```
+
+- `index.template.html` est le modèle suivi par git ; `index.html` est **généré** (ignoré par git). Relancer la génération donne toujours le même fichier et ne crée aucun diff.
+- Les chaînes de la config peuvent reprendre le nom de l'événement par gabarit : `"title": "Carte - {{app.name}}"`. Changer `app.name` change tous les titres.
+- Si une valeur requise manque dans la config (`app.description`, `texts.meta.title`, `ogTitle`, `ogDescription`, `iconRef`), la génération échoue avec un message qui la nomme.
+
 ## Configuration API Backend
 
 L'application se connecte au backend NestJS pour récupérer les événements. Il n'y a pas de données de secours côté frontend.

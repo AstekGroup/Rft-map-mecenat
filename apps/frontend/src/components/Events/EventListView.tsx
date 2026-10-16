@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Event } from '@/types/event';
 import { Pagination } from '@/components/UI/Pagination';
+import { useConfig } from '@/hooks/useConfig';
 import {Calendar, Clock, Users, Accessibility, MapPin, Video, BookOpen, HelpCircle} from 'lucide-react';
 import {checkIconColor, getIcon} from "@/utils/iconResolver.ts";
 
@@ -13,6 +14,8 @@ interface EventListViewProps {
 
 export function EventListView({ events }: EventListViewProps) {
   const [currentPage, setCurrentPage] = useState(1);
+  const { helpers } = useConfig();
+  const editionBadge = helpers.getEditionBadge();
   
   const totalPages = Math.ceil(events.length / ITEMS_PER_PAGE);
   
@@ -83,9 +86,9 @@ export function EventListView({ events }: EventListViewProps) {
                     />
                     {/* Tags overlay on image */}
                     <div className="absolute top-1.5 left-1.5 flex flex-wrap gap-1">
-                      {event.isDuringWeek && (
+                      {event.isDuringWeek && editionBadge && (
                         <span className="inline-flex items-center gap-0.5 bg-primary text-white px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
-                          LGSV 2026
+                          {editionBadge}
                         </span>
                       )}
                       <span
@@ -103,9 +106,9 @@ export function EventListView({ events }: EventListViewProps) {
                   >
                     <Icon className="w-6 h-6" style={{ color: typeColor }} />
                     <div className="absolute top-1.5 left-1.5 flex flex-wrap gap-1">
-                      {event.isDuringWeek && (
+                      {event.isDuringWeek && editionBadge && (
                         <span className="inline-flex items-center gap-0.5 bg-primary text-white px-1.5 py-0.5 rounded-full text-[10px] font-semibold">
-                          LGSV 2026
+                          {editionBadge}
                         </span>
                       )}
                     </div>

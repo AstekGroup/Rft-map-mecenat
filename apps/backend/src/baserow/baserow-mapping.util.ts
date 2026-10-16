@@ -63,20 +63,40 @@ export function extractImageUrl(
 // isDuringWeek
 // ============================================================
 
+const CONFIG_DATE_FORMAT = /^\d{4}-\d{2}-\d{2}$/;
+
+function assertConfigDate(value: string | undefined, key: string): string {
+  if (
+    !value ||
+    !CONFIG_DATE_FORMAT.test(value) ||
+    Number.isNaN(new Date(`${value}T00:00:00.000Z`).getTime())
+  ) {
+    throw new Error(
+      `Dates de l'événement absentes ou invalides dans la config : app.eventDates.${key} doit être une date au format AAAA-MM-JJ (reçu : ${JSON.stringify(value)}).`,
+    );
+  }
+  return value;
+}
+
+/**
+ * Indique si la date tombe dans la période de l'événement (`app.eventDates` de la config).
+ * Aucune date par défaut : si la config ne donne pas des dates valides, on lève une erreur
+ * explicite plutôt que de calculer un badge faux.
+ */
 export function computeIsDuringWeek(
   dateString: string | undefined,
-  weekStart?: string,
-  weekEnd?: string,
+  weekStart: string | undefined,
+  weekEnd: string | undefined,
 ): boolean {
+  const start = assertConfigDate(weekStart, 'weekStart');
+  const end = assertConfigDate(weekEnd, 'weekEnd');
   if (!dateString) return false;
-  const start = weekStart || '2026-09-25';
-  const end = weekEnd || '2026-10-04';
-  try {
-    const date = new Date(dateString);
-    return date >= new Date(start) && date <= new Date(`${end}T23:59:59.999Z`);
-  } catch {
-    return false;
-  }
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return false;
+  return (
+    date >= new Date(`${start}T00:00:00.000Z`) &&
+    date <= new Date(`${end}T23:59:59.999Z`)
+  );
 }
 
 // ============================================================

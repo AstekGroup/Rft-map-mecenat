@@ -124,7 +124,7 @@ function EventCardComponent({
             )}
           </div>
 
-          {/* Badge semaine LGSV */}
+          {/* Badge « pendant l'événement » (nom depuis la config) */}
           {event.isDuringWeek && (
             <div className="mt-2 inline-flex items-center gap-1 text-xs text-primary font-medium">
               <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse-soft" />

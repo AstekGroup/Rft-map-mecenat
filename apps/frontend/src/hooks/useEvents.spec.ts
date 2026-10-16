@@ -188,7 +188,7 @@ describe('useEvents', () => {
       expect(result.current.events[0].modality).toBe('distanciel');
     });
 
-    it('filtre pendant la semaine (during-week)', async () => {
+    it("filtre pendant la période de l'événement (during-week)", async () => {
       const events = [
         makeEvent({ id: 'a', isDuringWeek: true }),
         makeEvent({ id: 'b', isDuringWeek: false }),

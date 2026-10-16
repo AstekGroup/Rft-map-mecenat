@@ -44,10 +44,15 @@ Preuve = `fichier:ligne` ou commande + extrait de sortie (dans JOURNAL.md).
 |---|---|
 | 0 GitHub CLI | **faite** : `gh` 2.102.0, connecté (`ClementTro`, droit ADMIN) |
 | 1 Base Git | **faite** : PR #9 à #14 mergées dans `develop` ; `pnpm build` et `pnpm test` verts sur `develop`. Reste : PR `develop` → `main` et tag `v0.1.0` (validation du propriétaire). |
-| 2 Nettoyage et intégration | **PR unique #21 `chore/session-2-unifiee`, en attente de merge par le propriétaire** (regroupe `docs/agents`, `chore/remove-airtable`, `chore/remove-dead-code`, `merge/refonte-unifier-outils-carte`, `merge/refonte-panneau-lateral` et ce suivi ; les PR #15 à #20 sont fermées). Preuves dans JOURNAL. |
-| 3 à 8 | non commencées |
+| 2 Nettoyage et intégration | **faite** : PR unique #21 `chore/session-2-unifiee` mergée dans `develop` (commit `7c9e01c`, constaté en début de session 3 ; elle regroupait `docs/agents`, `chore/remove-airtable`, `chore/remove-dead-code`, `merge/refonte-unifier-outils-carte`, `merge/refonte-panneau-lateral` ; PR #15 à #20 fermées). Preuves dans JOURNAL. |
+| 3 Titres et identité pilotés par la config | **faite, PR #22 `feat/config-titres-identite` vers `develop`, en attente de merge par le propriétaire** (12 commits). Gabarits `{{app.name}}` dans la config (backend), badge d'édition et libellés de période depuis la config, plus de repli de dates, `index.html` généré (idempotent), vérifié avec la seconde config. Preuves dans JOURNAL. |
+| 4 à 8 | non commencées |
 
-Prochaine action : merger la PR #21 dans `develop` (option « Create a merge commit »), fermer les PR #7 et #8 (redondantes avec #21 si elles ne sont pas marquées mergées), puis vérifier `pnpm build` et `pnpm test` sur `develop`, supprimer `wip/audit-snapshot` (le contenu des 5 `AGENTS.md` est repris par #15), puis PR `develop` → `main` et tag `v0.2.0`. Hors dépôt, à demander à l'auteur : accord pour supprimer les 3 branches obsolètes `add-dynamic-filters`, `modify-audiences-filters`, `modif_audience_filters`.
+**Reporté (décision du propriétaire)** : la PR `develop` → `main` et les tags (`v0.1.0`, `v0.2.0`, …) ne sont pas faits ; on reste sur `develop`.
+
+Prochaine action : merger la PR #22 dans `develop` (option « Create a merge commit ») puis lancer la **session 4** (Baserow réglable par la config, config validée : `baserow.mapping`, suppression des 29 noms de champs de repli, validation de la config au démarrage, alignement du type `AppConfig`). La session 4 touche `app.config.json` et `AppConfig` comme la session 3 : ne la commencer qu'après le merge de #22. Restent aussi (propriétaire) : fermer les PR #7 et #8 si elles ne sont pas marquées mergées, supprimer `wip/audit-snapshot`, et demander à l'auteur l'accord pour supprimer les 3 branches obsolètes `add-dynamic-filters`, `modify-audiences-filters`, `modif_audience_filters`. PR `develop` → `main` et tags : reportés.
+
+Points relevés en session 3 pour la suite : `APP_CONFIG_PATH` invalide retombe silencieusement sur le fichier par défaut côté backend (session 4, validation) ; `HomePage` affiche « Édition » sans année si `eventDates` manque (non rejoué), `getText` renvoie la clé brute et un événement sans date affiche « Invalid Date » (constaté dans le navigateur ; session 6) ; le `Dockerfile` frontend devra fournir `app.config.json` et `index.template.html` est le seul modèle suivi (session 8).
 
 > Les parties ci-dessous (branche `audit/bilan-refonte`, « à commiter », etc.) décrivent l'état au moment de l'audit et sont **périmées** : cette branche est supprimée et le code corrigé est dans les PR de la session 1.
 
