@@ -8,12 +8,13 @@
  * - Écrit apps/backend/.env (gitignoré) avec les IDs de tables, de champ et le jeton.
  * - Écrit scripts/seed-baserow/out/schema.json (schéma réel créé).
  *
- * Le noms des champs suivent `app.config.json > baserow.fieldMapping` (vérité d'exécution).
+ * Les noms de champs et les valeurs de listes de choix suivent la config de la carte
+ * (`baserow.fieldMapping` et `baserow.mapping` de `app.config.json`, ou `--config=...`).
  * NB : exception assumée à la règle "Baserow en lecture seule" : cette règle concerne
  * le BACKEND de l'application, pas cet outil de dev qui cible une instance Docker locale.
  *
  * Usage :
- *   node scripts/seed-baserow/seed.mjs [--bulk=1500] [--url=http://localhost:8088] [--no-env]
+ *   node scripts/seed-baserow/seed.mjs [--bulk=1500] [--url=http://localhost:8088] [--no-env] [--config=chemin/app.config.json]
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -36,10 +37,30 @@ const ADMIN = {
 };
 const DB_NAME = 'LGSV test';
 
-// Noms de champs : repris de app.config.json (fieldMapping) pour rester alignés avec le backend.
-const appConfig = JSON.parse(readFileSync(resolve(ROOT, 'app.config.json'), 'utf8'));
+// Noms de champs et valeurs de listes : repris de la config de la carte pour rester alignés avec
+// le backend. `--config=chemin/vers/app.config.json` seed le schéma d'une autre carte.
+const CONFIG_PATH = args.config ? resolve(String(args.config)) : resolve(ROOT, 'app.config.json');
+const appConfig = JSON.parse(readFileSync(CONFIG_PATH, 'utf8'));
 const FM = appConfig.baserow.fieldMapping;
-const MODERATION_OK = appConfig.baserow.moderationVisibleValue; // "Accepté"
+const MAPPING = appConfig.baserow.mapping;
+const REF = MAPPING.referenceFields; // colonnes des tables de référence (nom, logo, picto, couleur)
+const MODERATION_OK = appConfig.baserow.moderationVisibleValue;
+const TARIFF_FREE = MAPPING.tariffFreeValue;
+
+// Les cas de test parlent de rôles ('Présentiel', 'Distanciel', 'Hybride', 'Gratuit') : on les
+// traduit ici en valeurs de listes de choix de la config (le seed crée les options de la config).
+const labelsFor = (role) => Object.entries(MAPPING.modality).filter(([, v]) => v === role).map(([k]) => k);
+const MODALITY_OPTIONS = Object.keys(MAPPING.modality);
+const MODALITY_LABEL = {
+  Présentiel: labelsFor('presentiel')[0],
+  Distanciel: labelsFor('distanciel')[0],
+  Hybride: labelsFor('presentiel')[1] ?? labelsFor('presentiel')[0],
+};
+if (!MODALITY_LABEL.Présentiel || !MODALITY_LABEL.Distanciel) {
+  throw new Error('baserow.mapping.modality doit associer au moins une valeur à "presentiel" et une à "distanciel"');
+}
+const TARIFF_LABEL = (token) => (token === 'Gratuit' ? TARIFF_FREE : token);
+console.log(`[seed] Config : ${CONFIG_PATH}`);
 
 // ---------------------------------------------------------------- HTTP
 let jwt = null;
@@ -359,21 +380,21 @@ async function main() {
 
   // --- Tables (référentiels d'abord)
   const T = {};
-  T.formats = await ensureTable(db, 'Formats', 'Nom');
-  T.publics = await ensureTable(db, 'Publics', 'Nom');
-  T.themes = await ensureTable(db, 'Thématiques', 'Nom');
-  T.partners = await ensureTable(db, 'Partenaires', 'Nom');
+  T.formats = await ensureTable(db, 'Formats', REF.name);
+  T.publics = await ensureTable(db, 'Publics', REF.name);
+  T.themes = await ensureTable(db, 'Thématiques', REF.name);
+  T.partners = await ensureTable(db, 'Partenaires', REF.name);
   T.events = await ensureTable(db, 'Événements', FM.title);
 
   const pictosOf = (list) => [...new Set(list.map((r) => r[1]).filter(Boolean))];
   const colorsOf = (list) => [...new Set(list.map((r) => r[2]).filter(Boolean))];
   const refFields = {};
   for (const [key, list] of [['formats', FORMATS], ['publics', PUBLICS], ['themes', THEMES]]) {
-    const picto = await ensureField(T[key], { name: 'Picto', type: 'multiple_select', select_options: opts(pictosOf(list), 'light-green') });
-    const couleur = await ensureField(T[key], { name: 'Couleur', type: 'multiple_select', select_options: opts(colorsOf(list), 'light-orange') });
+    const picto = await ensureField(T[key], { name: REF.picto, type: 'multiple_select', select_options: opts(pictosOf(list), 'light-green') });
+    const couleur = await ensureField(T[key], { name: REF.color, type: 'multiple_select', select_options: opts(colorsOf(list), 'light-orange') });
     refFields[key] = { picto, couleur };
   }
-  await ensureField(T.partners, { name: 'Logo', type: 'file' });
+  await ensureField(T.partners, { name: REF.logo, type: 'file' });
 
   // --- Champs des événements (noms = fieldMapping, sauf champs "formulaire" additionnels)
   const E = T.events;
@@ -383,7 +404,7 @@ async function main() {
   f.start = await ensureField(E, { name: FM.startDate, type: 'date', date_format: 'ISO', date_include_time: true, date_time_format: '24' });
   f.end = await ensureField(E, { name: FM.endDate, type: 'date', date_format: 'ISO', date_include_time: true, date_time_format: '24' });
   f.format = await linkField(FM.format, T.formats.table.id);
-  f.modality = await ensureField(E, { name: FM.modality, type: 'single_select', select_options: opts(['Présentiel', 'Distanciel', 'Hybride']) });
+  f.modality = await ensureField(E, { name: FM.modality, type: 'single_select', select_options: opts(MODALITY_OPTIONS) });
   f.audience = await linkField(FM.audience, T.publics.table.id);
   f.theme = await linkField(FM.theme, T.themes.table.id);
   f.partners = await linkField(FM.partnerField, T.partners.table.id);
@@ -403,7 +424,7 @@ async function main() {
   f.phone = await ensureField(E, { name: FM.contactPhone, type: 'text' });
   f.website = await ensureField(E, { name: FM.organizerWebsite, type: 'text' });
   f.capacity = await ensureField(E, { name: FM.capacity, type: 'number', number_decimal_places: 0 });
-  f.tarif = await ensureField(E, { name: FM.tariff, type: 'single_select', select_options: opts(['Gratuit', 'Payant']) });
+  f.tarif = await ensureField(E, { name: FM.tariff, type: 'single_select', select_options: opts([TARIFF_FREE, 'Payant']) });
   f.price = await ensureField(E, { name: FM.price, type: 'number', number_decimal_places: 2 });
   f.moderation = await ensureField(E, { name: FM.moderation, type: 'single_select', select_options: opts([MODERATION_OK, 'Refusé', 'En attente'], 'light-red') });
   // Champs "formulaire" présents dans BaserowRecord mais non utilisés par le mapping (doivent être ignorés)
@@ -440,16 +461,16 @@ async function main() {
   const idByName = {};
   for (const [key, list] of [['formats', FORMATS], ['publics', PUBLICS], ['themes', THEMES]]) {
     const items = list.map(([name, picto, color]) => ({
-      Nom: name,
-      Picto: picto ? [optId(refFields[key].picto, picto)] : [],
-      Couleur: color ? [optId(refFields[key].couleur, color)] : [],
+      [REF.name]: name,
+      [REF.picto]: picto ? [optId(refFields[key].picto, picto)] : [],
+      [REF.color]: color ? [optId(refFields[key].couleur, color)] : [],
     }));
     const ids = await insert(T[key], items);
     list.forEach(([name], i) => (idByName[`${key}:${name}`] = ids[i]));
   }
   const partnerItems = [];
   for (const [name, rgb] of PARTNERS) {
-    partnerItems.push({ Nom: name, Logo: rgb ? [await uploadImage(`logo-${partnerItems.length}.png`, 200, 200, rgb)] : [] });
+    partnerItems.push({ [REF.name]: name, [REF.logo]: rgb ? [await uploadImage(`logo-${partnerItems.length}.png`, 200, 200, rgb)] : [] });
   }
   const pIds = await insert(T.partners, partnerItems);
   PARTNERS.forEach(([name], i) => (idByName[`partners:${name}`] = pIds[i]));
@@ -480,7 +501,7 @@ async function main() {
       [FM.startDate]: e.start ?? null,
       [FM.endDate]: e.end ?? null,
       [FM.format]: e.fmt.map((n) => idByName[`formats:${n}`]),
-      [FM.modality]: optId(f.modality, e.modality),
+      [FM.modality]: optId(f.modality, MODALITY_LABEL[e.modality]),
       [FM.audience]: e.pub.map((n) => idByName[`publics:${n}`]),
       [FM.theme]: e.th.map((n) => idByName[`themes:${n}`]),
       [FM.partnerField]: (e.part || []).map((n) => idByName[`partners:${n}`]),
@@ -500,7 +521,7 @@ async function main() {
       [FM.contactPhone]: '01 02 03 04 05',
       [FM.organizerWebsite]: 'https://example.org',
       [FM.capacity]: e.cap ?? null,
-      [FM.tariff]: e.tarif ? optId(f.tarif, e.tarif) : null,
+      [FM.tariff]: e.tarif ? optId(f.tarif, TARIFF_LABEL(e.tarif)) : null,
       [FM.price]: e.montant != null ? String(e.montant) : null,
       [FM.moderation]: e.mod ? optId(f.moderation, e.mod) : null,
     };
