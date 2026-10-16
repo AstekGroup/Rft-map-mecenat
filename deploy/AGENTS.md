@@ -2,7 +2,7 @@
 
 [← Instructions racine](../AGENTS.md) · [README déploiement](./README.md) · [Suivi de la refonte](../docs/audit/SUIVI.md)
 
-> Le déploiement est traité **en dernier** (session 8 du [plan](../docs/audit/PLAN-SESSIONS.md)). Ne pas y toucher avant, hors retrait d'Airtable (session 2).
+> Le déploiement est traité **en dernier** (session 8 du [plan](../docs/audit/PLAN-SESSIONS.md)). Ne pas y toucher avant, hors mise à jour des variables d'environnement (session 2).
 
 ## Contexte
 
@@ -17,7 +17,7 @@
 ## Règles (cohérentes avec la refonte « 1 code / N cartes »)
 
 1. **Une carte = une configuration de déploiement** (fichier de config + variables d'environnement), **pas un fork du code**. Tout déploiement doit pouvoir fournir son `app.config.json` (volume ou `APP_CONFIG_PATH`) à l'image backend, et lancer le build front avec la même config (le script `update-index-html.cjs` en dépend). Les images n'embarquent pas encore `app.config.json` : session 8.
-2. **Variables Baserow, pas Airtable.** Les variables `BASEROW_*` remplacent `AIRTABLE_*` (liste dans [apps/backend/AGENTS.md](../apps/backend/AGENTS.md)). Aucun test de déploiement n'a été fait.
+2. **Variables `BASEROW_*`** (liste dans [apps/backend/AGENTS.md](../apps/backend/AGENTS.md)) dans `docker-compose.prod.yml`, `.env.prod.example`, `.envmap.yaml` et `scripts/deploy-v2.sh`. Aucun test de déploiement n'a été fait.
 3. **Embarquement iframe (WordPress)** : l'iframe reste telle quelle. Aucun travail sur WordPress ni sur `frame-ancestors` dans ce plan.
 4. **Build reproductible** : les Dockerfiles utilisent `--frozen-lockfile` ; le lockfile est à jour. Aucun `docker build` réel n'a été exécuté à ce jour (non vérifié) : session 8.
 5. **Ne jamais exposer `devMode`** ni le jeton Baserow ; ne pas committer de secrets (mécanismes documentés : `envmap`, fichiers `.env` non versionnés).
