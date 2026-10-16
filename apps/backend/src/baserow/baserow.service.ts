@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type {
   BaserowFieldMapping,
@@ -23,11 +23,27 @@ import {
   buildAccessibilityInfo,
   mapLinkedRow,
 } from './baserow-mapping.util';
+import {
+  checkEventColumns,
+  checkReferenceColumns,
+  type ReferenceTableColumns,
+} from './baserow-schema.util';
 import { GeocodingService } from '../geocoding/geocoding.service';
 import { AppConfigService } from '../config/config.service';
 
+const errorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
+
+/** Variables d'environnement (sans le suffixe `_ID`) des tables de référence. */
+const REFERENCE_TABLES = [
+  'BASEROW_PARTNERS_TABLE',
+  'BASEROW_THEMATIQUES_TABLE',
+  'BASEROW_FORMATS_TABLE',
+  'BASEROW_PUBLICS_TABLE',
+] as const;
+
 @Injectable()
-export class BaserowService {
+export class BaserowService implements OnApplicationBootstrap {
   private readonly logger = new Logger(BaserowService.name);
   /** Avertissements déjà émis (un seul message par cause, pas un par ligne). */
   private readonly warned = new Set<string>();
@@ -37,6 +53,135 @@ export class BaserowService {
     private readonly geocodingService: GeocodingService,
     private readonly appConfig: AppConfigService,
   ) {}
+
+  /**
+   * Contrôle du schéma au démarrage, sans bloquer le démarrage : Baserow injoignable ou colonne
+   * absente donnent des messages précis dans les logs, jamais un arrêt ni un 500.
+   */
+  onApplicationBootstrap(): void {
+    void this.checkSchema();
+  }
+
+  /**
+   * Compare les colonnes réelles de Baserow (lues sur une ligne de chaque table) à la config.
+   * Journalise chaque écart et renvoie la liste des messages (vide si tout est en ordre).
+   * Une table sans ligne ne peut pas être contrôlée : elle est signalée, pas ignorée.
+   */
+  async checkSchema(): Promise<string[]> {
+    const issues: string[] = [];
+    try {
+      const baserow = this.appConfig.get()?.baserow;
+      const apiToken = this.configService.get<string>('BASEROW_API_TOKEN');
+      const apiUrl = this.configService.get<string>('BASEROW_API_URL');
+      const eventTableId = this.configService.get<string>(
+        'BASEROW_EVENT_TABLE_ID',
+      );
+      if (!baserow || !apiToken || !apiUrl || !eventTableId) {
+        this.logger.warn(
+          'Contrôle du schéma Baserow impossible : config ou variables BASEROW_API_URL / BASEROW_API_TOKEN / BASEROW_EVENT_TABLE_ID manquantes.',
+        );
+        return issues;
+      }
+
+      const eventColumns = await this.fetchSampleColumns(
+        apiUrl,
+        apiToken,
+        eventTableId,
+      );
+      if (eventColumns) {
+        issues.push(...checkEventColumns(eventColumns, baserow.fieldMapping));
+      } else {
+        this.logger.warn(
+          'Table des événements vide : colonnes non contrôlables (le contrôle sera fait au premier chargement des événements).',
+        );
+      }
+
+      const referenceTables: ReferenceTableColumns[] = [];
+      for (const envName of REFERENCE_TABLES) {
+        const tableId = this.configService.get<string>(`${envName}_ID`);
+        if (!tableId) {
+          this.logger.warn(
+            `Variable ${envName}_ID absente : table de référence non contrôlée (aucun élément ne sera chargé).`,
+          );
+          continue;
+        }
+        try {
+          const columns = await this.fetchSampleColumns(
+            apiUrl,
+            apiToken,
+            tableId,
+          );
+          if (columns) {
+            referenceTables.push({ label: envName, columns });
+          } else {
+            this.logger.warn(
+              `Table de référence ${envName} vide : colonnes non contrôlables.`,
+            );
+          }
+        } catch (error) {
+          this.logger.warn(
+            `Contrôle du schéma impossible pour la table ${envName} : ${errorMessage(error)}`,
+          );
+        }
+      }
+      issues.push(
+        ...checkReferenceColumns(
+          referenceTables,
+          baserow.mapping.referenceFields,
+        ),
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Contrôle du schéma Baserow impossible : ${errorMessage(error)}`,
+      );
+      return issues;
+    }
+
+    if (issues.length === 0) {
+      this.logger.log(
+        'Contrôle du schéma Baserow : toutes les colonnes de la config sont présentes.',
+      );
+    }
+    for (const issue of issues) this.logger.error(issue);
+    return issues;
+  }
+
+  /** Noms des colonnes d'une table, lus sur sa première ligne ; `null` si la table est vide. */
+  private async fetchSampleColumns(
+    apiUrl: string,
+    apiToken: string,
+    tableId: string,
+  ): Promise<string[] | null> {
+    const url = new URL(`${apiUrl}/api/database/rows/table/${tableId}/`);
+    url.searchParams.set('user_field_names', 'true');
+    url.searchParams.set('size', '1');
+    const response = await fetch(url.toString(), {
+      headers: { Authorization: `Token ${apiToken}` },
+    });
+    if (!response.ok) {
+      throw new Error(
+        `Baserow a répondu ${response.status} ${response.statusText} pour la table ${tableId}`,
+      );
+    }
+    const data = (await response.json()) as BaserowResponse<BaserowRecord>;
+    if (!data.results || data.results.length === 0) return null;
+    return Object.keys(data.results[0]);
+  }
+
+  /**
+   * Même contrôle à chaque chargement des événements : une colonne renommée pendant que le
+   * serveur tourne est signalée au prochain rafraîchissement du cache (une seule fois par écart).
+   */
+  private checkRecordColumns(record: BaserowRecord): void {
+    const fieldMapping = this.appConfig.get()?.baserow?.fieldMapping;
+    if (!fieldMapping) return;
+    for (const message of checkEventColumns(
+      Object.keys(record),
+      fieldMapping,
+    )) {
+      this.errorOnce(`columns:${message}`, message);
+    }
+  }
 
   /**
    * Récupère et transforme tous les événements depuis Baserow.
@@ -68,6 +213,7 @@ export class BaserowService {
     this.logger.log(
       `${records.length} enregistrements récupérés depuis Baserow`,
     );
+    if (records.length > 0) this.checkRecordColumns(records[0]);
 
     // 6. Transformer sans géocodage
     const partialEvents = records.map((r) =>
@@ -169,7 +315,8 @@ export class BaserowService {
         const data =
           (await response.json()) as BaserowResponse<BaserowLinkedTableRecord>;
 
-        const referenceFields = this.appConfig.safe.baserow.mapping.referenceFields;
+        const referenceFields =
+          this.appConfig.safe.baserow.mapping.referenceFields;
         if (
           data.results.length > 0 &&
           !(referenceFields.name in data.results[0])
@@ -298,6 +445,13 @@ export class BaserowService {
     if (this.warned.has(key)) return;
     this.warned.add(key);
     this.logger.warn(message);
+  }
+
+  /** Comme `warnOnce`, au niveau erreur (donnée dégradée : colonne absente). */
+  private errorOnce(key: string, message: string): void {
+    if (this.warned.has(key)) return;
+    this.warned.add(key);
+    this.logger.error(message);
   }
 
   /**

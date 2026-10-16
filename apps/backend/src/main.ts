@@ -49,4 +49,10 @@ async function bootstrap() {
     process.exit(1);
   }
 }
-bootstrap();
+bootstrap().catch((error: unknown) => {
+  // Config invalide, fichier introuvable… : le message explicatif suffit, pas de stack d'une promesse rejetée.
+  new Logger('Bootstrap').error(
+    `Démarrage impossible : ${error instanceof Error ? error.message : String(error)}`,
+  );
+  process.exit(1);
+});
