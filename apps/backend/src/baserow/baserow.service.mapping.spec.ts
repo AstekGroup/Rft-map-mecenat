@@ -138,6 +138,26 @@ describe('BaserowService : noms de colonnes et valeurs venant de la config', () 
     ).toBe(true);
   });
 
+  it("marque « pendant l'événement » tout événement qui recoupe la période de la config", () => {
+    const config = buildTestConfig(); // période : 2026-05-04 → 2026-05-10
+    const service = buildService(config);
+    const { startDate, endDate } = config.baserow.fieldMapping;
+    const during = (start: string, end?: string) =>
+      transform(service, {
+        id: 1,
+        [startDate]: start,
+        ...(end ? { [endDate]: end } : {}),
+      }).isDuringWeek;
+
+    expect(during('2026-05-06T10:00:00')).toBe(true);
+    // Commence avant la période, finit dedans : comptait « hors période » quand seul le début comptait.
+    expect(during('2026-04-30T10:00:00', '2026-05-05T18:00:00')).toBe(true);
+    // Commence dedans, finit après.
+    expect(during('2026-05-09T10:00:00', '2026-05-15T18:00:00')).toBe(true);
+    expect(during('2026-04-20T10:00:00', '2026-04-22T18:00:00')).toBe(false);
+    expect(during('2026-05-20T10:00:00')).toBe(false);
+  });
+
   it('reconnaît le tarif gratuit avec la valeur de la config', () => {
     const config = buildTestConfig();
     config.baserow.mapping.tariffFreeValue = 'Offert';

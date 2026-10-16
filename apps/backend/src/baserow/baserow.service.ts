@@ -505,7 +505,8 @@ export class BaserowService implements OnApplicationBootstrap {
 
     const startDateRaw = read<string>('startDate');
     const startDateTime = parseDateTime(startDateRaw);
-    const endDateTime = parseDateTime(read<string>('endDate'));
+    const endDateRaw = read<string>('endDate');
+    const endDateTime = parseDateTime(endDateRaw);
 
     const modality = mapModality(
       read<BaserowSelect>('modality'),
@@ -532,7 +533,12 @@ export class BaserowService implements OnApplicationBootstrap {
 
     const imageUrl = extractImageUrl(read<BaserowAttachment[]>('image'));
     const { weekStart, weekEnd } = this.appConfig.eventDates;
-    const isDuringWeek = computeIsDuringWeek(startDateRaw, weekStart, weekEnd);
+    const isDuringWeek = computeIsDuringWeek(
+      startDateRaw,
+      endDateRaw,
+      weekStart,
+      weekEnd,
+    );
     const organizerContact = buildOrganizerContact(
       read<string>('organizerFirstName'),
       read<string>('organizerLastName'),
