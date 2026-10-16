@@ -406,7 +406,6 @@ async function main() {
   f.tarif = await ensureField(E, { name: FM.tariff, type: 'single_select', select_options: opts(['Gratuit', 'Payant']) });
   f.price = await ensureField(E, { name: FM.price, type: 'number', number_decimal_places: 2 });
   f.moderation = await ensureField(E, { name: FM.moderation, type: 'single_select', select_options: opts([MODERATION_OK, 'Refusé', 'En attente'], 'light-red') });
-  f.visibility = await ensureField(E, { name: FM.visibility, type: 'single_select', select_options: opts(['Oui', 'Non']) });
   // Champs "formulaire" présents dans BaserowRecord mais non utilisés par le mapping (doivent être ignorés)
   await ensureField(E, { name: 'Respect de la charte', type: 'boolean' });
   await ensureField(E, { name: 'Avez-vous quelque chose à ajouter ?', type: 'long_text' });
@@ -504,7 +503,6 @@ async function main() {
       [FM.tariff]: e.tarif ? optId(f.tarif, e.tarif) : null,
       [FM.price]: e.montant != null ? String(e.montant) : null,
       [FM.moderation]: e.mod ? optId(f.moderation, e.mod) : null,
-      [FM.visibility]: optId(f.visibility, 'Oui'),
     };
     rows.push(row);
   }
