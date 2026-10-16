@@ -9,11 +9,9 @@ Carte interactive pour visualiser les événements de **La Grande Semaine Végé
 ```
 make-map/
 ├── AGENTS.md               # Consignes pour assistants IA (Cursor, etc.)
-├── CLAUDE.md               # Architecture détaillée pour agents
 ├── apps/
 │   ├── frontend/           # React + Vite (consomme l'API backend)
-│   ├── backend/            # NestJS (proxy Baserow + géocodage)
-│   └── map-interactive/    # Version standalone originale (référence)
+│   └── backend/            # NestJS (proxy Baserow + géocodage)
 ├── shared/
 │   └── types/              # @make-map/types (types TypeScript partagés)
 ├── deploy/                 # Docker Compose + Caddy (production)
@@ -87,14 +85,6 @@ Application React avec carte interactive MapLibre GL JS.
 - Encarts DOM-TOM
 - Design system calé sur la charte semaine-ia.fr (Rubik / Palanquin)
 
-### map-interactive (`apps/map-interactive`)
-
-Version standalone originale avec appel direct Airtable côté client. Conservée comme référence, non modifiée (elle continue à utiliser Airtable).
-
-```bash
-pnpm map:dev
-```
-
 ## Package partagé
 
 ### @make-map/types (`shared/types`)
@@ -120,8 +110,7 @@ Format ouvert [agents.md](https://agents.md/) : un **`AGENTS.md` par zone** du m
 - [apps/backend/AGENTS.md](apps/backend/AGENTS.md) — API NestJS
 - [shared/types/AGENTS.md](shared/types/AGENTS.md) — package `@make-map/types`
 - [deploy/AGENTS.md](deploy/AGENTS.md) — déploiement
-- [apps/map-interactive/AGENTS.md](apps/map-interactive/AGENTS.md) — référence (non modifiée)
-- [CLAUDE.md](CLAUDE.md) — architecture et conventions détaillées
+- [docs/audit/PLAN-SESSIONS.md](docs/audit/PLAN-SESSIONS.md) — plan de refonte et workflow Git
 
 ## Ressources
 
