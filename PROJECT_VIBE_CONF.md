@@ -10,7 +10,7 @@ Application React standalone pour afficher les événements sur une carte de Fra
 
 - **Client** : La Grande Semaine Végétale
 - **Type** : POC / MVP
-- **Data source** : API Airtable (via backend proxy)
+- **Data source** : API Baserow (via backend proxy)
 - **Hébergement** : Scaleway DEV1-S
 
 ## Tech Stack Strategy
