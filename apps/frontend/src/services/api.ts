@@ -1,7 +1,7 @@
 /**
  * Service API - Appels HTTP vers le backend NestJS.
  * 
- * Le frontend ne connaît plus Airtable ni le géocodage.
+ * Le frontend ne connaît ni la source de données ni le géocodage.
  * Tout passe par le backend qui sécurise le token et le cache.
  */
 

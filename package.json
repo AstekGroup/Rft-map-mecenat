@@ -23,7 +23,7 @@
     "react",
     "maplibre",
     "nestjs",
-    "airtable"
+    "baserow"
   ],
   "author": "ILAB Innovation Team",
   "packageManager": "pnpm@9.0.0",
