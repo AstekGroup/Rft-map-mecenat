@@ -11,14 +11,17 @@ import { buildTestConfig } from '../../test/test-config';
  * Le service ne connaît aucun nom de colonne : tout vient de la config. Ces tests donnent à la
  * carte un vocabulaire sans rapport avec celui de la config par défaut pour le prouver.
  */
+type MultipleFormats = { id: string; title: string; formats: string[] };
 type Private = {
   transformRecord(
     record: BaserowRecord,
-    partners: Map<string, never>,
-    themes: Map<string, never>,
-    formats: Map<string, never>,
-    publics: Map<string, never>,
+    partners: Map<string, unknown>,
+    themes: Map<string, unknown>,
+    formats: Map<string, unknown>,
+    publics: Map<string, unknown>,
+    issues?: { multipleFormats: MultipleFormats[] },
   ): Record<string, unknown>;
+  reportMultipleFormats(affected: MultipleFormats[]): void;
   fetchLinkedTableMap(tableName: string): Promise<Map<string, unknown>>;
 };
 
@@ -136,6 +139,90 @@ describe('BaserowService : noms de colonnes et valeurs venant de la config', () 
         String(c[0]).includes('baserow.mapping.modality'),
       ),
     ).toBe(true);
+  });
+
+  describe('un seul format par événement', () => {
+    const atelier = { id: '1', name: 'Atelier' };
+    const conference = { id: '2', name: 'Conférence' };
+    const formatsMap = new Map<string, unknown>([
+      ['1', atelier],
+      ['2', conference],
+    ]);
+
+    function withFormats(
+      service: Private,
+      config: AppConfig,
+      links: number[],
+      issues?: { multipleFormats: MultipleFormats[] },
+    ) {
+      const { format, title } = config.baserow.fieldMapping;
+      return service.transformRecord(
+        {
+          id: 7,
+          [title]: 'Soirée mixte',
+          [format]: links.map((id) => ({ id, value: `format ${id}` })),
+        },
+        new Map(),
+        new Map(),
+        formatsMap,
+        new Map(),
+        issues,
+      );
+    }
+
+    it('retient le premier format lié et signale les autres', () => {
+      const config = buildTestConfig();
+      const service = buildService(config);
+      const issues = { multipleFormats: [] as MultipleFormats[] };
+
+      const event = withFormats(service, config, [2, 1], issues);
+
+      expect(event.type).toEqual(conference);
+      expect(issues.multipleFormats).toEqual([
+        { id: '7', title: 'Soirée mixte', formats: ['Conférence', 'Atelier'] },
+      ]);
+    });
+
+    it('ne signale rien pour un seul format ou aucun format', () => {
+      const config = buildTestConfig();
+      const service = buildService(config);
+      const issues = { multipleFormats: [] as MultipleFormats[] };
+
+      expect(withFormats(service, config, [1], issues).type).toEqual(atelier);
+      expect(withFormats(service, config, [], issues).type).toBeUndefined();
+      expect(issues.multipleFormats).toEqual([]);
+    });
+
+    it("journalise un seul avertissement pour tous les événements, et ne le répète pas s'ils n'ont pas changé", () => {
+      const service = buildService(buildTestConfig());
+      const affected = [1, 2, 3, 4, 5].map((n) => ({
+        id: String(n),
+        title: `Événement ${n}`,
+        formats: ['Atelier', 'Conférence'],
+      }));
+
+      service.reportMultipleFormats(affected);
+      service.reportMultipleFormats(affected);
+
+      const messages = warn.mock.calls
+        .map((c) => String(c[0]))
+        .filter((m) => m.includes('plusieurs formats'));
+      expect(messages).toHaveLength(1);
+      expect(messages[0]).toContain('5 événement(s)');
+      expect(messages[0]).toContain('Événement 1');
+      expect(messages[0]).toContain('et 2 autre(s)');
+
+      service.reportMultipleFormats([...affected, { id: '6', title: 'Autre', formats: ['A', 'B'] }]);
+      expect(
+        warn.mock.calls.filter((c) => String(c[0]).includes('plusieurs formats')),
+      ).toHaveLength(2);
+    });
+
+    it("ne journalise rien quand aucun événement n'a plusieurs formats", () => {
+      const service = buildService(buildTestConfig());
+      service.reportMultipleFormats([]);
+      expect(warn).not.toHaveBeenCalled();
+    });
   });
 
   it("marque « pendant l'événement » tout événement qui recoupe la période de la config", () => {

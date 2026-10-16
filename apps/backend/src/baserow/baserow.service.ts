@@ -31,6 +31,18 @@ import {
 import { GeocodingService } from '../geocoding/geocoding.service';
 import { AppConfigService } from '../config/config.service';
 
+/** Événement liant plusieurs formats (un seul est retenu). */
+interface MultipleFormatsIssue {
+  id: string;
+  title: string;
+  formats: string[];
+}
+
+/** Écarts relevés pendant la transformation, journalisés une fois pour l'ensemble des événements. */
+interface TransformIssues {
+  multipleFormats: MultipleFormatsIssue[];
+}
+
 const errorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
 
@@ -216,9 +228,18 @@ export class BaserowService implements OnApplicationBootstrap {
     if (records.length > 0) this.checkRecordColumns(records[0]);
 
     // 6. Transformer sans géocodage
+    const issues: TransformIssues = { multipleFormats: [] };
     const partialEvents = records.map((r) =>
-      this.transformRecord(r, partnersMap, themesMap, formatsMap, publicsMap),
+      this.transformRecord(
+        r,
+        partnersMap,
+        themesMap,
+        formatsMap,
+        publicsMap,
+        issues,
+      ),
     );
+    this.reportMultipleFormats(issues.multipleFormats);
 
     // 7. Préparer le batch geocoding (seulement pour les événements présentiels)
     const itemsToGeocode = partialEvents
@@ -440,6 +461,24 @@ export class BaserowService implements OnApplicationBootstrap {
     return records;
   }
 
+  /**
+   * Avertit (un seul message pour tous les événements concernés) que des événements portent
+   * plusieurs formats : l'application n'en garde qu'un, le premier lié dans Baserow. Le message
+   * n'est répété que si la liste des événements concernés change.
+   */
+  private reportMultipleFormats(affected: MultipleFormatsIssue[]): void {
+    if (affected.length === 0) return;
+    const examples = affected
+      .slice(0, 3)
+      .map((e) => `« ${e.title || 'sans titre'} » (id ${e.id} : ${e.formats.join(', ')})`)
+      .join(' ; ');
+    const more = affected.length > 3 ? ` et ${affected.length - 3} autre(s)` : '';
+    this.warnOnce(
+      `multiple-formats:${affected.map((e) => e.id).join(',')}`,
+      `${affected.length} événement(s) ont plusieurs formats ; seul le premier lié dans Baserow est retenu (un événement n'a qu'un format). Rendre la colonne de format à choix unique ou ne lier qu'un format. Exemples : ${examples}${more}.`,
+    );
+  }
+
   /** Journalise un avertissement une seule fois (clé = cause). */
   private warnOnce(key: string, message: string): void {
     if (this.warned.has(key)) return;
@@ -495,6 +534,7 @@ export class BaserowService implements OnApplicationBootstrap {
     thematiquesMap: Map<string, LinkedTableRow>,
     formatsMap: Map<string, LinkedTableRow>,
     publicsMap: Map<string, LinkedTableRow>,
+    issues?: TransformIssues,
   ): Event {
     const read = <T = unknown>(role: keyof BaserowFieldMapping) =>
       this.readField<T>(record, role);
@@ -518,7 +558,15 @@ export class BaserowService implements OnApplicationBootstrap {
         ),
     );
 
-    const format = mapLinkedRow(record, this.columnOf('format'), formatsMap);
+    // Un événement n'a qu'un seul format : le premier lié dans Baserow. Les autres sont signalés.
+    const formats = mapLinkedRow(record, this.columnOf('format'), formatsMap);
+    if (formats.length > 1) {
+      issues?.multipleFormats.push({
+        id: String(record.id),
+        title: text('title'),
+        formats: formats.map((f) => f.name),
+      });
+    }
     const targetAudience = mapLinkedRow(
       record,
       this.columnOf('audience'),
@@ -567,7 +615,7 @@ export class BaserowService implements OnApplicationBootstrap {
       postalCode,
       latitude: 0,
       longitude: 0,
-      type: format[0],
+      type: formats[0],
       themes,
       organizer: read<string>('organizer') || '',
       organizerContact,
