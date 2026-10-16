@@ -62,7 +62,7 @@ src/
 │   ├── EventsListPage.tsx  # Liste des événements
 │   └── EventDetailPage.tsx # Détail d'un événement
 ├── services/
-│   ├── api.ts              # Service API backend + fallback mock
+│   ├── api.ts              # Service API backend
 │   ├── geocoding.ts        # Géocodage via api-adresse.data.gouv.fr
 │   └── baserowMapping.ts  # Mapping champs Baserow → types internes
 ├── types/
@@ -88,7 +88,7 @@ Chargées à partir du fichier de config app.config.json (theme.fonts)
 
 ## Configuration API Backend
 
-L'application se connecte au backend NestJS pour récupérer les événements. En l'absence de configuration, elle utilise les données mockées (fallback automatique).
+L'application se connecte au backend NestJS pour récupérer les événements. Il n'y a pas de données de secours côté frontend.
 
 ### Variables d'environnement
 
