@@ -1,18 +1,13 @@
 import type { EventFilters } from '@/hooks/useEvents';
 import type { Event } from '@/types/event';
-import { eventIntersectsYmdRange, isDateFilterActive } from '@/utils/eventDateRange';
+import { eventIntersectsYmdRange } from '@/utils/eventDateRange';
+import { countDefinedFilters } from '@/utils/filterDefinitions';
 
+/** Nombre total de filtres actifs : ceux de `FILTER_DEFINITIONS`, plus la recherche et les événements passés. */
 export function countActiveFilters(filters: EventFilters): number {
   return (
     Number(Boolean(filters.search.trim())) +
-    Number(Boolean(filters.postalCode.trim())) +
-    filters.regions.length +
-    filters.types.length +
-    filters.audiences.length +
-    filters.partners.length +
-    filters.themes.length +
-    Number(isDateFilterActive(filters.dateFilter, filters.dateFrom)) +
-    Number(filters.modality !== 'all') +
+    countDefinedFilters(filters) +
     Number(filters.showPastEvents)
   );
 }

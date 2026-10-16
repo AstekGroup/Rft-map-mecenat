@@ -21,6 +21,26 @@ export interface EventFilters {
   showPastEvents: boolean;
 }
 
+/**
+ * Tout ce dont un écran de filtres a besoin : l'état, les actions et les options issues de Baserow.
+ * Le panneau de la carte, la barre de la liste et le panneau latéral reçoivent le même objet
+ * (`controls` renvoyé par `useEvents`) au lieu d'une douzaine de props recopiées.
+ */
+export interface EventFilterControls {
+  filters: EventFilters;
+  onUpdateFilters: (filters: Partial<EventFilters>) => void;
+  onToggleRegion: (region: string) => void;
+  onToggleType: (typeId: string) => void;
+  onToggleTheme: (themeId: string) => void;
+  onTogglePartner: (partnerId: string) => void;
+  onToggleAudience: (audienceId: string) => void;
+  onResetFilters: () => void;
+  availablePartners: LinkedTableRow[];
+  availableThemes: LinkedTableRow[];
+  availableFormats: LinkedTableRow[];
+  availablePublics: LinkedTableRow[];
+}
+
 /** Filtres à sélection multiple (listes d'identifiants ou de noms de région). */
 type MultiValueFilterKey = 'regions' | 'types' | 'themes' | 'partners' | 'audiences';
 
@@ -156,8 +176,26 @@ export function useEvents() {
     ) as Record<string, number>,
   }), [events, filteredEvents, availableFormats]);
 
+  const controls: EventFilterControls = useMemo(() => ({
+    filters,
+    onUpdateFilters: updateFilters,
+    onToggleRegion: toggleRegion,
+    onToggleType: toggleType,
+    onToggleTheme: toggleTheme,
+    onTogglePartner: togglePartner,
+    onToggleAudience: toggleAudience,
+    onResetFilters: resetFilters,
+    availablePartners,
+    availableThemes,
+    availableFormats,
+    availablePublics,
+  }), [
+    filters, updateFilters, toggleRegion, toggleType, toggleTheme, togglePartner, toggleAudience,
+    resetFilters, availablePartners, availableThemes, availableFormats, availablePublics,
+  ]);
 
   return {
+    controls,
     events: filteredEvents,
     allEvents: events,
     geojson,
