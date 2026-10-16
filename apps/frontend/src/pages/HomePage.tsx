@@ -8,11 +8,10 @@ import { Loader2 } from 'lucide-react';
 import {checkIconColor, getIcon} from "@/utils/iconResolver.ts";
 
 function MiniEventCard({ event }: { event: Event }) {
-  const { config } = useConfig();
+  const { helpers } = useConfig();
   const Icon = getIcon(event.type?.pictoName, Globe);
   const typeColor = checkIconColor(event.type?.colorHexa, "#D4DDE2");
-  const editionYear = config?.app?.eventDates?.weekStart?.split('-')[0];
-  const weekBadgeText = editionYear ? `${config.app.shortName} ${editionYear}` : `${editionYear}`;
+  const weekBadgeText = helpers.getEditionBadge();
   const formattedDate = new Date(event.date).toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'long',
@@ -31,7 +30,7 @@ function MiniEventCard({ event }: { event: Event }) {
               <Icon className="w-2.5 h-2.5" />
               {event.type?.name}
             </span>
-            {event.isDuringWeek && (
+            {event.isDuringWeek && weekBadgeText && (
               <span className="inline-flex items-center gap-1 bg-primary text-white px-1.5 py-0.5 rounded-full text-[10px] font-medium">
                 {weekBadgeText}
               </span>

@@ -5,6 +5,8 @@ export interface ConfigHelpers {
   getEnumLabel: (category: keyof typeof ENUM_MAP, id: string) => string;
   getText: (section: string, key: string) => string;
   getRegionGroups: () => { metropole: string[]; domtom: string[] };
+  /** Badge d'édition « nom court + année » tiré de la config ; chaîne vide si la config ne les donne pas. */
+  getEditionBadge: () => string;
 }
 
 export interface ConfigContextValue {
@@ -85,6 +87,12 @@ export function buildHelpers(config: AppConfig | null): ConfigHelpers {
       const texts = (config?.texts as any)?.[section];
       if (texts && texts[key]) return texts[key];
       return key;
+    },
+    getEditionBadge() {
+      const shortName = config?.app?.shortName?.trim();
+      const year = config?.app?.eventDates?.weekStart?.split('-')[0];
+      const validYear = year && /^\d{4}$/.test(year) ? year : undefined;
+      return [shortName, validYear].filter(Boolean).join(' ');
     },
     getRegionGroups() {
       const metropole: string[] = [];

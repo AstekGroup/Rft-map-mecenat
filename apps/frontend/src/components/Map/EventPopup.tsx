@@ -64,7 +64,7 @@ export function EventPopup({ event, onClose, onViewDetails }: EventPopupProps) {
           <span>{event.time}{event.endTime ? ` - ${event.endTime}` : ''}</span>
         </div>
         
-        {/* Badge semaine LGSV */}
+        {/* Badge « pendant l'événement » (nom depuis la config) */}
         {event.isDuringWeek && (
           <div className="inline-flex items-center gap-1.5 bg-primary/10 text-primary-dark px-2.5 py-1 rounded-full text-xs font-medium">
             <span className="w-2 h-2 bg-primary rounded-full animate-pulse-soft" />
