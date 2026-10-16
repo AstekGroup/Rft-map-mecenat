@@ -1,0 +1,97 @@
+{
+  "profile": "autre-evenement-test",
+  "app": {
+    "name": "Les Journées du Test",
+    "shortName": "JDT",
+    "description": "Supper Carte interactive des événements de La Grande Semaine Végétale",
+    "eventDates": {
+      "weekStart": "2026-11-10",
+      "weekEnd": "2026-11-16"
+    },
+    "url": "https://lagrandesemainevegetale.fr",
+    "locale": "fr"
+  },
+  "theme": {
+    "colors": {
+      "primary": "#1F5FAE",
+      "primary-dark": "#123A6B",
+      "primary-light": "#A7C4E8"
+    },
+    "fonts": {
+      "heading": "Poppins",
+      "body": "Inter",
+      "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Inter:wght@400;600&display=swap"
+    }
+  },
+  "texts": {
+    "meta": {
+      "title": "La super Carte Interactive - La Grande Semaine Végétale",
+      "description": "Découvrez les ateliers cuisine, dégustations et événements végétaux près de chez vous",
+      "ogTitle": "Carte Interactive - La Grande Semaine Végétale",
+      "ogDescription": "Découvrez les ateliers cuisine, dégustations et événements végétaux près de chez vous",
+      "iconRef": "https://lagrandesemainevegetale.fr/favicon.ico"
+    },
+    "home": {
+      "mainTitle": "Les Journées du Test",
+      "mainDescription": "Texte de test : une autre carte, un autre événement, le même code.",
+      "ctaText": "Ouvrir la carte de test",
+      "ctaTextShort": "Découvrir les événements",
+      "editionLabel": "Session",
+      "nearbySubtitle": "Près de chez vous",
+      "seeAll": "Tout voir",
+      "infoTitle": "C'est quoi les Journées du Test ?",
+      "infoDescription": "Une initiative nationale pour démocratiser l'alimentation végétale. Pendant une semaine, des fermes, des restaurants, des associations et des cuisiniers se mobilisent pour vous faire découvrir de nouvelles saveurs, apprendre à cuisiner les légumineuses et comprendre les enjeux de notre alimentation.",
+      "sectionPresentiel": "Événements en présentiel"
+    }
+  },
+  "filters": {
+    "dateFilterModes": [
+      {
+        "mode": "all",
+        "label": "Toutes les dates"
+      },
+      {
+        "mode": "during-week",
+        "label": "Pendant les Journées du Test"
+      },
+      {
+        "mode": "custom",
+        "label": "Dates personnalisées"
+      }
+    ]
+  },
+  "baserow": {
+    "moderationVisibleValue": "Accepté",
+    "fieldMapping": {
+      "title": "Nom de l'événement",
+      "description": "Description",
+      "startDate": "Date de début de l'événement",
+      "endDate": "Date de fin de l'événement",
+      "format": "Format",
+      "modality": "Type de l'événement",
+      "audience": "Public",
+      "theme": "Thématique",
+      "image": "Visuel de l'évènement",
+      "address": "Adresse du lieu",
+      "postalCode": "Code postal du lieu",
+      "city": "Ville du lieu",
+      "organizer": "Nom de la structure organisatrice",
+      "organizerFirstName": "Prénom de l'animateur",
+      "organizerLastName": "Nom de l'animateur",
+      "registrationUrl": "Lien d'inscription à l'événement",
+      "venueName": "Lieu",
+      "accessModalities": "Modalités spécifiques d'accès au lieu",
+      "videoConferenceUrl": "Lien de la visio",
+      "contactEmail": "Email contact événement",
+      "contactEmailFallback": "E-mail de l'animateur",
+      "contactPhone": "Téléphone inscription",
+      "organizerWebsite": "Site web de la structure",
+      "capacity": "Capacité d'accueil de l'événement",
+      "price": "Montant",
+      "tariff": "Tarif",
+      "partnerField": "Partenaires",
+      "moderation": "Modération de l'événement",
+      "visibility": "Visibilité sur la cartographie"
+    }
+  }
+}
