@@ -3,7 +3,7 @@
   "app": {
     "name": "Les Journées du Test",
     "shortName": "JDT",
-    "description": "Supper Carte interactive des événements de La Grande Semaine Végétale",
+    "description": "Carte interactive des événements de {{app.name}}",
     "eventDates": {
       "weekStart": "2026-11-10",
       "weekEnd": "2026-11-16"
@@ -25,21 +25,21 @@
   },
   "texts": {
     "meta": {
-      "title": "La super Carte Interactive - La Grande Semaine Végétale",
+      "title": "La super Carte Interactive - {{app.name}}",
       "description": "Découvrez les ateliers cuisine, dégustations et événements végétaux près de chez vous",
-      "ogTitle": "Carte Interactive - La Grande Semaine Végétale",
+      "ogTitle": "Carte Interactive - {{app.name}}",
       "ogDescription": "Découvrez les ateliers cuisine, dégustations et événements végétaux près de chez vous",
       "iconRef": "https://lagrandesemainevegetale.fr/favicon.ico"
     },
     "home": {
-      "mainTitle": "Les Journées du Test",
+      "mainTitle": "{{app.name}}",
       "mainDescription": "Texte de test : une autre carte, un autre événement, le même code.",
       "ctaText": "Ouvrir la carte de test",
       "ctaTextShort": "Découvrir les événements",
       "editionLabel": "Session",
       "nearbySubtitle": "Près de chez vous",
       "seeAll": "Tout voir",
-      "infoTitle": "C'est quoi les Journées du Test ?",
+      "infoTitle": "C'est quoi {{app.name}} ?",
       "infoDescription": "Une initiative nationale pour démocratiser l'alimentation végétale. Pendant une semaine, des fermes, des restaurants, des associations et des cuisiniers se mobilisent pour vous faire découvrir de nouvelles saveurs, apprendre à cuisiner les légumineuses et comprendre les enjeux de notre alimentation.",
       "sectionPresentiel": "Événements en présentiel"
     }
@@ -52,7 +52,7 @@
       },
       {
         "mode": "during-week",
-        "label": "Pendant les Journées du Test"
+        "label": "Pendant {{app.name}}"
       },
       {
         "mode": "custom",
