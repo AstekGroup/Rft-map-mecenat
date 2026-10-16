@@ -3,9 +3,10 @@ import { Event, LinkedTableRow } from '@/types/event';
 import {EventFilters, useConfig} from '@/hooks';
 import { EventCard } from './EventCard';
 import { FilterPanel } from '@/components/Filters/FilterPanel';
+import { PastEventsToggle } from '@/components/Filters/PastEventsToggle';
 import { ChevronLeft, ChevronRight, Filter, List, MapIcon } from 'lucide-react';
 import { MapBounds } from '@/components/Map';
-import { isDateFilterActive } from '@/utils/eventDateRange';
+import { countActiveFilters } from '@/utils/eventFilters';
 
 interface SidebarProps {
   events: Event[];
@@ -72,15 +73,7 @@ export function Sidebar({
     };
   }, [events, mapBounds]);
 
-  const filtersActiveBadge =
-    !!filters.search ||
-    !!filters.postalCode ||
-    filters.regions.length > 0 ||
-    filters.types.length > 0 ||
-    filters.audiences.length > 0 ||
-    filters.partners.length > 0 ||
-    filters.themes.length > 0 ||
-    isDateFilterActive(filters.dateFilter, filters.dateFrom);
+  const activeFiltersCount = countActiveFilters(filters);
 
   if (isCollapsed) {
     return (
@@ -143,8 +136,10 @@ export function Sidebar({
           >
             <Filter className="w-4 h-4" />
             Filtres
-            {filtersActiveBadge && (
-              <span className="w-2 h-2 bg-accent-yellow rounded-full" />
+            {activeFiltersCount > 0 && (
+              <span className="inline-flex min-w-5 h-5 items-center justify-center rounded-full px-1 bg-accent-yellow text-[11px] font-bold text-text-primary leading-none">
+                {activeFiltersCount}
+              </span>
             )}
           </button>
         </div>
@@ -154,77 +149,47 @@ export function Sidebar({
       <div className="flex-1 overflow-y-auto scrollbar-thin">
         {activeTab === 'list' ? (
           <div className="p-4 space-y-4">
-            {events.length === 0 ? (
-              <div className="text-center py-8 text-text-secondary">
-                <MapIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p className="font-medium">Aucun événement trouvé</p>
-                <p className="text-sm mt-1">Essayez de modifier vos filtres</p>
+            <div className="rounded-xl border-2 border-primary/30 bg-primary/5 overflow-hidden">
+              <div className="px-3 py-2 bg-primary/10 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <span className="text-xs font-semibold text-primary-dark uppercase tracking-wide">
+                  Visibles sur la carte ({visibleEvents?.length ?? 0})
+                </span>
               </div>
-            ) : visibleEvents !== null ? (
-              <>
-                {/* Section : visibles sur la carte */}
-                <div className="rounded-xl border-2 border-primary/30 bg-primary/5 overflow-hidden">
-                  <div className="px-3 py-2 bg-primary/10 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                    <span className="text-xs font-semibold text-primary-dark uppercase tracking-wide">
-                      Visibles sur la carte ({visibleEvents.length})
-                    </span>
+              <div className="p-2 space-y-2">
+                {visibleEvents === null ? (
+                  <p className="text-center text-sm text-text-secondary py-3">
+                    {events.length > 0 ? 'Calcul de la zone visible...' : 'Aucun événement trouvé'}
+                  </p>
+                ) : visibleEvents.length === 0 ? (
+                  <div className="text-center py-4 text-text-secondary">
+                    <MapIcon className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">
+                      {events.length === 0 ? 'Aucun événement trouvé' : 'Aucun événement dans cette zone'}
+                    </p>
                   </div>
-                  <div className="p-2 space-y-2">
-                    {visibleEvents.length === 0 ? (
-                      <p className="text-center text-sm text-text-secondary py-3">
-                        Aucun événement dans cette zone
-                      </p>
-                    ) : (
-                      visibleEvents.slice(0, 50).map((event) => (
-                        <EventCard
-                          key={event.id}
-                          event={event}
-                          isSelected={selectedEvent?.id === event.id}
-                          isHovered={hoveredEvent?.id === event.id}
-                          onClick={() => onSelectEvent(event)}
-                          onMouseEnter={() => onHoverEvent(event)}
-                          onMouseLeave={() => onHoverEvent(null)}
-                        />
-                      ))
-                    )}
-                  </div>
-                </div>
-
-                {/* Section : hors champ */}
-                {hiddenEvents.length > 0 && (
-                  <div className="rounded-xl border border-primary/10 bg-white/50 overflow-hidden">
-                    <div className="px-3 py-2 bg-primary/5 flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-primary/30" />
-                      <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">
-                        Autres événements ({hiddenEvents.length})
-                      </span>
-                    </div>
-                    <div className="p-2 space-y-2">
-                      {hiddenEvents.slice(0, 30).map((event) => (
-                        <EventCard
-                          key={event.id}
-                          event={event}
-                          isSelected={selectedEvent?.id === event.id}
-                          isHovered={hoveredEvent?.id === event.id}
-                          onClick={() => onSelectEvent(event)}
-                          onMouseEnter={() => onHoverEvent(event)}
-                          onMouseLeave={() => onHoverEvent(null)}
-                        />
-                      ))}
-                      {hiddenEvents.length > 30 && (
-                        <p className="text-center text-xs text-text-secondary py-2">
-                          +{hiddenEvents.length - 30} autres — zoomez ou déplacez la carte
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                ) : (
+                  visibleEvents.slice(0, 50).map((event) => (
+                    <EventCard
+                      key={event.id}
+                      event={event}
+                      isSelected={selectedEvent?.id === event.id}
+                      isHovered={hoveredEvent?.id === event.id}
+                      onClick={() => onSelectEvent(event)}
+                      onMouseEnter={() => onHoverEvent(event)}
+                      onMouseLeave={() => onHoverEvent(null)}
+                    />
+                  ))
                 )}
-              </>
-            ) : (
-              /* Pas de bounds encore : liste simple */
-              <>
-                {hiddenEvents.slice(0, 50).map((event) => (
+              </div>
+            </div>
+
+            {visibleEvents === null && events.length > 0 && (
+              <div className="p-2 space-y-2">
+                <div className="px-1 text-xs font-semibold text-text-secondary uppercase tracking-wide">
+                  Événements ({events.length})
+                </div>
+                {events.slice(0, 50).map((event) => (
                   <EventCard
                     key={event.id}
                     event={event}
@@ -240,7 +205,36 @@ export function Sidebar({
                     Affichage limité à 50 événements.
                   </p>
                 )}
-              </>
+              </div>
+            )}
+
+            {visibleEvents !== null && hiddenEvents.length > 0 && (
+              <div className="rounded-xl border border-primary/10 bg-white/50 overflow-hidden">
+                <div className="px-3 py-2 bg-primary/5 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-primary/30" />
+                  <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">
+                    Autres événements ({hiddenEvents.length})
+                  </span>
+                </div>
+                <div className="p-2 space-y-2">
+                  {hiddenEvents.slice(0, 30).map((event) => (
+                    <EventCard
+                      key={event.id}
+                      event={event}
+                      isSelected={selectedEvent?.id === event.id}
+                      isHovered={hoveredEvent?.id === event.id}
+                      onClick={() => onSelectEvent(event)}
+                      onMouseEnter={() => onHoverEvent(event)}
+                      onMouseLeave={() => onHoverEvent(null)}
+                    />
+                  ))}
+                  {hiddenEvents.length > 30 && (
+                    <p className="text-center text-xs text-text-secondary py-2">
+                      +{hiddenEvents.length - 30} autres — zoomez ou déplacez la carte
+                    </p>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         ) : (
@@ -268,7 +262,7 @@ export function Sidebar({
           <span className="text-text-secondary">
             <span className="font-semibold text-primary">{stats.duringWeek}</span> pour {helpers.getText('home', 'mainTitle')}
           </span>
-          {filtersActiveBadge && (
+          {activeTab === 'list' && activeFiltersCount > 0 && (
             <button
               onClick={onResetFilters}
               className="text-accent-red hover:underline font-medium"
@@ -277,6 +271,14 @@ export function Sidebar({
             </button>
           )}
         </div>
+        {activeTab === 'list' && (
+          <div className="mt-3 pt-3 border-t border-primary/10">
+            <PastEventsToggle
+              checked={filters.showPastEvents}
+              onChange={() => onUpdateFilters({ showPastEvents: !filters.showPastEvents })}
+            />
+          </div>
+        )}
       </div>
     </div>
     </>

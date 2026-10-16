@@ -4,6 +4,7 @@ import { LinkedTableRow } from '@/types/event';
 import {checkIconColor, getIcon} from '@/utils/iconResolver';
 import { DateCustomRangeInputs } from '@/components/Filters/DateCustomRangeInputs';
 import { formatFrDateRangeLabel, isDateFilterActive } from '@/utils/eventDateRange';
+import { countActiveFilters } from '@/utils/eventFilters';
 import { ChevronDown, RotateCcw, X, Search, MapPin, Globe, Handshake, History } from 'lucide-react';
 
 interface EventFiltersBarProps {
@@ -90,16 +91,7 @@ const dateFilterModes = config?.filters?.dateFilterModes || [
   { mode: 'custom', label: 'Dates personnalisées' },
 ];
 
-  const hasActiveFilters =
-    filters.search ||
-    filters.postalCode ||
-    filters.regions.length > 0 ||
-    filters.types.length > 0 ||
-    filters.themes.length > 0 ||
-    filters.partners.length > 0 ||
-    filters.audiences.length > 0 ||
-    isDateFilterActive(filters.dateFilter, filters.dateFrom) ||
-    filters.modality !== 'all';
+  const hasActiveFilters = countActiveFilters(filters) > 0;
 
   // Collecte des tags actifs
   const activeTags: { key: string; label: string; onRemove: () => void }[] = [];
