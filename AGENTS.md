@@ -1,44 +1,77 @@
 # AGENTS.md — racine (make-map)
 
-Ce dépôt suit le format ouvert [AGENTS.md](https://agents.md/) : instructions dédiées aux agents de code, complémentaires au [README.md](./README.md) humain.
+Ce dépôt suit le format ouvert [AGENTS.md](https://agents.md/) : instructions dédiées aux agents de code, complémentaires au [README.md](./README.md) humain. Les agents lisent en priorité l'`AGENTS.md` **le plus proche** du fichier modifié (liens en bas). Ces fichiers `AGENTS.md` sont la **seule** source de consignes pour les agents.
+
+## Philosophie de la refonte (à respecter pour tout changement)
+
+Ce dépôt est **1 seul code pour N cartes** d'événements (une carte = un événement : dates, marque, titres, données propres). Il remplace des copies du projet adaptées à la main, qui ont dérivé. Chaque changement doit rapprocher le code de ce modèle, jamais l'en éloigner.
+
+1. **Un code, N cartes.** Aucune branche, copie de dossier ni `if (carte === …)` par événement. Ce qui diffère d'une carte à l'autre vit dans **le fichier de config de la carte** (`app.config.json`) ou dans **Baserow**, jamais dans le code.
+2. **Ce que porte la config** : identité de l'événement (nom, URL, e-mail de contact, logo), **titres et noms de l'événement** (clés `texts.*` existantes : `meta`, `home`), **dates**, **design** (couleurs, polices, rayons, ombres), paramètres de carte (centre, zoom, styles, clustering) et **correspondance avec le schéma Baserow** (`baserow.fieldMapping`, `baserow.mapping`).
+3. **Le wording générique de l'interface reste en dur, en français** (boutons, placeholders, libellés de contrôles). Seuls les titres et noms propres à l'événement passent par la config. La **carte et les régions** restent dans le code.
+4. **Pas de flags de fonctionnalités** : on prend toutes les fonctionnalités, pour toutes les cartes. Aucun filtre n'est masquable par la config ; seuls les filtres dont la table Baserow est vide se masquent d'eux-mêmes. Ne pas ajouter de `features.*`.
+5. **Aucun nom de champ Baserow en dehors du mapping.** Les noms de colonnes et les valeurs des listes de choix viennent de la config ; pas de valeur de repli française dans le code (`fm.x || 'Ville du lieu'` est interdit). Les identifiants de tables restent dans l'environnement du backend. Il n'y a **pas de schéma cible** : la carte doit fonctionner avec le schéma indiqué par la config.
+6. **Les référentiels viennent de Baserow** (formats, publics, thématiques, partenaires : libellés, couleurs, pictos, logos). Pas de liste de libellés métier dans le code.
+7. **Dégradation propre, jamais de casse silencieuse.** Un champ renommé, une table absente, une config incomplète ou un champ de modération manquant ne doivent ni faire planter la carte (HTTP 500 inutile), ni la rendre publique par défaut, ni vider des données **sans avertissement**. Valider la config et le schéma au démarrage, journaliser clairement, appliquer un repli explicite.
+8. **Codé en dur = refus en revue.** Voir la checklist ci-dessous. Si un compromis est inévitable, l'inscrire dans le plan ([docs/audit/PLAN-SESSIONS.md](./docs/audit/PLAN-SESSIONS.md)) plutôt que le cacher.
+
+> **Écart connu entre ces règles et le code actuel** : la refonte est **partielle** et se fait par sessions (voir [docs/audit/PLAN-SESSIONS.md](./docs/audit/PLAN-SESSIONS.md) et [docs/audit/SUIVI.md](./docs/audit/SUIVI.md)). Le code contient encore de la marque LGSV, des couleurs, des régions et des noms de champs en dur (liste prouvée avec `fichier:ligne` dans [docs/audit/04-cartographie.md](./docs/audit/04-cartographie.md), photo du 2026-10-16). Ne pas copier ces patterns existants : ce sont des dettes, pas des modèles.
 
 ## Règles globales (tout le monorepo)
 
-1. `**apps/map-interactive**` : référence historique — **ne pas modifier** sans décision explicite.
-2. **Baserow** : **lecture seule** ; jeton uniquement côté backend (`BASEROW_API_TOKEN`).
-3. **Langue** : interface et libellés en **français**.
-4. **Git** : pas de push direct sur `main` ; branche + PR.
+1. **Baserow** : **lecture seule** depuis l'application (le backend ne fait que des `GET`) ; jeton uniquement côté backend (`BASEROW_API_TOKEN`), jamais dans le front ni dans le dépôt. Exception documentée : les scripts de `scripts/seed-baserow/` écrivent dans une instance **Docker locale jetable** (ne jamais les pointer vers un Baserow réel).
+2. **Modération** : un événement n'est public que s'il porte la valeur de modération configurée (`baserow.moderationVisibleValue`). En cas de doute (champ manquant, valeur vide), **masquer**, ne pas publier. Le mode `devMode` ne doit pas être accessible publiquement en production.
+3. **Langue** : interface et libellés **en français** ; code, commentaires techniques et noms d'identifiants peuvent rester en anglais.
+4. **Git** : voir « Workflow Git » ci-dessous.
 5. **Portée** : changements ciblés ; pas de refactor gratuit hors demande.
+6. **Preuves** : pour une affirmation sur l'état du projet, donner un `fichier:ligne` ou une commande exécutée ; sinon écrire « non vérifié ».
+
+## Workflow Git
+
+- `main` : stable, jamais de commit direct, mise à jour seulement depuis `develop` par PR, avec un tag à chaque jalon.
+- `develop` : branche d'intégration. Les branches de travail partent de `develop`, sont courtes (une par sujet), nommées en `kebab-case` avec un préfixe de type (`feat/`, `fix/`, `refactor/`, `chore/`, `docs/`, `test/`), sans doublon, et supprimées après merge.
+- Commits atomiques au format Conventional Commits : `type(scope): sujet` (type en anglais, sujet court en français à l'impératif, 72 caractères maximum). Scopes : `front`, `back`, `types`, `config`, `docs`, `deploy`, `scripts`. Le hook `husky` lance `pnpm test` à chaque commit ; ne jamais utiliser `--no-verify`.
+- Une PR par branche, vers `develop`, petite et lisible. `git rebase develop` avant la PR. Merge par **merge commit** (`--no-ff`). Pas de force-push sur `main` ni `develop` ; `--force-with-lease` seulement sur sa propre branche.
+- Aucune PR n'est mergée avec des tests rouges.
+
+## Définition de terminé (checklist de PR)
+
+- [ ] Aucun titre, nom de marque, date, e-mail/URL, couleur ou police propre à une carte dans le code (`rg -i "lgsv|semaine|végétal|#[0-9a-f]{6}"` sur les fichiers modifiés). Le wording générique de l'interface reste en dur.
+- [ ] Aucun nom de champ Baserow ni valeur de liste de choix ajouté hors de la config ; aucun libellé de référentiel métier en dur.
+- [ ] Nouveau **titre ou nom d'événement** → clé dans `texts.*` (type `AppConfig` + `app.config.json`), avec repli lisible si la clé manque.
+- [ ] Pas de flag `features.*` ni de `if (carte === …)`.
+- [ ] Cas dégradés couverts : donnée absente, champ renommé, config incomplète, API en erreur (pas de `Invalid Date`, pas de clé brute affichée, pas de 500 inutile).
+- [ ] Types partagés (`shared/types`) mis à jour **avant** les consommateurs ; `pnpm build` de la racine passe.
+- [ ] `pnpm lint` et `pnpm test` passent (voir « Commandes » : les scripts actuels ont des limites connues).
+- [ ] Aucune variable d'environnement morte ou non documentée ; `.env.example` à jour.
+- [ ] Si le changement touche l'identité ou la config : vérifié avec **une seconde config** (voir `docs/audit/fixtures/`), sans toucher au code.
+- [ ] Docs concernées mises à jour (README de la zone, `docs/audit/SUIVI.md`).
 
 ## Où travailler : fichiers AGENTS par zone
 
-Les agents lisent en priorité l’`**AGENTS.md` le plus proche** du fichier modifié. Chaque lien ci-dessous approfondit la zone concernée.
-
-
-| Zone                                  | Fichier                                                            |
-| ------------------------------------- | ------------------------------------------------------------------ |
-| Frontend React + carte                | [apps/frontend/AGENTS.md](./apps/frontend/AGENTS.md)               |
-| API NestJS + Baserow + géocodage      | [apps/backend/AGENTS.md](./apps/backend/AGENTS.md)                 |
-| Types partagés `@make-map/types`      | [shared/types/AGENTS.md](./shared/types/AGENTS.md)                 |
-| Déploiement Docker / Scaleway         | [deploy/AGENTS.md](./deploy/AGENTS.md)                             |
-| Référence `map-interactive` (lecture) | [apps/map-interactive/AGENTS.md](./apps/map-interactive/AGENTS.md) |
-
+| Zone | Fichier |
+| --- | --- |
+| Frontend React + carte | [apps/frontend/AGENTS.md](./apps/frontend/AGENTS.md) |
+| API NestJS + Baserow + géocodage | [apps/backend/AGENTS.md](./apps/backend/AGENTS.md) |
+| Types partagés `@make-map/types` (dont le type `AppConfig`) | [shared/types/AGENTS.md](./shared/types/AGENTS.md) |
+| Déploiement Docker / Scaleway | [deploy/AGENTS.md](./deploy/AGENTS.md) |
+| Plan de refonte, bilan, constats prouvés | [docs/audit/](./docs/audit/) (commencer par `SUIVI.md` puis `PLAN-SESSIONS.md`) |
 
 ## Commandes (depuis la racine)
 
-
-| Objectif             | Commande                                 |
-| -------------------- | ---------------------------------------- |
-| Frontend + backend   | `pnpm dev`                               |
-| Frontend seul        | `pnpm front:dev`                         |
-| Backend seul         | `pnpm back:dev`                          |
+| Objectif | Commande |
+| --- | --- |
+| Frontend + backend | `pnpm dev` |
+| Frontend seul / backend seul | `pnpm front:dev` · `pnpm back:dev` |
 | Build / lint / tests | `pnpm build` · `pnpm lint` · `pnpm test` |
+| Baserow local jetable + données de test | voir [docs/audit/02-baserow-seed.md](./docs/audit/02-baserow-seed.md) |
 
+Limites connues (preuves dans [docs/audit/01-lancement.md](./docs/audit/01-lancement.md) et [docs/audit/JOURNAL.md](./docs/audit/JOURNAL.md)) : le lint frontend n'est pas configuré ; `pnpm lint` du backend utilise `--fix` (modifie les fichiers) ; `pnpm test` ne couvre pas `shared/types` ; `pnpm build` réécrit `apps/frontend/index.html` (script non idempotent). Ne pas contourner ces échecs sans le dire.
 
-Environnement : `apps/backend/.env.example` et `apps/frontend/.env.example`.
+Environnement : `apps/backend/.env.example` et `apps/frontend/.env.example` (le backend lit `BASEROW_API_URL`, `BASEROW_API_TOKEN`, `BASEROW_EVENT_TABLE_ID`, `BASEROW_MODERATION_FIELD_ID`, `BASEROW_PARTNERS_TABLE_ID`, `BASEROW_THEMATIQUES_TABLE_ID`, `BASEROW_FORMATS_TABLE_ID`, `BASEROW_PUBLICS_TABLE_ID`, `PORT`, `CORS_ORIGIN`, `APP_CONFIG_PATH`, `ALLOW_DEV_MODE`).
 
 ## Documentation associée
 
-- [CLAUDE.md](./CLAUDE.md) — architecture, flux de données, arborescence détaillée
-- [DEVPLAN.md](./DEVPLAN.md) — jalons (**ne pas modifier sans accord**)
-- [PROJECT_VIBE_CONF.md](./PROJECT_VIBE_CONF.md) — type de projet (POC)
+- [docs/audit/PLAN-SESSIONS.md](./docs/audit/PLAN-SESSIONS.md) — plan de refonte en 9 sessions et workflow Git détaillé.
+- [docs/audit/SUIVI.md](./docs/audit/SUIVI.md) — état d'avancement, décisions, prochaine action.
+- [PROJECT_VIBE_CONF.md](./PROJECT_VIBE_CONF.md) — type de projet.

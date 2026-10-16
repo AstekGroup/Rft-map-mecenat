@@ -31,6 +31,3 @@ resources/
 **/coverage
 **/*.spec.ts
 **/test/
-
-# Map interactive (version statique, pas dans le build Docker)
-apps/map-interactive/

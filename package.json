@@ -10,8 +10,6 @@
     "lint": "turbo run lint",
     "front:dev": "turbo run dev --filter=@make-map/frontend",
     "back:dev": "turbo run dev --filter=@make-map/backend",
-    "map:dev": "turbo run dev --filter=@make-map/map-interactive",
-    "install:map": "cd apps/map-interactive && pnpm install",
     "deploy:scw": "./scripts/deploy.sh",
     "deploy:v2": "./scripts/deploy-v2.sh",
     "test": "turbo run test --filter=@make-map/backend --filter=@make-map/frontend",
@@ -23,7 +21,7 @@
     "react",
     "maplibre",
     "nestjs",
-    "airtable"
+    "baserow"
   ],
   "author": "ILAB Innovation Team",
   "packageManager": "pnpm@9.0.0",

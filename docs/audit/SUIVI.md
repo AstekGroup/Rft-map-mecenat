@@ -43,10 +43,11 @@ Preuve = `fichier:ligne` ou commande + extrait de sortie (dans JOURNAL.md).
 | Session | État (2026-10-16) |
 |---|---|
 | 0 GitHub CLI | **faite** : `gh` 2.102.0, connecté (`ClementTro`, droit ADMIN) |
-| 1 Base Git | **PR ouvertes, en attente de merge par le propriétaire** : #9, #10, #11, #12 (après #11), #13, #14. Preuves dans JOURNAL. |
-| 2 à 8 | non commencées |
+| 1 Base Git | **faite** : PR #9 à #14 mergées dans `develop` ; `pnpm build` et `pnpm test` verts sur `develop`. Reste : PR `develop` → `main` et tag `v0.1.0` (validation du propriétaire). |
+| 2 Nettoyage et intégration | **PR unique #21 `chore/session-2-unifiee`, en attente de merge par le propriétaire** (regroupe `docs/agents`, `chore/remove-airtable`, `chore/remove-dead-code`, `merge/refonte-unifier-outils-carte`, `merge/refonte-panneau-lateral` et ce suivi ; les PR #15 à #20 sont fermées). Preuves dans JOURNAL. |
+| 3 à 8 | non commencées |
 
-Prochaine action : merger les PR de la session 1 dans `develop` (option « Create a merge commit », #11 avant #12), puis vérifier `pnpm build` et `pnpm test` sur `develop`, supprimer `wip/audit-snapshot` **après la session 2** (elle porte les 5 `AGENTS.md`), puis PR `develop` → `main` et tag `v0.1.0`.
+Prochaine action : merger la PR #21 dans `develop` (option « Create a merge commit »), fermer les PR #7 et #8 (redondantes avec #21 si elles ne sont pas marquées mergées), puis vérifier `pnpm build` et `pnpm test` sur `develop`, supprimer `wip/audit-snapshot` (le contenu des 5 `AGENTS.md` est repris par #15), puis PR `develop` → `main` et tag `v0.2.0`. Hors dépôt, à demander à l'auteur : accord pour supprimer les 3 branches obsolètes `add-dynamic-filters`, `modify-audiences-filters`, `modif_audience_filters`.
 
 > Les parties ci-dessous (branche `audit/bilan-refonte`, « à commiter », etc.) décrivent l'état au moment de l'audit et sont **périmées** : cette branche est supprimée et le code corrigé est dans les PR de la session 1.
 
