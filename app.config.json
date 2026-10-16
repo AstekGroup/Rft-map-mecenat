@@ -86,8 +86,22 @@
       "price": "Montant",
       "tariff": "Tarif",
       "partnerField": "Partenaires",
-      "moderation": "Modération de l'événement",
-      "visibility": "Visibilité sur la cartographie"
+      "moderation": "Modération de l'événement"
+    },
+    "mapping": {
+      "referenceFields": {
+        "name": "Nom",
+        "logo": "Logo",
+        "picto": "Picto",
+        "color": "Couleur"
+      },
+      "modality": {
+        "Présentiel": "presentiel",
+        "Distanciel": "distanciel",
+        "En ligne": "distanciel",
+        "Hybride": "presentiel"
+      },
+      "tariffFreeValue": "Gratuit"
     }
   }
 }
