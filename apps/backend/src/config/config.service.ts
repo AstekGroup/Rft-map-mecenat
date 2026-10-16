@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import type { AppConfig } from '@make-map/types';
+import { resolveConfigTemplates } from './config-template.util';
 
 @Injectable()
 export class AppConfigService implements OnModuleInit {
@@ -46,7 +47,10 @@ export class AppConfigService implements OnModuleInit {
 
     try {
       const raw = readFileSync(resolvedPath, 'utf-8');
-      this.config = JSON.parse(raw) as AppConfig;
+      this.config = resolveConfigTemplates(
+        JSON.parse(raw) as AppConfig,
+        (message) => this.logger.warn(message),
+      );
       this.logger.log(
         `Configuration chargée depuis ${resolvedPath} (profil: ${this.config.profile})`,
       );
