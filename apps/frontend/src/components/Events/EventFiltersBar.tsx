@@ -62,6 +62,7 @@ function FilterDropdown({ label, children, badge }: FilterDropdownProps) {
 export function EventFiltersBar({ controls }: EventFiltersBarProps) {
   const {
     filters,
+    defaultShowPastEvents,
     onUpdateFilters,
     onToggleType,
     onToggleTheme,
@@ -76,16 +77,17 @@ export function EventFiltersBar({ controls }: EventFiltersBarProps) {
   } = controls;
   const { helpers } = useConfig();
   const visibleFilters = getVisibleFiltersFor(controls);
-  const hasActiveFilters = countActiveFilters(filters) > 0;
+  const hasActiveFilters = countActiveFilters(filters, defaultShowPastEvents) > 0;
 
   // Collecte des tags actifs
   const activeTags: { key: string; label: string; onRemove: () => void }[] = [];
 
-  if (filters.showPastEvents) {
+  // Seul un écart avec le défaut est un filtre : après l'événement, afficher les passés est normal.
+  if (filters.showPastEvents !== defaultShowPastEvents) {
     activeTags.push({
       key: 'pastEvents',
-      label: 'Événements passés',
-      onRemove: () => onUpdateFilters({ showPastEvents: false }),
+      label: filters.showPastEvents ? 'Événements passés' : 'Sans les événements passés',
+      onRemove: () => onUpdateFilters({ showPastEvents: defaultShowPastEvents }),
     });
   }
 

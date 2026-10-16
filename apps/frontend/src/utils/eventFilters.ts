@@ -3,12 +3,16 @@ import type { Event } from '@/types/event';
 import { eventIntersectsYmdRange } from '@/utils/eventDateRange';
 import { countDefinedFilters } from '@/utils/filterDefinitions';
 
-/** Nombre total de filtres actifs : ceux de `FILTER_DEFINITIONS`, plus la recherche et les événements passés. */
-export function countActiveFilters(filters: EventFilters): number {
+/**
+ * Nombre total de filtres actifs : ceux de `FILTER_DEFINITIONS`, plus la recherche et les
+ * événements passés. Ces derniers ne comptent que s'ils s'écartent de `defaultShowPastEvents`
+ * (une fois l'événement terminé, les afficher est le défaut, pas un filtre).
+ */
+export function countActiveFilters(filters: EventFilters, defaultShowPastEvents = false): number {
   return (
     Number(Boolean(filters.search.trim())) +
     countDefinedFilters(filters) +
-    Number(filters.showPastEvents)
+    Number(filters.showPastEvents !== defaultShowPastEvents)
   );
 }
 

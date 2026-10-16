@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
+import { createElement, type ReactNode } from 'react';
 import { useEvents } from './useEvents';
+import { ConfigContext, buildHelpers } from './useConfig';
 import * as api from '@/services/api';
-import type { Event, LinkedTableRow } from '@/types/event';
+import type { AppConfig, Event, LinkedTableRow } from '@/types/event';
 
 vi.mock('@/services/api');
 
@@ -428,6 +430,74 @@ describe('useEvents', () => {
 
       act(() => { result.current.toggleAudience('public1'); });
       expect(result.current.events).toHaveLength(2);
+    });
+  });
+
+  describe('événements passés affichés automatiquement une fois l\'événement terminé', () => {
+    const pastEvent = () => makeEvent({ id: 'passe', date: '2020-03-01' });
+    const upcomingEvent = () => makeEvent({ id: 'avenir', date: '2035-06-03' });
+
+    const contextFor = (weekEnd: string | undefined) => {
+      const config = weekEnd
+        ? ({ app: { eventDates: { weekStart: '2020-01-01', weekEnd } } } as unknown as AppConfig)
+        : null;
+      return { config, loading: false, error: null, helpers: buildHelpers(config) };
+    };
+
+    // Le contexte est relu à chaque rendu : un test peut le changer puis relancer le rendu.
+    let context = contextFor(undefined);
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(ConfigContext.Provider, { value: context }, children);
+
+    async function load(weekEnd: string | undefined) {
+      context = contextFor(weekEnd);
+      vi.mocked(api.fetchEvents).mockResolvedValueOnce([pastEvent(), upcomingEvent()]);
+      const hook = renderHook(() => useEvents(), { wrapper });
+      await waitFor(() => expect(hook.result.current.loading).toBe(false));
+      return hook;
+    }
+
+    it("masque les passés tant que l'événement n'est pas terminé", async () => {
+      const { result } = await load('2035-12-31');
+
+      expect(result.current.controls.defaultShowPastEvents).toBe(false);
+      expect(result.current.filters.showPastEvents).toBe(false);
+      expect(result.current.events.map((e) => e.id)).toEqual(['avenir']);
+    });
+
+    it("affiche les passés par défaut une fois l'événement terminé", async () => {
+      const { result } = await load('2020-12-31');
+
+      expect(result.current.controls.defaultShowPastEvents).toBe(true);
+      expect(result.current.filters.showPastEvents).toBe(true);
+      expect(result.current.events.map((e) => e.id)).toEqual(['passe', 'avenir']);
+    });
+
+    it('garde le comportement actuel (passés masqués) quand la config ou la date de fin manque', async () => {
+      const { result } = await load(undefined);
+
+      expect(result.current.controls.defaultShowPastEvents).toBe(false);
+      expect(result.current.events.map((e) => e.id)).toEqual(['avenir']);
+    });
+
+    it("respecte le choix de l'utilisateur, puis revient au défaut à la réinitialisation", async () => {
+      const { result } = await load('2020-12-31');
+
+      act(() => result.current.updateFilters({ showPastEvents: false }));
+      expect(result.current.events.map((e) => e.id)).toEqual(['avenir']);
+
+      act(() => result.current.resetFilters());
+      expect(result.current.filters.showPastEvents).toBe(true);
+      expect(result.current.events.map((e) => e.id)).toEqual(['passe', 'avenir']);
+    });
+
+    it("prend en compte une config qui arrive après le premier rendu", async () => {
+      const { result, rerender } = await load(undefined);
+      expect(result.current.events.map((e) => e.id)).toEqual(['avenir']);
+
+      context = contextFor('2020-12-31');
+      rerender();
+      expect(result.current.events.map((e) => e.id)).toEqual(['passe', 'avenir']);
     });
   });
 

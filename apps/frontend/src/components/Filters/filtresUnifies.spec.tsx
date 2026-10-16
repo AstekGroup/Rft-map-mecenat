@@ -30,6 +30,7 @@ const rows = (prefix: string): LinkedTableRow[] => [
 function makeControls(overrides: Partial<EventFilterControls> = {}): EventFilterControls {
   return {
     filters: defaultFilters,
+    defaultShowPastEvents: false,
     onUpdateFilters: vi.fn(),
     onToggleRegion: vi.fn(),
     onToggleType: vi.fn(),
