@@ -175,7 +175,7 @@ describe('computeIsDuringWeek', () => {
     expect(during('pas-une-date')).toBe(false);
   });
 
-  it("compte un événement qui commence avant la période et la recoupe (recoupement, pas début seul)", () => {
+  it('compte un événement qui commence avant la période et la recoupe (recoupement, pas début seul)', () => {
     expect(during('2026-09-20T10:00:00', '2026-09-26T18:00:00')).toBe(true);
   });
 
@@ -192,7 +192,7 @@ describe('computeIsDuringWeek', () => {
     expect(during('2026-10-05T10:00:00', '2026-10-08T18:00:00')).toBe(false);
   });
 
-  it("compte un événement qui se termine le premier jour de la période, et un qui commence le dernier", () => {
+  it('compte un événement qui se termine le premier jour de la période, et un qui commence le dernier', () => {
     expect(during('2026-09-24T10:00:00', '2026-09-25T09:00:00')).toBe(true);
     expect(during('2026-10-04T23:00:00', '2026-10-05T08:00:00')).toBe(true);
   });
@@ -232,7 +232,12 @@ describe('computeIsDuringWeek', () => {
 
   it('lève une erreur claire si les dates de la config manquent (pas de repli)', () => {
     expect(() =>
-      computeIsDuringWeek('2026-09-30T10:00:00', undefined, undefined, undefined),
+      computeIsDuringWeek(
+        '2026-09-30T10:00:00',
+        undefined,
+        undefined,
+        undefined,
+      ),
     ).toThrow(/app\.eventDates\.weekStart/);
     expect(() =>
       computeIsDuringWeek('2026-09-30T10:00:00', undefined, START, ''),
@@ -247,10 +252,20 @@ describe('computeIsDuringWeek', () => {
 
   it('lève une erreur claire si une date de la config est invalide', () => {
     expect(() =>
-      computeIsDuringWeek('2026-09-30T10:00:00', undefined, 'pas-une-date', END),
+      computeIsDuringWeek(
+        '2026-09-30T10:00:00',
+        undefined,
+        'pas-une-date',
+        END,
+      ),
     ).toThrow(/AAAA-MM-JJ/);
     expect(() =>
-      computeIsDuringWeek('2026-09-30T10:00:00', undefined, START, '2026-13-45'),
+      computeIsDuringWeek(
+        '2026-09-30T10:00:00',
+        undefined,
+        START,
+        '2026-13-45',
+      ),
     ).toThrow(/AAAA-MM-JJ/);
   });
 });

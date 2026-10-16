@@ -212,9 +212,14 @@ describe('BaserowService : noms de colonnes et valeurs venant de la config', () 
       expect(messages[0]).toContain('Événement 1');
       expect(messages[0]).toContain('et 2 autre(s)');
 
-      service.reportMultipleFormats([...affected, { id: '6', title: 'Autre', formats: ['A', 'B'] }]);
+      service.reportMultipleFormats([
+        ...affected,
+        { id: '6', title: 'Autre', formats: ['A', 'B'] },
+      ]);
       expect(
-        warn.mock.calls.filter((c) => String(c[0]).includes('plusieurs formats')),
+        warn.mock.calls.filter((c) =>
+          String(c[0]).includes('plusieurs formats'),
+        ),
       ).toHaveLength(2);
     });
 
@@ -324,13 +329,24 @@ describe('BaserowService : noms de colonnes et valeurs venant de la config', () 
         json: () =>
           Promise.resolve({
             next,
-            results: rows.map(([id, label]) => ({ id: Number(id), [name]: label })),
+            results: rows.map(([id, label]) => ({
+              id: Number(id),
+              [name]: label,
+            })),
           }),
       });
     const fetchMock = jest
       .fn()
       // Ordre voulu par les organisateurs : ni alphabétique, ni par identifiant.
-      .mockReturnValueOnce(page([['3', 'Zéro déchet'], ['1', 'Alimentation']], 'page-2'))
+      .mockReturnValueOnce(
+        page(
+          [
+            ['3', 'Zéro déchet'],
+            ['1', 'Alimentation'],
+          ],
+          'page-2',
+        ),
+      )
       .mockReturnValueOnce(page([['2', 'Autres']], null));
     const originalFetch = global.fetch;
     global.fetch = fetchMock as unknown as typeof fetch;

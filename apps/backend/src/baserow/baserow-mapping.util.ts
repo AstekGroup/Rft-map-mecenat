@@ -156,7 +156,8 @@ export function computeIsDuringWeek(
   const eventStart = parseDateTime(startDateString).date;
   if (!eventStart) return false;
   const parsedEnd = parseDateTime(endDateString).date;
-  const eventEnd = parsedEnd && parsedEnd >= eventStart ? parsedEnd : eventStart;
+  const eventEnd =
+    parsedEnd && parsedEnd >= eventStart ? parsedEnd : eventStart;
   return eventStart <= periodEnd && eventEnd >= periodStart;
 }
 
