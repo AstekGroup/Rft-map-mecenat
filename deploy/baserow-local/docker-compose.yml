@@ -1,0 +1,18 @@
+# Baserow LOCAL pour le développement et l'audit (jamais en production).
+# Démarrage :  docker compose -f deploy/baserow-local/docker-compose.yml up -d
+# URL        :  http://localhost:8088   (BASEROW_API_URL du backend)
+# Réinit.    :  docker compose -f deploy/baserow-local/docker-compose.yml down -v
+services:
+  baserow:
+    image: baserow/baserow:2.4.1
+    container_name: lgsv-baserow-local
+    restart: unless-stopped
+    ports:
+      - "8088:80"
+    environment:
+      BASEROW_PUBLIC_URL: "http://localhost:8088"
+    volumes:
+      - baserow_local_data:/baserow/data
+
+volumes:
+  baserow_local_data:
