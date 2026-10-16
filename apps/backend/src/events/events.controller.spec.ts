@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { EventsController } from './events.controller';
 import { EventsService } from './events.service';
 import type { Event, LinkedTableRow } from '@make-map/types';
@@ -50,8 +51,10 @@ const mockPublic: LinkedTableRow = {
 describe('EventsController', () => {
   let controller: EventsController;
   let eventsService: jest.Mocked<EventsService>;
+  let env: Record<string, string | undefined>;
 
   beforeEach(async () => {
+    env = {};
     eventsService = {
       findAll: jest.fn(),
       findAllPartners: jest.fn(),
@@ -63,7 +66,13 @@ describe('EventsController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [EventsController],
-      providers: [{ provide: EventsService, useValue: eventsService }],
+      providers: [
+        { provide: EventsService, useValue: eventsService },
+        {
+          provide: ConfigService,
+          useValue: { get: (key: string) => env[key] },
+        },
+      ],
     }).compile();
 
     controller = module.get<EventsController>(EventsController);
@@ -78,7 +87,33 @@ describe('EventsController', () => {
       expect(result).toEqual([mockEvent]);
     });
 
-    it('passe devMode=true quand le query param est "true"', async () => {
+    it('ignore ?devMode=true par défaut (ALLOW_DEV_MODE absent)', async () => {
+      eventsService.findAll.mockResolvedValueOnce([mockEvent]);
+
+      await controller.findAll('true');
+      expect(eventsService.findAll).toHaveBeenCalledWith(false);
+    });
+
+    it('ignore ?devMode=true si ALLOW_DEV_MODE n\'est pas "true"', async () => {
+      env.ALLOW_DEV_MODE = 'false';
+      eventsService.findAll.mockResolvedValueOnce([mockEvent]);
+
+      await controller.findAll('true');
+      expect(eventsService.findAll).toHaveBeenCalledWith(false);
+    });
+
+    it('ignore ?devMode=true en production même si ALLOW_DEV_MODE=true', async () => {
+      env.ALLOW_DEV_MODE = 'true';
+      env.NODE_ENV = 'production';
+      eventsService.findAll.mockResolvedValueOnce([mockEvent]);
+
+      await controller.findAll('true');
+      expect(eventsService.findAll).toHaveBeenCalledWith(false);
+    });
+
+    it('honore ?devMode=true si ALLOW_DEV_MODE=true hors production', async () => {
+      env.ALLOW_DEV_MODE = 'true';
+      env.NODE_ENV = 'development';
       eventsService.findAll.mockResolvedValueOnce([mockEvent]);
 
       await controller.findAll('true');
@@ -150,7 +185,15 @@ describe('EventsController', () => {
       );
     });
 
-    it('passe devMode=true pour findOne', async () => {
+    it('ignore ?devMode=true pour findOne par défaut', async () => {
+      eventsService.findOne.mockResolvedValueOnce(mockEvent);
+
+      await controller.findOne('rec123', 'true');
+      expect(eventsService.findOne).toHaveBeenCalledWith('rec123', false);
+    });
+
+    it('passe devMode=true pour findOne si ALLOW_DEV_MODE=true hors production', async () => {
+      env.ALLOW_DEV_MODE = 'true';
       eventsService.findOne.mockResolvedValueOnce(mockEvent);
 
       await controller.findOne('rec123', 'true');

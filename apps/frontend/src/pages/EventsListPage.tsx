@@ -1,6 +1,5 @@
 import { useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { EventType, TargetAudience } from '@/types/event';
 import { useEvents, type EventFilters } from '@/hooks';
 import { EventListView, EventFiltersBar } from '@/components/Events';
 import { Loader2, Home, Map } from 'lucide-react';
@@ -138,11 +137,11 @@ export function EventsListPage() {
         filters={filters}
         onUpdateFilters={handleUpdateFilters}
         onToggleRegion={toggleRegion}
-        onToggleType={(type) => toggleType(type as EventType)}
+        onToggleType={toggleType}
         onToggleTheme={toggleTheme}
         onTogglePartner={togglePartner}
         availablePartners={availablePartners}
-        onToggleAudience={(audience) => toggleAudience(audience as TargetAudience)}
+        onToggleAudience={toggleAudience}
         onResetFilters={handleResetFilters}
         availableThemes={availableThemes}
         availableFormats={availableFormats}
