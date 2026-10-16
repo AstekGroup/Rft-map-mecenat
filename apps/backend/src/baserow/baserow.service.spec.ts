@@ -9,7 +9,9 @@ type PrivateFetchRecords = {
 
 function buildService(
   env: Record<string, string | undefined>,
-  baserowConfig: Record<string, unknown> = { moderationVisibleValue: 'Accepté' },
+  baserowConfig: Record<string, unknown> = {
+    moderationVisibleValue: 'Accepté',
+  },
 ) {
   const configService = {
     get: (key: string) => env[key],
@@ -52,7 +54,7 @@ describe('BaserowService.fetchRecords (modération)', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('autorise l\'absence du champ de modération en devMode', async () => {
+  it("autorise l'absence du champ de modération en devMode", async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({ results: [{ id: 1 }], next: null }),

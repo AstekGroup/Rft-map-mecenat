@@ -75,7 +75,7 @@ function isDict(value: unknown): value is Dict {
 }
 
 function has(object: object, key: string): boolean {
-  return Object.prototype.hasOwnProperty.call(object, key);
+  return Object.hasOwn(object, key);
 }
 
 function isFilled(value: unknown): value is string {
@@ -128,7 +128,9 @@ export function validateAppConfig(config: unknown): ConfigValidationResult {
 
 function validateApp(app: unknown, errors: string[], warnings: string[]): void {
   if (!isDict(app)) {
-    errors.push('app : section absente (nom, nom court et dates de l\'événement).');
+    errors.push(
+      "app : section absente (nom, nom court et dates de l'événement).",
+    );
     return;
   }
   for (const key of ['name', 'shortName']) {
@@ -138,7 +140,9 @@ function validateApp(app: unknown, errors: string[], warnings: string[]): void {
   }
   for (const key of ['description', 'url', 'locale']) {
     if (app[key] !== undefined && typeof app[key] !== 'string') {
-      warnings.push(`app.${key} : doit être une chaîne (reçu : ${show(app[key])}).`);
+      warnings.push(
+        `app.${key} : doit être une chaîne (reçu : ${show(app[key])}).`,
+      );
     }
   }
 
@@ -200,17 +204,23 @@ function validateTheme(theme: unknown, errors: string[]): void {
       theme.fonts.googleFontsUrl !== undefined &&
       !isFilled(theme.fonts.googleFontsUrl)
     ) {
-      errors.push('theme.fonts.googleFontsUrl : doit être une URL non vide si elle est présente.');
+      errors.push(
+        'theme.fonts.googleFontsUrl : doit être une URL non vide si elle est présente.',
+      );
     }
   }
 
   if (theme.borderRadius !== undefined) {
     if (!isDict(theme.borderRadius)) {
-      errors.push('theme.borderRadius : doit être un objet { nom: "valeur CSS" }.');
+      errors.push(
+        'theme.borderRadius : doit être un objet { nom: "valeur CSS" }.',
+      );
     } else {
       for (const [name, value] of Object.entries(theme.borderRadius)) {
         if (!isFilled(value)) {
-          errors.push(`theme.borderRadius.${name} : valeur CSS attendue (reçu : ${show(value)}).`);
+          errors.push(
+            `theme.borderRadius.${name} : valeur CSS attendue (reçu : ${show(value)}).`,
+          );
         }
       }
     }
@@ -230,7 +240,9 @@ function validateTexts(texts: unknown, errors: string[]): void {
     }
     for (const [key, value] of Object.entries(entries)) {
       if (typeof value !== 'string') {
-        errors.push(`texts.${section}.${key} : doit être une chaîne (reçu : ${show(value)}).`);
+        errors.push(
+          `texts.${section}.${key} : doit être une chaîne (reçu : ${show(value)}).`,
+        );
       }
     }
   }
@@ -243,7 +255,9 @@ function validateFilters(filters: unknown, errors: string[]): void {
   }
   const modes = filters.dateFilterModes;
   if (!Array.isArray(modes)) {
-    errors.push('filters.dateFilterModes : doit être un tableau de { mode, label }.');
+    errors.push(
+      'filters.dateFilterModes : doit être un tableau de { mode, label }.',
+    );
     return;
   }
   modes.forEach((entry, index) => {
@@ -261,13 +275,15 @@ function validateBaserow(
   warnings: string[],
 ): void {
   if (!isDict(baserow)) {
-    errors.push('baserow : section absente (correspondance avec les colonnes Baserow).');
+    errors.push(
+      'baserow : section absente (correspondance avec les colonnes Baserow).',
+    );
     return;
   }
 
   if (!isFilled(baserow.moderationVisibleValue)) {
     errors.push(
-      'baserow.moderationVisibleValue : valeur de modération qui rend un événement public, absente ou vide (sans elle, rien n\'est publié).',
+      "baserow.moderationVisibleValue : valeur de modération qui rend un événement public, absente ou vide (sans elle, rien n'est publié).",
     );
   }
 
@@ -281,7 +297,9 @@ function validateFieldMapping(
   warnings: string[],
 ): void {
   if (!isDict(mapping)) {
-    errors.push('baserow.fieldMapping : section absente (rôle → nom de colonne Baserow).');
+    errors.push(
+      'baserow.fieldMapping : section absente (rôle → nom de colonne Baserow).',
+    );
     return;
   }
 
@@ -342,7 +360,9 @@ function validateMapping(
     }
     for (const key of Object.keys(reference)) {
       if (!has(REFERENCE_FIELD_ROLES, key)) {
-        warnings.push(`baserow.mapping.referenceFields.${key} : rôle inconnu, ignoré.`);
+        warnings.push(
+          `baserow.mapping.referenceFields.${key} : rôle inconnu, ignoré.`,
+        );
       }
     }
   }

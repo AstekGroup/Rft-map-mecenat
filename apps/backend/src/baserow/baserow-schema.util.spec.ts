@@ -7,7 +7,8 @@ import {
   suggestColumn,
 } from './baserow-schema.util';
 
-const FIELD_MAPPING: BaserowFieldMapping = buildTestConfig().baserow.fieldMapping;
+const FIELD_MAPPING: BaserowFieldMapping =
+  buildTestConfig().baserow.fieldMapping;
 const ALL_COLUMNS = ['id', 'order', ...Object.values(FIELD_MAPPING)];
 
 describe('checkEventColumns', () => {
@@ -15,9 +16,12 @@ describe('checkEventColumns', () => {
     expect(checkEventColumns(ALL_COLUMNS, FIELD_MAPPING)).toEqual([]);
   });
 
-  it("ignore les colonnes en trop (champs de formulaire non utilisés)", () => {
+  it('ignore les colonnes en trop (champs de formulaire non utilisés)', () => {
     expect(
-      checkEventColumns([...ALL_COLUMNS, 'Respect de la charte'], FIELD_MAPPING),
+      checkEventColumns(
+        [...ALL_COLUMNS, 'Respect de la charte'],
+        FIELD_MAPPING,
+      ),
     ).toEqual([]);
   });
 
@@ -37,13 +41,15 @@ describe('checkEventColumns', () => {
     ];
     const messages = checkEventColumns(columns, FIELD_MAPPING);
 
-    expect(messages[0]).toContain('Colonne proche présente dans Baserow : « commune du lieu »');
+    expect(messages[0]).toContain(
+      'Colonne proche présente dans Baserow : « commune du lieu »',
+    );
   });
 
   it('liste les colonnes non utilisées quand il en manque, pour repérer le renommage', () => {
     const columns = [
       ...ALL_COLUMNS.filter((c) => c !== FIELD_MAPPING.city),
-      'Lieu de l\'event',
+      "Lieu de l'event",
     ];
     const messages = checkEventColumns(columns, FIELD_MAPPING);
 
@@ -63,7 +69,9 @@ describe('checkEventColumns', () => {
   });
 
   it('distingue la casse et les accents (un nom doit être identique à celui de Baserow)', () => {
-    const columns = ALL_COLUMNS.map((c) => (c === FIELD_MAPPING.city ? 'commune' : c));
+    const columns = ALL_COLUMNS.map((c) =>
+      c === FIELD_MAPPING.city ? 'commune' : c,
+    );
     const messages = checkEventColumns(columns, FIELD_MAPPING);
     expect(messages[0]).toContain('introuvable');
     expect(messages[0]).toContain('« commune »'); // proposé comme colonne proche
@@ -89,7 +97,10 @@ describe('checkReferenceColumns', () => {
     const messages = checkReferenceColumns(
       [
         { label: 'FORMATS', columns: ['id', REF.name, REF.picto, REF.color] },
-        { label: 'PARTENAIRES', columns: ['id', 'Nom du partenaire', REF.logo] },
+        {
+          label: 'PARTENAIRES',
+          columns: ['id', 'Nom du partenaire', REF.logo],
+        },
       ],
       REF,
     );
@@ -115,15 +126,19 @@ describe('checkReferenceColumns', () => {
 });
 
 describe('suggestColumn et normalizeColumnName', () => {
-  it('ignore la casse, les accents et le type d\'apostrophe', () => {
-    expect(normalizeColumnName("  Nom de l’ÉVÉNEMENT ")).toBe("nom de l'evenement");
-    expect(suggestColumn("Nom de l'événement", ["nom de l’evenement"])).toBe(
-      "nom de l’evenement",
+  it("ignore la casse, les accents et le type d'apostrophe", () => {
+    expect(normalizeColumnName('  Nom de l’ÉVÉNEMENT ')).toBe(
+      "nom de l'evenement",
+    );
+    expect(suggestColumn("Nom de l'événement", ['nom de l’evenement'])).toBe(
+      'nom de l’evenement',
     );
   });
 
   it('ne propose rien de trop éloigné', () => {
-    expect(suggestColumn('Ville du lieu', ['Tarif', 'Montant'])).toBeUndefined();
+    expect(
+      suggestColumn('Ville du lieu', ['Tarif', 'Montant']),
+    ).toBeUndefined();
   });
 
   it('ne rapproche pas des noms trop courts', () => {

@@ -27,7 +27,9 @@ export function suggestColumn(
     const candidate = normalizeColumnName(column);
     if (candidate === target) return true;
     const [short, long] =
-      candidate.length < target.length ? [candidate, target] : [target, candidate];
+      candidate.length < target.length
+        ? [candidate, target]
+        : [target, candidate];
     return short.length >= 4 && long.includes(short);
   });
 }
@@ -38,7 +40,9 @@ function quote(name: string): string {
 
 function didYouMean(missing: string, available: readonly string[]): string {
   const suggestion = suggestColumn(missing, available);
-  return suggestion ? ` Colonne proche présente dans Baserow : ${quote(suggestion)}.` : '';
+  return suggestion
+    ? ` Colonne proche présente dans Baserow : ${quote(suggestion)}.`
+    : '';
 }
 
 /**

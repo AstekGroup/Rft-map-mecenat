@@ -63,7 +63,7 @@ export class AppConfigService implements OnModuleInit {
     try {
       parsed = JSON.parse(readFileSync(resolvedPath, 'utf-8'));
     } catch (error) {
-      const message = `Config illisible (${resolvedPath}) : ${error.message}`;
+      const message = `Config illisible (${resolvedPath}) : ${error instanceof Error ? error.message : String(error)}`;
       this.logger.error(message);
       throw new Error(message);
     }

@@ -31,6 +31,9 @@ import {
 import { GeocodingService } from '../geocoding/geocoding.service';
 import { AppConfigService } from '../config/config.service';
 
+const errorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
+
 /** Variables d'environnement (sans le suffixe `_ID`) des tables de référence. */
 const REFERENCE_TABLES = [
   'BASEROW_PARTNERS_TABLE',
@@ -117,7 +120,7 @@ export class BaserowService implements OnApplicationBootstrap {
           }
         } catch (error) {
           this.logger.warn(
-            `Contrôle du schéma impossible pour la table ${envName} : ${error.message}`,
+            `Contrôle du schéma impossible pour la table ${envName} : ${errorMessage(error)}`,
           );
         }
       }
@@ -129,13 +132,15 @@ export class BaserowService implements OnApplicationBootstrap {
       );
     } catch (error) {
       this.logger.warn(
-        `Contrôle du schéma Baserow impossible : ${error.message}`,
+        `Contrôle du schéma Baserow impossible : ${errorMessage(error)}`,
       );
       return issues;
     }
 
     if (issues.length === 0) {
-      this.logger.log('Contrôle du schéma Baserow : toutes les colonnes de la config sont présentes.');
+      this.logger.log(
+        'Contrôle du schéma Baserow : toutes les colonnes de la config sont présentes.',
+      );
     }
     for (const issue of issues) this.logger.error(issue);
     return issues;
@@ -170,7 +175,10 @@ export class BaserowService implements OnApplicationBootstrap {
   private checkRecordColumns(record: BaserowRecord): void {
     const fieldMapping = this.appConfig.get()?.baserow?.fieldMapping;
     if (!fieldMapping) return;
-    for (const message of checkEventColumns(Object.keys(record), fieldMapping)) {
+    for (const message of checkEventColumns(
+      Object.keys(record),
+      fieldMapping,
+    )) {
       this.errorOnce(`columns:${message}`, message);
     }
   }
@@ -307,7 +315,8 @@ export class BaserowService implements OnApplicationBootstrap {
         const data =
           (await response.json()) as BaserowResponse<BaserowLinkedTableRecord>;
 
-        const referenceFields = this.appConfig.safe.baserow.mapping.referenceFields;
+        const referenceFields =
+          this.appConfig.safe.baserow.mapping.referenceFields;
         if (
           data.results.length > 0 &&
           !(referenceFields.name in data.results[0])

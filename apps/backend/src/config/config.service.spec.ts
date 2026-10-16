@@ -22,13 +22,19 @@ describe('AppConfigService', () => {
   });
 
   function serviceFor(envPath: string | undefined): AppConfigService {
-    const env = { get: (key: string) => (key === 'APP_CONFIG_PATH' ? envPath : undefined) };
+    const env = {
+      get: (key: string) => (key === 'APP_CONFIG_PATH' ? envPath : undefined),
+    };
     return new AppConfigService(env as unknown as ConfigService);
   }
 
   function write(content: unknown, name = 'app.config.json'): string {
     const path = join(dir, name);
-    writeFileSync(path, typeof content === 'string' ? content : JSON.stringify(content), 'utf-8');
+    writeFileSync(
+      path,
+      typeof content === 'string' ? content : JSON.stringify(content),
+      'utf-8',
+    );
     return path;
   }
 
@@ -59,8 +65,12 @@ describe('AppConfigService', () => {
       const service = serviceFor(write(config));
 
       expect(() => service.onModuleInit()).toThrow(/Configuration invalide/);
-      expect(() => service.onModuleInit()).toThrow(/app\.eventDates\.weekStart/);
-      expect(() => service.onModuleInit()).toThrow(/baserow\.fieldMapping\.city/);
+      expect(() => service.onModuleInit()).toThrow(
+        /app\.eventDates\.weekStart/,
+      );
+      expect(() => service.onModuleInit()).toThrow(
+        /baserow\.fieldMapping\.city/,
+      );
       expect(service.get()).toBeNull();
     });
 
@@ -71,7 +81,9 @@ describe('AppConfigService', () => {
       const service = serviceFor(write(config));
 
       expect(() => service.onModuleInit()).toThrow();
-      expect(error.mock.calls.some((c) => String(c[0]).includes('tariffFreeValue'))).toBe(true);
+      expect(
+        error.mock.calls.some((c) => String(c[0]).includes('tariffFreeValue')),
+      ).toBe(true);
     });
 
     it('journalise les avertissements sans refuser de démarrer', () => {
@@ -83,10 +95,12 @@ describe('AppConfigService', () => {
       service.onModuleInit();
 
       expect(service.get()).not.toBeNull();
-      expect(warn.mock.calls.some((c) => String(c[0]).includes('ancienneCle'))).toBe(true);
+      expect(
+        warn.mock.calls.some((c) => String(c[0]).includes('ancienneCle')),
+      ).toBe(true);
     });
 
-    it('refuse un fichier qui n\'est pas du JSON', () => {
+    it("refuse un fichier qui n'est pas du JSON", () => {
       const service = serviceFor(write('{ pas du json'));
       expect(() => service.onModuleInit()).toThrow(/illisible/);
     });
@@ -95,7 +109,9 @@ describe('AppConfigService', () => {
   describe('APP_CONFIG_PATH', () => {
     it('refuse un chemin qui ne désigne aucun fichier (pas de repli silencieux sur la config par défaut)', () => {
       const service = serviceFor(join(dir, 'inexistant.json'));
-      expect(() => service.onModuleInit()).toThrow(/APP_CONFIG_PATH.*inexistant\.json/);
+      expect(() => service.onModuleInit()).toThrow(
+        /APP_CONFIG_PATH.*inexistant\.json/,
+      );
     });
   });
 });

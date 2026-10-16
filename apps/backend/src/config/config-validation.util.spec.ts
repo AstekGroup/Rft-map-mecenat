@@ -22,15 +22,15 @@ describe('validateAppConfig', () => {
     });
   });
 
-  it.each(['app.config.json', 'docs/audit/fixtures/app.config.second-map.json'])(
-    'accepte la config du dépôt %s',
-    (file) => {
-      const raw = JSON.parse(
-        readFileSync(resolve(__dirname, '../../../../', file), 'utf-8'),
-      );
-      expect(validateAppConfig(raw).errors).toEqual([]);
-    },
-  );
+  it.each([
+    'app.config.json',
+    'docs/audit/fixtures/app.config.second-map.json',
+  ])('accepte la config du dépôt %s', (file) => {
+    const raw = JSON.parse(
+      readFileSync(resolve(__dirname, '../../../../', file), 'utf-8'),
+    );
+    expect(validateAppConfig(raw).errors).toEqual([]);
+  });
 
   it("refuse autre chose qu'un objet", () => {
     expect(validateAppConfig(null).errors).toHaveLength(1);
@@ -60,17 +60,23 @@ describe('validateAppConfig', () => {
       expect(errors.join('\n')).toMatch(/app\.eventDates/);
     });
 
-    it.each(['2026-9-21', '21/09/2026', '2026-13-45', '2026-02-30', 20260921, ''])(
-      'refuse la date %p',
-      (value) => {
-        const { errors } = validateAppConfig(
-          configWith((c) => {
-            c.app.eventDates.weekStart = value;
-          }),
-        );
-        expect(errors.join('\n')).toMatch(/app\.eventDates\.weekStart.*AAAA-MM-JJ/);
-      },
-    );
+    it.each([
+      '2026-9-21',
+      '21/09/2026',
+      '2026-13-45',
+      '2026-02-30',
+      20260921,
+      '',
+    ])('refuse la date %p', (value) => {
+      const { errors } = validateAppConfig(
+        configWith((c) => {
+          c.app.eventDates.weekStart = value;
+        }),
+      );
+      expect(errors.join('\n')).toMatch(
+        /app\.eventDates\.weekStart.*AAAA-MM-JJ/,
+      );
+    });
 
     it('refuse une fin avant le début', () => {
       const { errors } = validateAppConfig(
@@ -83,14 +89,19 @@ describe('validateAppConfig', () => {
   });
 
   describe('theme', () => {
-    it.each(['rouge', '#12', '#GGGGGG', 'AE3B5D', 255])('refuse la couleur %p', (value) => {
-      const { errors } = validateAppConfig(
-        configWith((c) => {
-          c.theme.colors['primary-dark'] = value;
-        }),
-      );
-      expect(errors.join('\n')).toMatch(/theme\.colors\.primary-dark.*hexadécimale/);
-    });
+    it.each(['rouge', '#12', '#GGGGGG', 'AE3B5D', 255])(
+      'refuse la couleur %p',
+      (value) => {
+        const { errors } = validateAppConfig(
+          configWith((c) => {
+            c.theme.colors['primary-dark'] = value;
+          }),
+        );
+        expect(errors.join('\n')).toMatch(
+          /theme\.colors\.primary-dark.*hexadécimale/,
+        );
+      },
+    );
 
     it('accepte les formats hexadécimaux courts et avec transparence', () => {
       const { errors } = validateAppConfig(
@@ -130,7 +141,10 @@ describe('validateAppConfig', () => {
     it('vérifie les modes du filtre de période', () => {
       const { errors } = validateAppConfig(
         configWith((c) => {
-          c.filters.dateFilterModes = [{ mode: 'all', label: 'Toutes' }, { mode: 'x' }];
+          c.filters.dateFilterModes = [
+            { mode: 'all', label: 'Toutes' },
+            { mode: 'x' },
+          ];
         }),
       );
       expect(errors.join('\n')).toMatch(/dateFilterModes\[1\]/);
@@ -148,15 +162,18 @@ describe('validateAppConfig', () => {
       expect(errors[0]).toContain(`baserow.fieldMapping.${role}`);
     });
 
-    it.each(REFERENCE_FIELD_KEYS)('exige la colonne referenceFields.%s', (role) => {
-      const { errors } = validateAppConfig(
-        configWith((c) => {
-          c.baserow.mapping.referenceFields[role] = ' ';
-        }),
-      );
-      expect(errors).toHaveLength(1);
-      expect(errors[0]).toContain(`baserow.mapping.referenceFields.${role}`);
-    });
+    it.each(REFERENCE_FIELD_KEYS)(
+      'exige la colonne referenceFields.%s',
+      (role) => {
+        const { errors } = validateAppConfig(
+          configWith((c) => {
+            c.baserow.mapping.referenceFields[role] = ' ';
+          }),
+        );
+        expect(errors).toHaveLength(1);
+        expect(errors[0]).toContain(`baserow.mapping.referenceFields.${role}`);
+      },
+    );
 
     it('exige la valeur de modération visible', () => {
       const { errors } = validateAppConfig(
@@ -208,7 +225,7 @@ describe('validateAppConfig', () => {
       expect(warnings.join('\n')).toMatch(/plusieurs rôles \(address, city\)/);
     });
 
-    it('refuse un nom de colonne qui n\'est pas du texte', () => {
+    it("refuse un nom de colonne qui n'est pas du texte", () => {
       const { errors } = validateAppConfig(
         configWith((c) => {
           c.baserow.fieldMapping.city = 42;

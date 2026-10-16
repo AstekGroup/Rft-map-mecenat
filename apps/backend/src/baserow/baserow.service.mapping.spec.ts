@@ -54,7 +54,9 @@ describe('BaserowService : noms de colonnes et valeurs venant de la config', () 
   let warn: jest.SpyInstance;
 
   beforeEach(() => {
-    warn = jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+    warn = jest
+      .spyOn(Logger.prototype, 'warn')
+      .mockImplementation(() => undefined);
   });
 
   afterEach(() => {
@@ -95,7 +97,8 @@ describe('BaserowService : noms de colonnes et valeurs venant de la config', () 
 
   it('donne une valeur vide et un avertissement unique pour un rôle absent de la config', () => {
     const config = buildTestConfig();
-    delete (config.baserow.fieldMapping as Partial<BaserowFieldMapping>).venueName;
+    delete (config.baserow.fieldMapping as Partial<BaserowFieldMapping>)
+      .venueName;
     const service = buildService(config);
 
     const first = transform(service, { id: 1, Lieu: 'Salle' });
@@ -103,12 +106,17 @@ describe('BaserowService : noms de colonnes et valeurs venant de la config', () 
 
     expect(first.venueName).toBeUndefined();
     const messages = warn.mock.calls.map((c) => String(c[0]));
-    expect(messages.filter((m) => m.includes('baserow.fieldMapping.venueName'))).toHaveLength(1);
+    expect(
+      messages.filter((m) => m.includes('baserow.fieldMapping.venueName')),
+    ).toHaveLength(1);
   });
 
   it('traduit la modalité avec les valeurs de la config et signale une valeur inconnue', () => {
     const config = buildTestConfig();
-    config.baserow.mapping.modality = { 'Sur place': 'presentiel', 'À distance': 'distanciel' };
+    config.baserow.mapping.modality = {
+      'Sur place': 'presentiel',
+      'À distance': 'distanciel',
+    };
     const service = buildService(config);
     const modalityColumn = config.baserow.fieldMapping.modality;
 
@@ -124,7 +132,9 @@ describe('BaserowService : noms de colonnes et valeurs venant de la config', () 
     });
     expect(unknown.modality).toBe('presentiel');
     expect(
-      warn.mock.calls.some((c) => String(c[0]).includes('baserow.mapping.modality')),
+      warn.mock.calls.some((c) =>
+        String(c[0]).includes('baserow.mapping.modality'),
+      ),
     ).toBe(true);
   });
 
@@ -202,7 +212,8 @@ describe('BaserowService : noms de colonnes et valeurs venant de la config', () 
     });
     const fetchMock = jest.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ next: null, results: [{ id: 1, Intitulé: 'X' }] }),
+      json: () =>
+        Promise.resolve({ next: null, results: [{ id: 1, Intitulé: 'X' }] }),
     });
     const originalFetch = global.fetch;
     global.fetch = fetchMock as unknown as typeof fetch;

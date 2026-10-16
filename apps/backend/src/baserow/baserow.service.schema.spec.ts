@@ -36,14 +36,19 @@ function mockTables(tables: Record<string, string[] | null | 'erreur'>) {
     const tableId = /rows\/table\/(\d+)\//.exec(url)?.[1] as string;
     const columns = tables[tableId];
     if (columns === 'erreur') {
-      return Promise.resolve({ ok: false, status: 500, statusText: 'Server Error' });
+      return Promise.resolve({
+        ok: false,
+        status: 500,
+        statusText: 'Server Error',
+      });
     }
     const results = columns
       ? [Object.fromEntries([['id', 1], ...columns.map((c) => [c, null])])]
       : [];
     return Promise.resolve({
       ok: true,
-      json: () => Promise.resolve({ count: results.length, next: null, results }),
+      json: () =>
+        Promise.resolve({ count: results.length, next: null, results }),
     });
   });
   global.fetch = mock as unknown as typeof fetch;
@@ -69,8 +74,12 @@ describe('BaserowService.checkSchema', () => {
       '5': [ref.name, ref.picto, ref.color],
     };
     jest.spyOn(Logger.prototype, 'log').mockImplementation(() => undefined);
-    warn = jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
-    error = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    warn = jest
+      .spyOn(Logger.prototype, 'warn')
+      .mockImplementation(() => undefined);
+    error = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
   });
 
   afterEach(() => {
@@ -93,20 +102,24 @@ describe('BaserowService.checkSchema', () => {
 
     const issues = await buildService(config).checkSchema();
 
-    expect(issues.join('\n')).toContain(`« ${config.baserow.fieldMapping.city} » (baserow.fieldMapping.city)`);
+    expect(issues.join('\n')).toContain(
+      `« ${config.baserow.fieldMapping.city} » (baserow.fieldMapping.city)`,
+    );
     expect(issues.join('\n')).toContain("« Commune de l'event »");
     expect(error).toHaveBeenCalled();
   });
 
   it('suit la config : la même colonne renommée ne pose plus de problème une fois la config adaptée', async () => {
     config.baserow.fieldMapping.city = "Commune de l'event";
-    const renamed = eventColumns.map((c) => (c === 'Commune' ? "Commune de l'event" : c));
+    const renamed = eventColumns.map((c) =>
+      c === 'Commune' ? "Commune de l'event" : c,
+    );
     mockTables({ '1': renamed, ...referenceTables });
 
     await expect(buildService(config).checkSchema()).resolves.toEqual([]);
   });
 
-  it('signale la colonne du nom absente d\'une table de référence', async () => {
+  it("signale la colonne du nom absente d'une table de référence", async () => {
     referenceTables['4'] = ['Autre nom'];
     mockTables({ '1': eventColumns, ...referenceTables });
 
@@ -120,16 +133,24 @@ describe('BaserowService.checkSchema', () => {
     mockTables({ '1': null, ...referenceTables });
 
     await expect(buildService(config).checkSchema()).resolves.toEqual([]);
-    expect(warn.mock.calls.some((c) => String(c[0]).includes('Table des événements vide'))).toBe(true);
+    expect(
+      warn.mock.calls.some((c) =>
+        String(c[0]).includes('Table des événements vide'),
+      ),
+    ).toBe(true);
   });
 
   it('ne lève jamais quand Baserow répond en erreur ou est injoignable', async () => {
     mockTables({ '1': 'erreur', ...referenceTables });
     await expect(buildService(config).checkSchema()).resolves.toEqual([]);
 
-    global.fetch = jest.fn().mockRejectedValue(new Error('ECONNREFUSED')) as unknown as typeof fetch;
+    global.fetch = jest
+      .fn()
+      .mockRejectedValue(new Error('ECONNREFUSED')) as unknown as typeof fetch;
     await expect(buildService(config).checkSchema()).resolves.toEqual([]);
-    expect(warn.mock.calls.some((c) => String(c[0]).includes('impossible'))).toBe(true);
+    expect(
+      warn.mock.calls.some((c) => String(c[0]).includes('impossible')),
+    ).toBe(true);
   });
 
   it('signale une variable de table de référence absente et poursuit le contrôle', async () => {
@@ -137,7 +158,11 @@ describe('BaserowService.checkSchema', () => {
     mockTables({ '1': eventColumns, ...referenceTables });
 
     await expect(buildService(config, env).checkSchema()).resolves.toEqual([]);
-    expect(warn.mock.calls.some((c) => String(c[0]).includes('BASEROW_FORMATS_TABLE_ID'))).toBe(true);
+    expect(
+      warn.mock.calls.some((c) =>
+        String(c[0]).includes('BASEROW_FORMATS_TABLE_ID'),
+      ),
+    ).toBe(true);
   });
 
   it('signale une colonne renommée pendant que le serveur tourne, une seule fois par écart', () => {
