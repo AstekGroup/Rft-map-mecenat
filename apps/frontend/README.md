@@ -50,7 +50,7 @@ src/
 │   ├── Sidebar/       # Sidebar avec liste et recherche
 │   ├── Filters/       # Panneau de filtres
 │   ├── Events/        # Vue liste événements et filtres
-│   ├── Layout/        # Header et Footer
+│   ├── Layout/        # ConfigProvider (thème depuis /api/config)
 │   └── UI/            # Composants UI réutilisables
 ├── hooks/
 │   ├── useEvents.ts   # Gestion des événements et filtres
@@ -65,8 +65,6 @@ src/
 │   ├── api.ts              # Service API backend + fallback mock
 │   ├── geocoding.ts        # Géocodage via api-adresse.data.gouv.fr
 │   └── baserowMapping.ts  # Mapping champs Baserow → types internes
-├── data/
-│   └── mockEvents.ts  # Données mockées (fallback si backend non configuré)
 ├── types/
 │   └── event.ts       # Types TypeScript
 └── styles/
