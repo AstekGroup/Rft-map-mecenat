@@ -28,6 +28,10 @@ import {
   checkReferenceColumns,
   type ReferenceTableColumns,
 } from './baserow-schema.util';
+import {
+  ReferenceTableError,
+  type ReferenceTableStatus,
+} from './baserow.errors';
 import { GeocodingService } from '../geocoding/geocoding.service';
 import { AppConfigService } from '../config/config.service';
 
@@ -59,6 +63,8 @@ export class BaserowService implements OnApplicationBootstrap {
   private readonly logger = new Logger(BaserowService.name);
   /** Avertissements déjà émis (un seul message par cause, pas un par ligne). */
   private readonly warned = new Set<string>();
+  /** Dernier état de lecture de chaque table de référence (voir `getReferenceStatus`). */
+  private readonly referenceStatus = new Map<string, ReferenceTableStatus>();
 
   constructor(
     private readonly configService: ConfigService,
@@ -205,20 +211,23 @@ export class BaserowService implements OnApplicationBootstrap {
     );
 
     // 1. Récupérer les partenaires
-    const partnersMap = await this.fetchLinkedTableMap(
-      'BASEROW_PARTNERS_TABLE',
-    );
+    const partnersMap = await this.loadReferenceMap('BASEROW_PARTNERS_TABLE');
 
     // 2. Récupérer les thématiques
-    const themesMap = await this.fetchLinkedTableMap(
-      'BASEROW_THEMATIQUES_TABLE',
-    );
+    const themesMap = await this.loadReferenceMap('BASEROW_THEMATIQUES_TABLE');
 
     // 3. Récupérer les formats
-    const formatsMap = await this.fetchLinkedTableMap('BASEROW_FORMATS_TABLE');
+    const formatsMap = await this.loadReferenceMap('BASEROW_FORMATS_TABLE');
 
     // 4. Récupérer l'audience (public cible)'
-    const publicsMap = await this.fetchLinkedTableMap('BASEROW_PUBLICS_TABLE');
+    const publicsMap = await this.loadReferenceMap('BASEROW_PUBLICS_TABLE');
+
+    const degraded = this.degradedReferences();
+    if (degraded.length > 0) {
+      this.logger.error(
+        `Événements chargés sans le(s) référentiel(s) en erreur : ${degraded.join(', ')}. Leurs liens (partenaires, thématiques, formats ou publics) sont vides tant que la table n'est pas relue avec succès.`,
+      );
+    }
 
     // 5. Récupérer les enregistrements bruts
     const records = await this.fetchRecords(devMode);
@@ -366,13 +375,53 @@ export class BaserowService implements OnApplicationBootstrap {
       this.logger.log(
         `${linkedTableMap.size} éléments récupérés à partir de la table ${tableName}`,
       );
+      this.setReferenceStatus(tableName, true);
       return linkedTableMap;
     } catch (error) {
+      const message = errorMessage(error);
       this.logger.error(
-        `Erreur lors de la récupération des éléments à partir de la table ${tableName}: ${error.message}`,
+        `Erreur lors de la récupération des éléments à partir de la table ${tableName}: ${message}`,
       );
-      return new Map();
+      this.setReferenceStatus(tableName, false);
+      // Pas de liste vide ici : une table en erreur n'est pas une table vide.
+      throw new ReferenceTableError(tableName, message);
     }
+  }
+
+  /**
+   * Lit une table de référence pour enrichir les événements : en cas d'erreur, les événements
+   * restent servis (sans cette dimension) plutôt que de tout refuser. L'erreur est déjà
+   * journalisée et visible dans `getReferenceStatus()`.
+   */
+  private async loadReferenceMap(
+    tableName: string,
+  ): Promise<Map<string, LinkedTableRow>> {
+    try {
+      return await this.fetchLinkedTableMap(tableName);
+    } catch (error) {
+      if (error instanceof ReferenceTableError) return new Map();
+      throw error;
+    }
+  }
+
+  private setReferenceStatus(table: string, ok: boolean): void {
+    this.referenceStatus.set(table, {
+      table,
+      ok,
+      checkedAt: new Date().toISOString(),
+    });
+  }
+
+  /** Dernier état connu de chaque table de référence déjà lue (vide tant qu'aucune ne l'a été). */
+  getReferenceStatus(): ReferenceTableStatus[] {
+    return Array.from(this.referenceStatus.values());
+  }
+
+  /** Tables de référence dont la dernière lecture a échoué. */
+  degradedReferences(): string[] {
+    return this.getReferenceStatus()
+      .filter((status) => !status.ok)
+      .map((status) => status.table);
   }
 
   /**
@@ -471,9 +520,13 @@ export class BaserowService implements OnApplicationBootstrap {
     if (affected.length === 0) return;
     const examples = affected
       .slice(0, 3)
-      .map((e) => `« ${e.title || 'sans titre'} » (id ${e.id} : ${e.formats.join(', ')})`)
+      .map(
+        (e) =>
+          `« ${e.title || 'sans titre'} » (id ${e.id} : ${e.formats.join(', ')})`,
+      )
       .join(' ; ');
-    const more = affected.length > 3 ? ` et ${affected.length - 3} autre(s)` : '';
+    const more =
+      affected.length > 3 ? ` et ${affected.length - 3} autre(s)` : '';
     this.warnOnce(
       `multiple-formats:${affected.map((e) => e.id).join(',')}`,
       `${affected.length} événement(s) ont plusieurs formats ; seul le premier lié dans Baserow est retenu (un événement n'a qu'un format). Rendre la colonne de format à choix unique ou ne lier qu'un format. Exemples : ${examples}${more}.`,

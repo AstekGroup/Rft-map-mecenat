@@ -38,6 +38,7 @@ describe('EventsService', () => {
     baserowService = {
       fetchEvents: jest.fn(),
       fetchLinkedTableRow: jest.fn(),
+      degradedReferences: jest.fn().mockReturnValue([]),
     } as unknown as jest.Mocked<BaserowService>;
 
     service = new EventsService(baserowService);
@@ -80,6 +81,48 @@ describe('EventsService', () => {
       await service.findAll();
 
       expect(baserowService.fetchEvents).toHaveBeenCalledTimes(2);
+    });
+
+    describe('référentiel en erreur', () => {
+      const t0 = new Date('2026-05-20T10:00:00Z').getTime();
+      let now: jest.SpyInstance<number, []>;
+
+      beforeEach(() => {
+        now = jest.spyOn(Date, 'now').mockReturnValue(t0);
+      });
+
+      afterEach(() => {
+        now.mockRestore();
+      });
+
+      it('ne fige pas 5 minutes un chargement dégradé (relu après 30 s)', async () => {
+        baserowService.degradedReferences.mockReturnValue([
+          'BASEROW_FORMATS_TABLE',
+        ]);
+        baserowService.fetchEvents.mockResolvedValue([mockEvent]);
+
+        await service.findAll();
+        now.mockReturnValue(t0 + 20_000);
+        await service.findAll();
+        expect(baserowService.fetchEvents).toHaveBeenCalledTimes(1);
+
+        now.mockReturnValue(t0 + 31_000);
+        await service.findAll();
+        expect(baserowService.fetchEvents).toHaveBeenCalledTimes(2);
+      });
+
+      it('garde le cache normal de 5 minutes quand tout est en ordre', async () => {
+        baserowService.fetchEvents.mockResolvedValue([mockEvent]);
+
+        await service.findAll();
+        now.mockReturnValue(t0 + 4 * 60_000);
+        await service.findAll();
+        expect(baserowService.fetchEvents).toHaveBeenCalledTimes(1);
+
+        now.mockReturnValue(t0 + 5 * 60_000 + 1_000);
+        await service.findAll();
+        expect(baserowService.fetchEvents).toHaveBeenCalledTimes(2);
+      });
     });
   });
 
