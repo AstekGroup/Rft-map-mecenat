@@ -310,6 +310,46 @@ describe('BaserowService : noms de colonnes et valeurs venant de la config', () 
     }
   });
 
+  it("renvoie les options d'un référentiel dans l'ordre des lignes de Baserow, sur plusieurs pages", async () => {
+    const config = buildTestConfig();
+    const service = buildService(config, {
+      BASEROW_API_URL: 'http://baserow.test',
+      BASEROW_API_TOKEN: 'token',
+      BASEROW_THEMATIQUES_TABLE_ID: '6',
+    });
+    const name = config.baserow.mapping.referenceFields.name;
+    const page = (rows: string[][], next: string | null) =>
+      Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            next,
+            results: rows.map(([id, label]) => ({ id: Number(id), [name]: label })),
+          }),
+      });
+    const fetchMock = jest
+      .fn()
+      // Ordre voulu par les organisateurs : ni alphabétique, ni par identifiant.
+      .mockReturnValueOnce(page([['3', 'Zéro déchet'], ['1', 'Alimentation']], 'page-2'))
+      .mockReturnValueOnce(page([['2', 'Autres']], null));
+    const originalFetch = global.fetch;
+    global.fetch = fetchMock as unknown as typeof fetch;
+    try {
+      const rows = await (
+        service as unknown as {
+          fetchLinkedTableRow(table: string): Promise<{ name: string }[]>;
+        }
+      ).fetchLinkedTableRow('BASEROW_THEMATIQUES_TABLE');
+      expect(rows.map((r) => r.name)).toEqual([
+        'Zéro déchet',
+        'Alimentation',
+        'Autres',
+      ]);
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
+
   it("signale (une fois) l'absence de la colonne du nom dans une table de référence", async () => {
     const config = buildTestConfig();
     const service = buildService(config, {

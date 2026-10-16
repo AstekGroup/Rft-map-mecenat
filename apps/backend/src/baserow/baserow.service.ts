@@ -288,9 +288,10 @@ export class BaserowService implements OnApplicationBootstrap {
    */
   async fetchLinkedTableRow(tableName: string): Promise<LinkedTableRow[]> {
     const map = await this.fetchLinkedTableMap(tableName);
-    return Array.from(map.values()).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
+    // Ordre des lignes dans Baserow (celui de l'API sans tri : ordre manuel de la table, puis
+    // identifiant), jamais l'ordre alphabétique : les organisateurs maîtrisent l'ordre
+    // d'affichage des options (ex. « Autres » en dernier) en déplaçant les lignes dans Baserow.
+    return Array.from(map.values());
   }
 
   /**
