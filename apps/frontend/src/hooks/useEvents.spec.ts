@@ -51,6 +51,7 @@ describe('useEvents', () => {
     vi.mocked(api.fetchPartners).mockResolvedValue([]);
     vi.mocked(api.fetchThemes).mockResolvedValue([]);
     vi.mocked(api.fetchFormats).mockResolvedValue([]);
+    vi.mocked(api.fetchPublics).mockResolvedValue([]);
     vi.mocked(api.eventsToGeoJSON).mockReturnValue({ type: 'FeatureCollection', features: [] });
   });
 
@@ -115,6 +116,48 @@ describe('useEvents', () => {
 
     expect(result.current.error).toBeInstanceOf(Error);
     expect(result.current.error?.message).toContain('Network error');
+  });
+
+  describe('référentiel en erreur', () => {
+    it('garde la carte et les autres filtres, et signale le référentiel indisponible', async () => {
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const events = [makeEvent()];
+      const themes: LinkedTableRow[] = [{ id: 't1', name: 'Thème 1' }];
+      vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
+      vi.mocked(api.fetchFormats).mockRejectedValueOnce(new Error('Erreur API: 502 Bad Gateway'));
+      vi.mocked(api.fetchThemes).mockResolvedValueOnce(themes);
+
+      const { result } = renderHook(() => useEvents());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      expect(result.current.error).toBeNull();
+      expect(result.current.allEvents).toEqual(events);
+      expect(result.current.controls.availableThemes).toEqual(themes);
+      expect(result.current.controls.availableFormats).toEqual([]);
+      expect(result.current.controls.unavailableReferences).toEqual(['formats']);
+      expect(consoleError).toHaveBeenCalled();
+      consoleError.mockRestore();
+    });
+
+    it('un référentiel simplement vide n’est pas signalé comme indisponible', async () => {
+      vi.mocked(api.fetchEvents).mockResolvedValueOnce([makeEvent()]);
+      vi.mocked(api.fetchFormats).mockResolvedValueOnce([]);
+
+      const { result } = renderHook(() => useEvents());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      expect(result.current.controls.unavailableReferences).toEqual([]);
+    });
+
+    it('reste en erreur globale si les événements eux-mêmes ne se chargent pas', async () => {
+      vi.mocked(api.fetchEvents).mockRejectedValueOnce(new Error('Erreur API: 500'));
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+      const { result } = renderHook(() => useEvents());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      expect(result.current.error).toBeInstanceOf(Error);
+    });
   });
 
   describe('filtres', () => {

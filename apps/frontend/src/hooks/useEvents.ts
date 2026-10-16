@@ -4,6 +4,7 @@ import {fetchEvents, fetchPartners, eventsToGeoJSON, fetchThemes, fetchFormats, 
 import type { DateFilterMode } from '@/utils/eventDateRange';
 import { isEventOver } from '@/utils/eventDateRange';
 import { matchesFilters } from '@/utils/eventFilters';
+import type { ReferenceKey } from '@/utils/filterDefinitions';
 import { useConfig } from './useConfig';
 
 export interface EventFilters {
@@ -43,6 +44,11 @@ export interface EventFilterControls {
   availableThemes: LinkedTableRow[];
   availableFormats: LinkedTableRow[];
   availablePublics: LinkedTableRow[];
+  /**
+   * Référentiels que le backend n'a pas pu charger (erreur, à ne pas confondre avec un référentiel
+   * vide qui masque simplement le filtre) : le filtre reste affiché avec un message.
+   */
+  unavailableReferences: ReferenceKey[];
 }
 
 /** Filtres à sélection multiple (listes d'identifiants ou de noms de région). */
@@ -53,6 +59,13 @@ type MultiValueFilterKey = 'regions' | 'types' | 'themes' | 'partners' | 'audien
  * pas touché au bouton, sa valeur se déduit de la config (événement terminé ou non).
  */
 type StoredFilters = Omit<EventFilters, 'showPastEvents'>;
+
+type SettledReference = PromiseSettledResult<LinkedTableRow[]>;
+
+/** Convertit le résultat d'une requête de référentiel en résultat « réglé » (jamais de rejet). */
+function settle(request: Promise<LinkedTableRow[]>): Promise<SettledReference> {
+  return Promise.allSettled([request]).then(([result]) => result);
+}
 
 const initialFilters: StoredFilters = {
   search: '',
@@ -74,6 +87,7 @@ export function useEvents() {
   const [availableThemes, setAvailableThemes] = useState<LinkedTableRow[]>([]);
   const [availableFormats, setAvailableFormats] = useState<LinkedTableRow[]>([]);
   const [availablePublics, setAvailablePublics] = useState<LinkedTableRow[]>([]);
+  const [unavailableReferences, setUnavailableReferences] = useState<ReferenceKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [storedFilters, setFilters] = useState<StoredFilters>(initialFilters);
@@ -100,20 +114,30 @@ export function useEvents() {
         setLoading(true);
         setError(null);
         
-        // Charger événements et les autres datas pour les filtres
-        const [eventsData, partnersData, themesData, formatsData, publicsData] = await Promise.all([
+        // Les événements sont indispensables (erreur si la requête échoue) ; chaque référentiel
+        // des filtres est indépendant : l'un en erreur ne casse ni la carte ni les autres filtres.
+        const [eventsData, partnersResult, themesResult, formatsResult, publicsResult] = await Promise.all([
           fetchEvents(devMode),
-          fetchPartners(),
-          fetchThemes(),
-          fetchFormats(),
-          fetchPublics(),
+          settle(fetchPartners()),
+          settle(fetchThemes()),
+          settle(fetchFormats()),
+          settle(fetchPublics()),
         ]);
-        
+
+        const unavailable: ReferenceKey[] = [];
+        const rowsOf = (key: ReferenceKey, result: SettledReference): LinkedTableRow[] => {
+          if (result.status === 'fulfilled') return result.value ?? [];
+          console.error(`[useEvents] Référentiel « ${key} » indisponible:`, result.reason);
+          unavailable.push(key);
+          return [];
+        };
+
         setEvents(eventsData);
-        setAvailablePartners(partnersData);
-        setAvailableThemes(themesData);
-        setAvailableFormats(formatsData);
-        setAvailablePublics(publicsData);
+        setAvailablePartners(rowsOf('partners', partnersResult));
+        setAvailableThemes(rowsOf('themes', themesResult));
+        setAvailableFormats(rowsOf('formats', formatsResult));
+        setAvailablePublics(rowsOf('publics', publicsResult));
+        setUnavailableReferences(unavailable);
       } catch (err) {
         console.error('[useEvents] Erreur lors du chargement:', err);
         setError(err instanceof Error ? err : new Error('Erreur lors du chargement des données'));
@@ -216,9 +240,10 @@ export function useEvents() {
     availableThemes,
     availableFormats,
     availablePublics,
+    unavailableReferences,
   }), [
     filters, defaultShowPastEvents, updateFilters, toggleRegion, toggleType, toggleTheme, togglePartner, toggleAudience,
-    resetFilters, availablePartners, availableThemes, availableFormats, availablePublics,
+    resetFilters, availablePartners, availableThemes, availableFormats, availablePublics, unavailableReferences,
   ]);
 
   return {
