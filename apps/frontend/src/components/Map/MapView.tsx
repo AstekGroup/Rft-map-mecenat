@@ -3,14 +3,14 @@ import Map, { Marker, Popup, ScaleControl } from 'react-map-gl/maplibre';
 import type { MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import { useMapViewport, useClusters } from '@/hooks';
+import { useMapViewport, useClusters, FRANCE_DEFAULT_VIEW } from '@/hooks';
 import { EventsGeoJSON, Event, isCluster, MapFeature } from '@/types/event';
 import { ClusterMarker } from './ClusterMarker';
 import { EventMarker } from './EventMarker';
 import { EventPopup } from './EventPopup';
 import { MAP_STYLES } from './MapStyleSelector';
 import { DOMTOMInset } from './DOMTOMInset';
-import { ZoomIn, ZoomOut, Home } from 'lucide-react';
+import { ZoomIn, ZoomOut, Crosshair } from 'lucide-react';
 
 export interface MapBounds {
   west: number;
@@ -287,8 +287,8 @@ export function MapView({
             const map = mapRef.current;
             if (map) {
               map.flyTo({
-                center: [2.2137, 46.2276],
-                zoom: 5.5,
+                center: [FRANCE_DEFAULT_VIEW.longitude, FRANCE_DEFAULT_VIEW.latitude],
+                zoom: FRANCE_DEFAULT_VIEW.zoom,
                 duration: 1200,
               });
             }
@@ -296,7 +296,7 @@ export function MapView({
           className="w-10 h-10 bg-white rounded-lg shadow-card flex items-center justify-center text-primary hover:bg-surface-beige transition-colors"
           aria-label="Recentrer la carte"
         >
-          <Home className="w-5 h-5" />
+          <Crosshair className="w-5 h-5" />
         </button>
       </div>
 
