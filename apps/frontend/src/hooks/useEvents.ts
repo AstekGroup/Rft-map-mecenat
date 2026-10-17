@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Event, EventsGeoJSON, LinkedTableRow } from '@/types/event';
 import {fetchEvents, fetchPartners, eventsToGeoJSON, fetchThemes, fetchFormats, fetchPublics} from '@/services/api';
 import type { DateFilterMode } from '@/utils/eventDateRange';
-import { eventIntersectsYmdRange } from '@/utils/eventDateRange';
+import { matchesFilters } from '@/utils/eventFilters';
 
 export interface EventFilters {
   search: string;
@@ -20,6 +20,29 @@ export interface EventFilters {
   modality: 'all' | 'presentiel' | 'distanciel';
   showPastEvents: boolean;
 }
+
+/**
+ * Tout ce dont un écran de filtres a besoin : l'état, les actions et les options issues de Baserow.
+ * Le panneau de la carte, la barre de la liste et le panneau latéral reçoivent le même objet
+ * (`controls` renvoyé par `useEvents`) au lieu d'une douzaine de props recopiées.
+ */
+export interface EventFilterControls {
+  filters: EventFilters;
+  onUpdateFilters: (filters: Partial<EventFilters>) => void;
+  onToggleRegion: (region: string) => void;
+  onToggleType: (typeId: string) => void;
+  onToggleTheme: (themeId: string) => void;
+  onTogglePartner: (partnerId: string) => void;
+  onToggleAudience: (audienceId: string) => void;
+  onResetFilters: () => void;
+  availablePartners: LinkedTableRow[];
+  availableThemes: LinkedTableRow[];
+  availableFormats: LinkedTableRow[];
+  availablePublics: LinkedTableRow[];
+}
+
+/** Filtres à sélection multiple (listes d'identifiants ou de noms de région). */
+type MultiValueFilterKey = 'regions' | 'types' | 'themes' | 'partners' | 'audiences';
 
 const initialFilters: EventFilters = {
   search: '',
@@ -86,74 +109,10 @@ export function useEvents() {
     return d;
   }, []);
 
-  const filteredEvents = useMemo(() => {
-    return events.filter(event => {
-      // Filtre événements passés (par défaut on masque les passés)
-      if (!filters.showPastEvents) {
-        const eventEndDate = new Date(event.endDate || event.date);
-        eventEndDate.setHours(23, 59, 59, 999);
-        if (eventEndDate < today) return false;
-      }
-
-      // Filtre recherche
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
-        const matchesSearch = 
-          event.title.toLowerCase().includes(searchLower) ||
-          event.description.toLowerCase().includes(searchLower) ||
-          event.city.toLowerCase().includes(searchLower) ||
-          event.organizer.toLowerCase().includes(searchLower) ||
-          event.region.toLowerCase().includes(searchLower) ||
-          (event.venueName && event.venueName.toLowerCase().includes(searchLower));
-        if (!matchesSearch) return false;
-      }
-
-      // Filtre modalité
-      if (filters.modality !== 'all' && event.modality !== filters.modality) return false;
-
-      // Filtre date
-       if (filters.dateFilter === 'during-week' && !event.isDuringWeek) return false;
-       if (filters.dateFilter === 'custom' && filters.dateFrom) {
-         const rangeStart = filters.dateFrom.slice(0, 10);
-         const rangeEnd = (filters.dateTo || filters.dateFrom).slice(0, 10);
-         if (!eventIntersectsYmdRange(event, rangeStart, rangeEnd)) return false;
-       }
-
-      // Filtre régions
-      if (filters.regions.length > 0 && !filters.regions.includes(event.region)) return false;
-
-      // Filtre types
-      if (filters.types.length > 0 && (event.type === null || event.type === undefined || !filters.types.includes(event.type.id))) return false;
-
-      // Filtre thématiques - maintenant filter sur les IDs de thèmes (string)
-      if (filters.themes.length > 0) {
-        const hasMatchingTheme = event.themes.some(theme => theme && filters.themes.includes(theme.id));
-        if (!hasMatchingTheme) return false;
-      }
-
-      // Filtre partenaires
-      if (filters.partners.length > 0) {
-        if (!event.partners || event.partners.length === 0) return false;
-        const hasMatchingPartner = event.partners.some(partner => partner && filters.partners.includes(partner.id));
-        if (!hasMatchingPartner) return false;
-      }
-
-      // Filtre public cible (audience)
-      if (filters.audiences.length > 0) {
-        if (!event.targetAudience || event.targetAudience.length === 0) return false;
-        const hasMatchingAudience = event.targetAudience.some(audience => audience && filters.audiences.includes(audience.id));
-        if (!hasMatchingAudience) return false;
-      }
-
-      // Filtre code postal
-      if (filters.postalCode) {
-        const postalCodeFilter = filters.postalCode.trim();
-        if (!event.postalCode.startsWith(postalCodeFilter)) return false;
-      }
-
-      return true;
-    });
-  }, [events, filters]);
+  const filteredEvents = useMemo(
+    () => events.filter((event) => matchesFilters(event, filters, today)),
+    [events, filters, today],
+  );
 
   // Convertir en GeoJSON (exclut automatiquement les événements sans coordonnées)
   const geojson: EventsGeoJSON = useMemo(() => {
@@ -177,50 +136,21 @@ export function useEvents() {
     setFilters(initialFilters);
   }, []);
 
-  const toggleRegion = (region: string) => {
+  // Ajoute la valeur à la sélection d'un filtre à choix multiples, ou la retire si elle y est déjà.
+  const toggleValue = useCallback((key: MultiValueFilterKey, value: string) => {
     setFilters(prev => ({
       ...prev,
-      regions: prev.regions.includes(region)
-        ? prev.regions.filter(r => r !== region)
-        : [...prev.regions, region],
+      [key]: prev[key].includes(value)
+        ? prev[key].filter(v => v !== value)
+        : [...prev[key], value],
     }));
-  };
+  }, []);
 
-  const toggleType = (typeId: string) => {
-    setFilters(prev => ({
-      ...prev,
-      types: prev.types.includes(typeId)
-        ? prev.types.filter(t => t !== typeId)
-        : [...prev.types, typeId],
-    }));
-  };
-
-  const toggleTheme = (themeId: string) => {
-    setFilters(prev => ({
-      ...prev,
-      themes: prev.themes.includes(themeId)
-        ? prev.themes.filter(t => t !== themeId)
-        : [...prev.themes, themeId],
-    }));
-  };
-
-  const togglePartner = (partnerId: string) => {
-    setFilters(prev => ({
-      ...prev,
-      partners: prev.partners.includes(partnerId)
-        ? prev.partners.filter(p => p !== partnerId)
-        : [...prev.partners, partnerId],
-    }));
-  };
-
-  const toggleAudience = (audienceId: string) => {
-    setFilters(prev => ({
-      ...prev,
-      audiences: prev.audiences.includes(audienceId)
-        ? prev.audiences.filter(a => a !== audienceId)
-        : [...prev.audiences, audienceId],
-    }));
-  };
+  const toggleRegion = useCallback((region: string) => toggleValue('regions', region), [toggleValue]);
+  const toggleType = useCallback((typeId: string) => toggleValue('types', typeId), [toggleValue]);
+  const toggleTheme = useCallback((themeId: string) => toggleValue('themes', themeId), [toggleValue]);
+  const togglePartner = useCallback((partnerId: string) => toggleValue('partners', partnerId), [toggleValue]);
+  const toggleAudience = useCallback((audienceId: string) => toggleValue('audiences', audienceId), [toggleValue]);
 
   // Toggle mode dev (afficher tous les événements vs validés seulement)
   const toggleDevMode = useCallback(() => {
@@ -246,8 +176,26 @@ export function useEvents() {
     ) as Record<string, number>,
   }), [events, filteredEvents, availableFormats]);
 
+  const controls: EventFilterControls = useMemo(() => ({
+    filters,
+    onUpdateFilters: updateFilters,
+    onToggleRegion: toggleRegion,
+    onToggleType: toggleType,
+    onToggleTheme: toggleTheme,
+    onTogglePartner: togglePartner,
+    onToggleAudience: toggleAudience,
+    onResetFilters: resetFilters,
+    availablePartners,
+    availableThemes,
+    availableFormats,
+    availablePublics,
+  }), [
+    filters, updateFilters, toggleRegion, toggleType, toggleTheme, togglePartner, toggleAudience,
+    resetFilters, availablePartners, availableThemes, availableFormats, availablePublics,
+  ]);
 
   return {
+    controls,
     events: filteredEvents,
     allEvents: events,
     geojson,

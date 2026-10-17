@@ -11,19 +11,8 @@ function App() {
     geojson,
     loading,
     error,
-    filters,
-    updateFilters,
-    resetFilters,
-    toggleRegion,
-    toggleType,
-    toggleTheme,
-    togglePartner,
-    availablePartners,
-    toggleAudience,
+    controls,
     stats,
-    availableThemes,
-    availableFormats,
-    availablePublics,
   } = useEvents();
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -86,23 +75,12 @@ function App() {
       {/* Sidebar */}
       <Sidebar
         events={events}
-        filters={filters}
-        onUpdateFilters={updateFilters}
-        onToggleRegion={toggleRegion}
-        onToggleType={toggleType}
-        onToggleTheme={toggleTheme}
-        onTogglePartner={togglePartner}
-        availablePartners={availablePartners}
-        onToggleAudience={toggleAudience}
-        onResetFilters={resetFilters}
+        controls={controls}
         selectedEvent={selectedEvent}
         onSelectEvent={setSelectedEvent}
         hoveredEvent={hoveredEvent}
         onHoverEvent={setHoveredEvent}
         stats={stats}
-        availableThemes={availableThemes}
-        availableFormats={availableFormats}
-        availablePublics={availablePublics}
       />
 
       {/* Badge compteur mobile */}
