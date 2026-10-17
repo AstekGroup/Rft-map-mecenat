@@ -1,30 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
-import { EventFilters, useConfig } from '@/hooks';
-import { LinkedTableRow } from '@/types/event';
-import {checkIconColor, getIcon} from '@/utils/iconResolver';
-import { DateCustomRangeInputs } from '@/components/Filters/DateCustomRangeInputs';
-import { formatFrDateRangeLabel, isDateFilterActive } from '@/utils/eventDateRange';
+import type { ReactNode } from 'react';
+import { useConfig } from '@/hooks';
+import type { EventFilterControls } from '@/hooks';
+import { FilterContent, FilterSearch } from '@/components/Filters/FilterContent';
+import { formatFrDateRangeLabel } from '@/utils/eventDateRange';
 import { countActiveFilters } from '@/utils/eventFilters';
-import { ChevronDown, RotateCcw, X, Search, MapPin, Globe, Handshake, History } from 'lucide-react';
+import { getVisibleFiltersFor } from '@/utils/filterDefinitions';
+import { ChevronDown, RotateCcw, X, History } from 'lucide-react';
 
 interface EventFiltersBarProps {
-  filters: EventFilters;
-  onUpdateFilters: (filters: Partial<EventFilters>) => void;
-  onToggleRegion: (region: string) => void;
-  onToggleType: (type: string) => void;
-  onToggleTheme: (themeId: string) => void;
-  onTogglePartner: (partnerId: string) => void;
-  availablePartners: LinkedTableRow[];
-  onToggleAudience: (audience: string) => void;
-  onResetFilters: () => void;
-  availableThemes: LinkedTableRow[];
-  availableFormats: LinkedTableRow[];
-  availablePublics: LinkedTableRow[];
+  controls: EventFilterControls;
 }
 
 interface FilterDropdownProps {
   label: string;
-  children: React.ReactNode;
+  children: ReactNode;
   badge?: number;
 }
 
@@ -68,35 +58,36 @@ function FilterDropdown({ label, children, badge }: FilterDropdownProps) {
   );
 }
 
-export function EventFiltersBar({
-  filters,
-  onUpdateFilters,
-  onToggleRegion,
-  onToggleType,
-  onToggleTheme,
-  onTogglePartner,
-  availablePartners,
-  onToggleAudience,
-  availableThemes,
-  availableFormats,
-  availablePublics,
-  onResetFilters,
-}: EventFiltersBarProps) {
+/** Barre de filtres de la liste : un menu par filtre de `FILTER_DEFINITIONS` (modalité et code postal en ligne). */
+export function EventFiltersBar({ controls }: EventFiltersBarProps) {
+  const {
+    filters,
+    defaultShowPastEvents,
+    onUpdateFilters,
+    onToggleType,
+    onToggleTheme,
+    onTogglePartner,
+    onToggleAudience,
+    onToggleRegion,
+    onResetFilters,
+    availablePartners,
+    availableThemes,
+    availableFormats,
+    availablePublics,
+  } = controls;
   const { helpers } = useConfig();
-  const { metropole: REGIONS_METRO, domtom: REGIONS_DOMTOM } = helpers.getRegionGroups();
-  
-  const dateFilterModes = helpers.getDateFilterModes();
-
-  const hasActiveFilters = countActiveFilters(filters) > 0;
+  const visibleFilters = getVisibleFiltersFor(controls);
+  const hasActiveFilters = countActiveFilters(filters, defaultShowPastEvents) > 0;
 
   // Collecte des tags actifs
   const activeTags: { key: string; label: string; onRemove: () => void }[] = [];
 
-  if (filters.showPastEvents) {
+  // Seul un écart avec le défaut est un filtre : après l'événement, afficher les passés est normal.
+  if (filters.showPastEvents !== defaultShowPastEvents) {
     activeTags.push({
       key: 'pastEvents',
-      label: 'Événements passés',
-      onRemove: () => onUpdateFilters({ showPastEvents: false }),
+      label: filters.showPastEvents ? 'Événements passés' : 'Sans les événements passés',
+      onRemove: () => onUpdateFilters({ showPastEvents: defaultShowPastEvents }),
     });
   }
 
@@ -110,7 +101,7 @@ export function EventFiltersBar({
   } else if (
     filters.dateFilter === 'during-week'
   ) {
-    const duringWeekMode = dateFilterModes.find(m => m.mode === 'during-week');
+    const duringWeekMode = helpers.getDateFilterModes().find(m => m.mode === 'during-week');
     activeTags.push({
       key: 'date',
       label: duringWeekMode?.label || 'Période de l\'événement',
@@ -132,7 +123,7 @@ export function EventFiltersBar({
     activeTags.push({
       key: `theme-${themeId}`,
       label: theme?.name || themeId,
-      onRemove: () => onToggleTheme(themeId as any),
+      onRemove: () => onToggleTheme(themeId),
     });
   });
 
@@ -174,51 +165,12 @@ export function EventFiltersBar({
     <div className="flex flex-col gap-3 p-4 bg-surface-beige border-b border-primary/10">
       {/* Top row: Search and Modality Switcher */}
       <div className="flex flex-col md:flex-row gap-4">
-        {/* Search Input */}
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" />
-          <input
-            type="text"
-            value={filters.search}
-            onChange={(e) => onUpdateFilters({ search: e.target.value })}
-            placeholder="Rechercher par titre, description, ville..."
-            className="w-full pl-10 pr-10 py-2.5 bg-white border border-primary/20 rounded-xl text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-inter"
-          />
-          {filters.search && (
-            <button
-              onClick={() => onUpdateFilters({ search: '' })}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-primary"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
+        <div className="flex-1">
+          <FilterSearch filters={filters} onUpdateFilters={onUpdateFilters} variant="bar" />
         </div>
-
-        {/* Modality Switcher */}
-        <div className="flex bg-white/50 backdrop-blur-sm p-1 rounded-xl border border-primary/10 self-start">
-          {[
-            { value: 'all', label: 'Tous', icon: null },
-            { value: 'presentiel', label: 'Présentiel', icon: MapPin },
-            { value: 'distanciel', label: 'En ligne', icon: Globe },
-          ].map((option) => {
-            const Icon = option.icon;
-            const isActive = filters.modality === option.value;
-            return (
-              <button
-                key={option.value}
-                onClick={() => onUpdateFilters({ modality: option.value as any })}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                  isActive
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'text-text-secondary hover:text-primary hover:bg-white/50'
-                }`}
-              >
-                {Icon && <Icon className="w-3.5 h-3.5" />}
-                {option.label}
-              </button>
-            );
-          })}
-        </div>
+        {visibleFilters.some((definition) => definition.id === 'modality') && (
+          <FilterContent id="modality" variant="bar" controls={controls} />
+        )}
       </div>
 
       {/* Bottom row: Other filters */}
@@ -233,239 +185,22 @@ export function EventFiltersBar({
             Réinitialiser
           </button>
         )}
-        
-        {/* Date filter */}
-        <FilterDropdown
-          label="Date"
-          badge={isDateFilterActive(filters.dateFilter, filters.dateFrom) ? 1 : undefined}
-        >
-          <div className="p-2 space-y-1">
-            {dateFilterModes.map((modeObj) => {
-              const mode = modeObj.mode;
-              return (
-                <button
-                  key={mode}
-                  onClick={() =>
-                    onUpdateFilters({ dateFilter: mode as EventFilters['dateFilter'] })
-                  }
-                  className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                    filters.dateFilter === mode
-                      ? 'bg-primary/10 text-primary font-medium'
-                      : 'text-text-secondary hover:bg-primary/5'
-                  }`}
-                >
-                  {modeObj.label || mode}
-                </button>
-              );
-            })}
-            {filters.dateFilter === 'custom' && (
-              <DateCustomRangeInputs filters={filters} onUpdateFilters={onUpdateFilters} compact />
-            )}
-          </div>
-        </FilterDropdown>
 
-        {/* Partner filter */}
-        {availablePartners.length > 0 && (
-          <FilterDropdown
-            label="Partenaires"
-            badge={filters.partners.length || undefined}
-          >
-            <div className="flex items-center gap-2 px-3 py-1 mb-1 border-b border-primary/5 text-xs font-semibold text-text-secondary uppercase tracking-wider bg-surface-light/30">
-              <Handshake className="w-3.5 h-3.5" />
-              <span>Nos partenaires</span>
-            </div>
-            <div className="p-2 space-y-1 min-w-[200px]">
-              {availablePartners.map((partner) => (
-                <label
-                  key={partner.id}
-                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-primary/5 transition-colors"
-                >
-                  <input
-                    type="checkbox"
-                    checked={filters.partners.includes(partner.id)}
-                    onChange={() => onTogglePartner(partner.id)}
-                    className="w-4 h-4 text-accent-pink border-primary/30 rounded focus:ring-accent-pink"
-                  />
-                  {partner.logoUrl && (
-                    <img 
-                      src={partner.logoUrl} 
-                      alt={partner.name} 
-                      className="w-5 h-5 object-contain rounded-sm shadow-sm bg-white" 
-                    />
-                  )}
-                  <span className={filters.partners.includes(partner.id) ? 'text-primary font-medium' : 'text-text-secondary'}>
-                    {partner.name}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </FilterDropdown>
-        )}
-        
-        {/* Type filter with icons */}
-        {availableFormats.length > 0 && (
-        <FilterDropdown
-          label="Type d'événement"
-          badge={filters.types.length || undefined}
-        >
-          <div className="p-2 space-y-1">
-            {availableFormats.map((type) => {
-              const Icon = getIcon(type?.pictoName, Globe);
-              const typeColor = checkIconColor(type.colorHexa, "#D4DDE2");
-              return (
-                <label
-                  key={type.id}
-                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-primary/5 transition-colors"
-                >
-                  <input
-                    type="checkbox"
-                    checked={filters.types.includes(type.id)}
-                    onChange={() => onToggleType(type.id)}
-                    className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
-                  />
-                  <span
-                    className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: typeColor }}
-                  >
-                    <Icon className="w-3 h-3 text-white" />
-                  </span>
-                  <span className={filters.types.includes(type.id) ? 'text-primary font-medium' : 'text-text-secondary'}>
-                    {type.name}
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-        </FilterDropdown>
-        )}
-
-        {/* Thématiques filter */}
-        {availableFormats.length > 0 && (
-        <FilterDropdown
-          label="Thématiques"
-          badge={filters.themes.length || undefined}
-        >
-          <div className="p-2 space-y-1 min-w-[250px]">
-            {availableThemes.map((theme) => (
-              <label
-                key={theme.id}
-                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-primary/5 transition-colors"
+        {visibleFilters
+          .filter((definition) => definition.id !== 'modality')
+          .map((definition) =>
+            definition.id === 'postalCode' ? (
+              <FilterContent key={definition.id} id={definition.id} variant="bar" controls={controls} />
+            ) : (
+              <FilterDropdown
+                key={definition.id}
+                label={definition.title}
+                badge={definition.activeCount(filters) || undefined}
               >
-                <input
-                  type="checkbox"
-                  checked={filters.themes.includes(theme.id)}
-                  onChange={() => onToggleTheme(theme.id as any)}
-                  className="w-4 h-4 text-accent-pink border-primary/30 rounded focus:ring-accent-pink"
-                />
-                <span className={filters.themes.includes(theme.id) ? 'text-primary font-medium' : 'text-text-secondary'}>
-                  {theme.name}
-                </span>
-              </label>
-            ))}
-          </div>
-        </FilterDropdown>
-        )}
-        
-        {/* Audience filter */}
-        {availablePublics.length > 0 && (
-        <FilterDropdown
-          label="Public cible"
-          badge={filters.audiences.length || undefined}
-        >
-          <div className="p-2 space-y-1">
-            {availablePublics.map((audience) => (
-              <label
-                key={audience.id}
-                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-primary/5 transition-colors"
-              >
-                <input
-                  type="checkbox"
-                  checked={filters.audiences.includes(audience.id)}
-                  onChange={() => onToggleAudience(audience.id)}
-                  className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
-                />
-                <span className={filters.audiences.includes(audience.id) ? 'text-primary font-medium' : 'text-text-secondary'}>
-                  {audience.name}
-                </span>
-              </label>
-            ))}
-          </div>
-        </FilterDropdown>
-        )}
-
-        {/* Postal code filter */}
-        {filters.modality !== 'distanciel' && (
-          <div className="relative">
-            <input
-              type="text"
-              value={filters.postalCode}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, '').slice(0, 5);
-                onUpdateFilters({ postalCode: value });
-              }}
-              placeholder="Code postal"
-              className={`w-32 px-3 py-2 rounded-lg text-sm border transition-colors ${
-                filters.postalCode
-                  ? 'bg-primary text-white border-primary placeholder:text-white/70'
-                  : 'bg-white text-primary border-primary/20 placeholder:text-text-secondary'
-              }`}
-            />
-            {filters.postalCode && (
-              <button
-                onClick={() => onUpdateFilters({ postalCode: '' })}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        )}
-        
-        {/* Region filter */}
-        {filters.modality !== 'distanciel' && (
-          <FilterDropdown
-            label="Région"
-            badge={filters.regions.length || undefined}
-          >
-            <div className="p-2 space-y-1 max-h-[250px] overflow-y-auto scrollbar-thin">
-              {REGIONS_METRO.map((region) => (
-                <label
-                  key={region}
-                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-primary/5 transition-colors"
-                >
-                  <input
-                    type="checkbox"
-                    checked={filters.regions.includes(region)}
-                    onChange={() => onToggleRegion(region)}
-                    className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
-                  />
-                  <span className={filters.regions.includes(region) ? 'text-primary font-medium' : 'text-text-secondary'}>
-                    {region}
-                  </span>
-                </label>
-              ))}
-              <div className="border-t border-primary/10 mt-2 pt-2">
-                <p className="px-3 py-1 text-xs text-text-secondary font-medium uppercase">Outre-mer</p>
-                {REGIONS_DOMTOM.map((region) => (
-                  <label
-                    key={region}
-                    className="flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-pointer hover:bg-primary/5 transition-colors"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filters.regions.includes(region)}
-                      onChange={() => onToggleRegion(region)}
-                      className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
-                    />
-                    <span className={filters.regions.includes(region) ? 'text-primary font-medium' : 'text-text-secondary'}>
-                      {region}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </FilterDropdown>
-        )}
+                <FilterContent id={definition.id} variant="bar" controls={controls} />
+              </FilterDropdown>
+            ),
+          )}
 
         {/* Toggle événements passés */}
         <button

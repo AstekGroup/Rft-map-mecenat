@@ -28,8 +28,24 @@ import {
   checkReferenceColumns,
   type ReferenceTableColumns,
 } from './baserow-schema.util';
+import {
+  ReferenceTableError,
+  type ReferenceTableStatus,
+} from './baserow.errors';
 import { GeocodingService } from '../geocoding/geocoding.service';
 import { AppConfigService } from '../config/config.service';
+
+/** Événement liant plusieurs formats (un seul est retenu). */
+interface MultipleFormatsIssue {
+  id: string;
+  title: string;
+  formats: string[];
+}
+
+/** Écarts relevés pendant la transformation, journalisés une fois pour l'ensemble des événements. */
+interface TransformIssues {
+  multipleFormats: MultipleFormatsIssue[];
+}
 
 const errorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
@@ -47,6 +63,8 @@ export class BaserowService implements OnApplicationBootstrap {
   private readonly logger = new Logger(BaserowService.name);
   /** Avertissements déjà émis (un seul message par cause, pas un par ligne). */
   private readonly warned = new Set<string>();
+  /** Dernier état de lecture de chaque table de référence (voir `getReferenceStatus`). */
+  private readonly referenceStatus = new Map<string, ReferenceTableStatus>();
 
   constructor(
     private readonly configService: ConfigService,
@@ -193,20 +211,23 @@ export class BaserowService implements OnApplicationBootstrap {
     );
 
     // 1. Récupérer les partenaires
-    const partnersMap = await this.fetchLinkedTableMap(
-      'BASEROW_PARTNERS_TABLE',
-    );
+    const partnersMap = await this.loadReferenceMap('BASEROW_PARTNERS_TABLE');
 
     // 2. Récupérer les thématiques
-    const themesMap = await this.fetchLinkedTableMap(
-      'BASEROW_THEMATIQUES_TABLE',
-    );
+    const themesMap = await this.loadReferenceMap('BASEROW_THEMATIQUES_TABLE');
 
     // 3. Récupérer les formats
-    const formatsMap = await this.fetchLinkedTableMap('BASEROW_FORMATS_TABLE');
+    const formatsMap = await this.loadReferenceMap('BASEROW_FORMATS_TABLE');
 
     // 4. Récupérer l'audience (public cible)'
-    const publicsMap = await this.fetchLinkedTableMap('BASEROW_PUBLICS_TABLE');
+    const publicsMap = await this.loadReferenceMap('BASEROW_PUBLICS_TABLE');
+
+    const degraded = this.degradedReferences();
+    if (degraded.length > 0) {
+      this.logger.error(
+        `Événements chargés sans le(s) référentiel(s) en erreur : ${degraded.join(', ')}. Leurs liens (partenaires, thématiques, formats ou publics) sont vides tant que la table n'est pas relue avec succès.`,
+      );
+    }
 
     // 5. Récupérer les enregistrements bruts
     const records = await this.fetchRecords(devMode);
@@ -216,9 +237,18 @@ export class BaserowService implements OnApplicationBootstrap {
     if (records.length > 0) this.checkRecordColumns(records[0]);
 
     // 6. Transformer sans géocodage
+    const issues: TransformIssues = { multipleFormats: [] };
     const partialEvents = records.map((r) =>
-      this.transformRecord(r, partnersMap, themesMap, formatsMap, publicsMap),
+      this.transformRecord(
+        r,
+        partnersMap,
+        themesMap,
+        formatsMap,
+        publicsMap,
+        issues,
+      ),
     );
+    this.reportMultipleFormats(issues.multipleFormats);
 
     // 7. Préparer le batch geocoding (seulement pour les événements présentiels)
     const itemsToGeocode = partialEvents
@@ -267,9 +297,10 @@ export class BaserowService implements OnApplicationBootstrap {
    */
   async fetchLinkedTableRow(tableName: string): Promise<LinkedTableRow[]> {
     const map = await this.fetchLinkedTableMap(tableName);
-    return Array.from(map.values()).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
+    // Ordre des lignes dans Baserow (celui de l'API sans tri : ordre manuel de la table, puis
+    // identifiant), jamais l'ordre alphabétique : les organisateurs maîtrisent l'ordre
+    // d'affichage des options (ex. « Autres » en dernier) en déplaçant les lignes dans Baserow.
+    return Array.from(map.values());
   }
 
   /**
@@ -344,13 +375,53 @@ export class BaserowService implements OnApplicationBootstrap {
       this.logger.log(
         `${linkedTableMap.size} éléments récupérés à partir de la table ${tableName}`,
       );
+      this.setReferenceStatus(tableName, true);
       return linkedTableMap;
     } catch (error) {
+      const message = errorMessage(error);
       this.logger.error(
-        `Erreur lors de la récupération des éléments à partir de la table ${tableName}: ${error.message}`,
+        `Erreur lors de la récupération des éléments à partir de la table ${tableName}: ${message}`,
       );
-      return new Map();
+      this.setReferenceStatus(tableName, false);
+      // Pas de liste vide ici : une table en erreur n'est pas une table vide.
+      throw new ReferenceTableError(tableName, message);
     }
+  }
+
+  /**
+   * Lit une table de référence pour enrichir les événements : en cas d'erreur, les événements
+   * restent servis (sans cette dimension) plutôt que de tout refuser. L'erreur est déjà
+   * journalisée et visible dans `getReferenceStatus()`.
+   */
+  private async loadReferenceMap(
+    tableName: string,
+  ): Promise<Map<string, LinkedTableRow>> {
+    try {
+      return await this.fetchLinkedTableMap(tableName);
+    } catch (error) {
+      if (error instanceof ReferenceTableError) return new Map();
+      throw error;
+    }
+  }
+
+  private setReferenceStatus(table: string, ok: boolean): void {
+    this.referenceStatus.set(table, {
+      table,
+      ok,
+      checkedAt: new Date().toISOString(),
+    });
+  }
+
+  /** Dernier état connu de chaque table de référence déjà lue (vide tant qu'aucune ne l'a été). */
+  getReferenceStatus(): ReferenceTableStatus[] {
+    return Array.from(this.referenceStatus.values());
+  }
+
+  /** Tables de référence dont la dernière lecture a échoué. */
+  degradedReferences(): string[] {
+    return this.getReferenceStatus()
+      .filter((status) => !status.ok)
+      .map((status) => status.table);
   }
 
   /**
@@ -440,6 +511,28 @@ export class BaserowService implements OnApplicationBootstrap {
     return records;
   }
 
+  /**
+   * Avertit (un seul message pour tous les événements concernés) que des événements portent
+   * plusieurs formats : l'application n'en garde qu'un, le premier lié dans Baserow. Le message
+   * n'est répété que si la liste des événements concernés change.
+   */
+  private reportMultipleFormats(affected: MultipleFormatsIssue[]): void {
+    if (affected.length === 0) return;
+    const examples = affected
+      .slice(0, 3)
+      .map(
+        (e) =>
+          `« ${e.title || 'sans titre'} » (id ${e.id} : ${e.formats.join(', ')})`,
+      )
+      .join(' ; ');
+    const more =
+      affected.length > 3 ? ` et ${affected.length - 3} autre(s)` : '';
+    this.warnOnce(
+      `multiple-formats:${affected.map((e) => e.id).join(',')}`,
+      `${affected.length} événement(s) ont plusieurs formats ; seul le premier lié dans Baserow est retenu (un événement n'a qu'un format). Rendre la colonne de format à choix unique ou ne lier qu'un format. Exemples : ${examples}${more}.`,
+    );
+  }
+
   /** Journalise un avertissement une seule fois (clé = cause). */
   private warnOnce(key: string, message: string): void {
     if (this.warned.has(key)) return;
@@ -495,6 +588,7 @@ export class BaserowService implements OnApplicationBootstrap {
     thematiquesMap: Map<string, LinkedTableRow>,
     formatsMap: Map<string, LinkedTableRow>,
     publicsMap: Map<string, LinkedTableRow>,
+    issues?: TransformIssues,
   ): Event {
     const read = <T = unknown>(role: keyof BaserowFieldMapping) =>
       this.readField<T>(record, role);
@@ -505,7 +599,8 @@ export class BaserowService implements OnApplicationBootstrap {
 
     const startDateRaw = read<string>('startDate');
     const startDateTime = parseDateTime(startDateRaw);
-    const endDateTime = parseDateTime(read<string>('endDate'));
+    const endDateRaw = read<string>('endDate');
+    const endDateTime = parseDateTime(endDateRaw);
 
     const modality = mapModality(
       read<BaserowSelect>('modality'),
@@ -517,7 +612,15 @@ export class BaserowService implements OnApplicationBootstrap {
         ),
     );
 
-    const format = mapLinkedRow(record, this.columnOf('format'), formatsMap);
+    // Un événement n'a qu'un seul format : le premier lié dans Baserow. Les autres sont signalés.
+    const formats = mapLinkedRow(record, this.columnOf('format'), formatsMap);
+    if (formats.length > 1) {
+      issues?.multipleFormats.push({
+        id: String(record.id),
+        title: text('title'),
+        formats: formats.map((f) => f.name),
+      });
+    }
     const targetAudience = mapLinkedRow(
       record,
       this.columnOf('audience'),
@@ -532,7 +635,12 @@ export class BaserowService implements OnApplicationBootstrap {
 
     const imageUrl = extractImageUrl(read<BaserowAttachment[]>('image'));
     const { weekStart, weekEnd } = this.appConfig.eventDates;
-    const isDuringWeek = computeIsDuringWeek(startDateRaw, weekStart, weekEnd);
+    const isDuringWeek = computeIsDuringWeek(
+      startDateRaw,
+      endDateRaw,
+      weekStart,
+      weekEnd,
+    );
     const organizerContact = buildOrganizerContact(
       read<string>('organizerFirstName'),
       read<string>('organizerLastName'),
@@ -561,7 +669,7 @@ export class BaserowService implements OnApplicationBootstrap {
       postalCode,
       latitude: 0,
       longitude: 0,
-      type: format[0],
+      type: formats[0],
       themes,
       organizer: read<string>('organizer') || '',
       organizerContact,

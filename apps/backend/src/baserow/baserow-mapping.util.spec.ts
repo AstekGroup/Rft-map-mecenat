@@ -152,45 +152,78 @@ describe('computeIsDuringWeek', () => {
   const START = '2026-09-25';
   const END = '2026-10-04';
 
+  // Heures locales (sans « Z ») : le jour calendaire ne dépend pas du fuseau de la machine.
+  const during = (start: string | undefined, end?: string) =>
+    computeIsDuringWeek(start, end, START, END);
+
   it('retourne true pour une date dans la période de la config', () => {
-    expect(computeIsDuringWeek('2026-09-25T10:00:00.000Z', START, END)).toBe(
-      true,
-    );
-    expect(computeIsDuringWeek('2026-09-30T14:00:00.000Z', START, END)).toBe(
-      true,
-    );
-    expect(computeIsDuringWeek('2026-10-04T20:00:00.000Z', START, END)).toBe(
-      true,
-    );
+    expect(during('2026-09-25T10:00:00')).toBe(true);
+    expect(during('2026-09-30T14:00:00')).toBe(true);
+    expect(during('2026-10-04T20:00:00')).toBe(true);
   });
 
   it('retourne false pour une date avant la période', () => {
-    expect(computeIsDuringWeek('2026-09-24T23:59:59.000Z', START, END)).toBe(
-      false,
-    );
+    expect(during('2026-09-24T23:30:00')).toBe(false);
   });
 
   it('retourne false pour une date après la période', () => {
-    expect(computeIsDuringWeek('2026-10-05T00:00:00.000Z', START, END)).toBe(
-      false,
-    );
+    expect(during('2026-10-05T00:30:00')).toBe(false);
   });
 
-  it('retourne false si undefined', () => {
-    expect(computeIsDuringWeek(undefined, START, END)).toBe(false);
+  it('retourne false si undefined ou illisible', () => {
+    expect(during(undefined)).toBe(false);
+    expect(during('pas-une-date')).toBe(false);
+  });
+
+  it('compte un événement qui commence avant la période et la recoupe (recoupement, pas début seul)', () => {
+    expect(during('2026-09-20T10:00:00', '2026-09-26T18:00:00')).toBe(true);
+  });
+
+  it('compte un événement qui commence dans la période et se termine après', () => {
+    expect(during('2026-10-03T10:00:00', '2026-10-10T18:00:00')).toBe(true);
+  });
+
+  it('compte un événement qui englobe toute la période', () => {
+    expect(during('2026-09-01T10:00:00', '2026-11-01T18:00:00')).toBe(true);
+  });
+
+  it('ne compte pas un événement entièrement avant ou après la période', () => {
+    expect(during('2026-09-10T10:00:00', '2026-09-24T18:00:00')).toBe(false);
+    expect(during('2026-10-05T10:00:00', '2026-10-08T18:00:00')).toBe(false);
+  });
+
+  it('compte un événement qui se termine le premier jour de la période, et un qui commence le dernier', () => {
+    expect(during('2026-09-24T10:00:00', '2026-09-25T09:00:00')).toBe(true);
+    expect(during('2026-10-04T23:00:00', '2026-10-05T08:00:00')).toBe(true);
+  });
+
+  it('traite une fin avant le début comme un événement ponctuel (fin ignorée)', () => {
+    // Début avant la période, « fin » encore plus tôt : seul le début compte.
+    expect(during('2026-09-20T10:00:00', '2026-09-18T10:00:00')).toBe(false);
+    // Début dans la période, « fin » avant la période : seul le début compte, l'événement est dedans.
+    expect(during('2026-09-30T10:00:00', '2026-09-10T10:00:00')).toBe(true);
+    // Début après la période, « fin » dans la période : la fin invalide ne le fait pas entrer.
+    expect(during('2026-10-10T10:00:00', '2026-09-28T10:00:00')).toBe(false);
+  });
+
+  it('ignore une date de fin illisible', () => {
+    expect(during('2026-09-30T10:00:00', 'pas-une-date')).toBe(true);
+    expect(during('2026-09-10T10:00:00', 'pas-une-date')).toBe(false);
   });
 
   it("suit les dates de la config (une autre carte, d'autres dates)", () => {
     expect(
       computeIsDuringWeek(
-        '2026-11-12T10:00:00.000Z',
+        '2026-11-12T10:00:00',
+        undefined,
         '2026-11-10',
         '2026-11-16',
       ),
     ).toBe(true);
     expect(
       computeIsDuringWeek(
-        '2026-09-30T10:00:00.000Z',
+        '2026-09-30T10:00:00',
+        undefined,
         '2026-11-10',
         '2026-11-16',
       ),
@@ -199,25 +232,40 @@ describe('computeIsDuringWeek', () => {
 
   it('lève une erreur claire si les dates de la config manquent (pas de repli)', () => {
     expect(() =>
-      computeIsDuringWeek('2026-09-30T10:00:00.000Z', undefined, undefined),
+      computeIsDuringWeek(
+        '2026-09-30T10:00:00',
+        undefined,
+        undefined,
+        undefined,
+      ),
     ).toThrow(/app\.eventDates\.weekStart/);
     expect(() =>
-      computeIsDuringWeek('2026-09-30T10:00:00.000Z', START, ''),
+      computeIsDuringWeek('2026-09-30T10:00:00', undefined, START, ''),
     ).toThrow(/app\.eventDates\.weekEnd/);
   });
 
   it("lève l'erreur même pour un événement sans date (la config est en cause, pas la donnée)", () => {
-    expect(() => computeIsDuringWeek(undefined, undefined, undefined)).toThrow(
-      /app\.eventDates/,
-    );
+    expect(() =>
+      computeIsDuringWeek(undefined, undefined, undefined, undefined),
+    ).toThrow(/app\.eventDates/);
   });
 
   it('lève une erreur claire si une date de la config est invalide', () => {
     expect(() =>
-      computeIsDuringWeek('2026-09-30T10:00:00.000Z', 'pas-une-date', END),
+      computeIsDuringWeek(
+        '2026-09-30T10:00:00',
+        undefined,
+        'pas-une-date',
+        END,
+      ),
     ).toThrow(/AAAA-MM-JJ/);
     expect(() =>
-      computeIsDuringWeek('2026-09-30T10:00:00.000Z', START, '2026-13-45'),
+      computeIsDuringWeek(
+        '2026-09-30T10:00:00',
+        undefined,
+        START,
+        '2026-13-45',
+      ),
     ).toThrow(/AAAA-MM-JJ/);
   });
 });

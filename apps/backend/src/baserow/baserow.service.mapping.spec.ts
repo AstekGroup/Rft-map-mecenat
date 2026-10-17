@@ -11,14 +11,17 @@ import { buildTestConfig } from '../../test/test-config';
  * Le service ne connaît aucun nom de colonne : tout vient de la config. Ces tests donnent à la
  * carte un vocabulaire sans rapport avec celui de la config par défaut pour le prouver.
  */
+type MultipleFormats = { id: string; title: string; formats: string[] };
 type Private = {
   transformRecord(
     record: BaserowRecord,
-    partners: Map<string, never>,
-    themes: Map<string, never>,
-    formats: Map<string, never>,
-    publics: Map<string, never>,
+    partners: Map<string, unknown>,
+    themes: Map<string, unknown>,
+    formats: Map<string, unknown>,
+    publics: Map<string, unknown>,
+    issues?: { multipleFormats: MultipleFormats[] },
   ): Record<string, unknown>;
+  reportMultipleFormats(affected: MultipleFormats[]): void;
   fetchLinkedTableMap(tableName: string): Promise<Map<string, unknown>>;
 };
 
@@ -138,6 +141,115 @@ describe('BaserowService : noms de colonnes et valeurs venant de la config', () 
     ).toBe(true);
   });
 
+  describe('un seul format par événement', () => {
+    const atelier = { id: '1', name: 'Atelier' };
+    const conference = { id: '2', name: 'Conférence' };
+    const formatsMap = new Map<string, unknown>([
+      ['1', atelier],
+      ['2', conference],
+    ]);
+
+    function withFormats(
+      service: Private,
+      config: AppConfig,
+      links: number[],
+      issues?: { multipleFormats: MultipleFormats[] },
+    ) {
+      const { format, title } = config.baserow.fieldMapping;
+      return service.transformRecord(
+        {
+          id: 7,
+          [title]: 'Soirée mixte',
+          [format]: links.map((id) => ({ id, value: `format ${id}` })),
+        },
+        new Map(),
+        new Map(),
+        formatsMap,
+        new Map(),
+        issues,
+      );
+    }
+
+    it('retient le premier format lié et signale les autres', () => {
+      const config = buildTestConfig();
+      const service = buildService(config);
+      const issues = { multipleFormats: [] as MultipleFormats[] };
+
+      const event = withFormats(service, config, [2, 1], issues);
+
+      expect(event.type).toEqual(conference);
+      expect(issues.multipleFormats).toEqual([
+        { id: '7', title: 'Soirée mixte', formats: ['Conférence', 'Atelier'] },
+      ]);
+    });
+
+    it('ne signale rien pour un seul format ou aucun format', () => {
+      const config = buildTestConfig();
+      const service = buildService(config);
+      const issues = { multipleFormats: [] as MultipleFormats[] };
+
+      expect(withFormats(service, config, [1], issues).type).toEqual(atelier);
+      expect(withFormats(service, config, [], issues).type).toBeUndefined();
+      expect(issues.multipleFormats).toEqual([]);
+    });
+
+    it("journalise un seul avertissement pour tous les événements, et ne le répète pas s'ils n'ont pas changé", () => {
+      const service = buildService(buildTestConfig());
+      const affected = [1, 2, 3, 4, 5].map((n) => ({
+        id: String(n),
+        title: `Événement ${n}`,
+        formats: ['Atelier', 'Conférence'],
+      }));
+
+      service.reportMultipleFormats(affected);
+      service.reportMultipleFormats(affected);
+
+      const messages = warn.mock.calls
+        .map((c) => String(c[0]))
+        .filter((m) => m.includes('plusieurs formats'));
+      expect(messages).toHaveLength(1);
+      expect(messages[0]).toContain('5 événement(s)');
+      expect(messages[0]).toContain('Événement 1');
+      expect(messages[0]).toContain('et 2 autre(s)');
+
+      service.reportMultipleFormats([
+        ...affected,
+        { id: '6', title: 'Autre', formats: ['A', 'B'] },
+      ]);
+      expect(
+        warn.mock.calls.filter((c) =>
+          String(c[0]).includes('plusieurs formats'),
+        ),
+      ).toHaveLength(2);
+    });
+
+    it("ne journalise rien quand aucun événement n'a plusieurs formats", () => {
+      const service = buildService(buildTestConfig());
+      service.reportMultipleFormats([]);
+      expect(warn).not.toHaveBeenCalled();
+    });
+  });
+
+  it("marque « pendant l'événement » tout événement qui recoupe la période de la config", () => {
+    const config = buildTestConfig(); // période : 2026-05-04 → 2026-05-10
+    const service = buildService(config);
+    const { startDate, endDate } = config.baserow.fieldMapping;
+    const during = (start: string, end?: string) =>
+      transform(service, {
+        id: 1,
+        [startDate]: start,
+        ...(end ? { [endDate]: end } : {}),
+      }).isDuringWeek;
+
+    expect(during('2026-05-06T10:00:00')).toBe(true);
+    // Commence avant la période, finit dedans : comptait « hors période » quand seul le début comptait.
+    expect(during('2026-04-30T10:00:00', '2026-05-05T18:00:00')).toBe(true);
+    // Commence dedans, finit après.
+    expect(during('2026-05-09T10:00:00', '2026-05-15T18:00:00')).toBe(true);
+    expect(during('2026-04-20T10:00:00', '2026-04-22T18:00:00')).toBe(false);
+    expect(during('2026-05-20T10:00:00')).toBe(false);
+  });
+
   it('reconnaît le tarif gratuit avec la valeur de la config', () => {
     const config = buildTestConfig();
     config.baserow.mapping.tariffFreeValue = 'Offert';
@@ -198,6 +310,57 @@ describe('BaserowService : noms de colonnes et valeurs venant de la config', () 
         pictoName: 'PartyPopper',
         colorHexa: '#E74C8C',
       });
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
+
+  it("renvoie les options d'un référentiel dans l'ordre des lignes de Baserow, sur plusieurs pages", async () => {
+    const config = buildTestConfig();
+    const service = buildService(config, {
+      BASEROW_API_URL: 'http://baserow.test',
+      BASEROW_API_TOKEN: 'token',
+      BASEROW_THEMATIQUES_TABLE_ID: '6',
+    });
+    const name = config.baserow.mapping.referenceFields.name;
+    const page = (rows: string[][], next: string | null) =>
+      Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            next,
+            results: rows.map(([id, label]) => ({
+              id: Number(id),
+              [name]: label,
+            })),
+          }),
+      });
+    const fetchMock = jest
+      .fn()
+      // Ordre voulu par les organisateurs : ni alphabétique, ni par identifiant.
+      .mockReturnValueOnce(
+        page(
+          [
+            ['3', 'Zéro déchet'],
+            ['1', 'Alimentation'],
+          ],
+          'page-2',
+        ),
+      )
+      .mockReturnValueOnce(page([['2', 'Autres']], null));
+    const originalFetch = global.fetch;
+    global.fetch = fetchMock as unknown as typeof fetch;
+    try {
+      const rows = await (
+        service as unknown as {
+          fetchLinkedTableRow(table: string): Promise<{ name: string }[]>;
+        }
+      ).fetchLinkedTableRow('BASEROW_THEMATIQUES_TABLE');
+      expect(rows.map((r) => r.name)).toEqual([
+        'Zéro déchet',
+        'Alimentation',
+        'Autres',
+      ]);
     } finally {
       global.fetch = originalFetch;
     }

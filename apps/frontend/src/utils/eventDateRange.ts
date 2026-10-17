@@ -9,6 +9,22 @@ export function isDateFilterActive(dateFilter: DateFilterMode, dateFrom: string)
   );
 }
 
+/** Jour calendaire (fuseau du navigateur) de `date`, au format YYYY-MM-DD. */
+export function toLocalYmd(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+/**
+ * L'événement (la période `app.eventDates` de la config) est-il terminé ? Vrai dès le lendemain
+ * de sa dernière journée. Date de fin absente ou illisible : faux (on ne devine rien).
+ */
+export function isEventOver(weekEnd: string | undefined, now: Date = new Date()): boolean {
+  if (!weekEnd || !/^\d{4}-\d{2}-\d{2}/.test(weekEnd)) return false;
+  return toLocalYmd(now) > weekEnd.slice(0, 10);
+}
+
 /** Extrait YYYY-MM-DD depuis une chaîne API (ISO ou date seule). */
 export function toYmd(s: string | undefined): string {
   if (!s) return '';

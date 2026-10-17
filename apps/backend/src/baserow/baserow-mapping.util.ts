@@ -135,24 +135,30 @@ function assertConfigDate(value: string | undefined, key: string): string {
 }
 
 /**
- * Indique si la date tombe dans la période de l'événement (`app.eventDates` de la config).
- * Aucune date par défaut : si la config ne donne pas des dates valides, on lève une erreur
- * explicite plutôt que de calculer un badge faux.
+ * Indique si l'événement recoupe la période de l'événement (`app.eventDates` de la config) :
+ * il compte dès qu'un seul de ses jours tombe dans la période, même s'il a commencé avant ou
+ * se termine après. C'est la même règle que le filtre « dates personnalisées » du frontend
+ * (recoupement de deux intervalles de jours), pour que les deux modes donnent le même résultat.
+ *
+ * - Sans date de début valide : `false` (l'événement sans date est écarté ailleurs).
+ * - Fin absente, invalide ou avant le début : l'événement est ponctuel (fin ignorée).
+ * - Aucune date par défaut : si la config ne donne pas des dates valides, on lève une erreur
+ *   explicite plutôt que de calculer un badge faux.
  */
 export function computeIsDuringWeek(
-  dateString: string | undefined,
+  startDateString: string | undefined,
+  endDateString: string | undefined,
   weekStart: string | undefined,
   weekEnd: string | undefined,
 ): boolean {
-  const start = assertConfigDate(weekStart, 'weekStart');
-  const end = assertConfigDate(weekEnd, 'weekEnd');
-  if (!dateString) return false;
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return false;
-  return (
-    date >= new Date(`${start}T00:00:00.000Z`) &&
-    date <= new Date(`${end}T23:59:59.999Z`)
-  );
+  const periodStart = assertConfigDate(weekStart, 'weekStart');
+  const periodEnd = assertConfigDate(weekEnd, 'weekEnd');
+  const eventStart = parseDateTime(startDateString).date;
+  if (!eventStart) return false;
+  const parsedEnd = parseDateTime(endDateString).date;
+  const eventEnd =
+    parsedEnd && parsedEnd >= eventStart ? parsedEnd : eventStart;
+  return eventStart <= periodEnd && eventEnd >= periodStart;
 }
 
 // ============================================================

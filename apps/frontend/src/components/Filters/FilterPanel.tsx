@@ -1,336 +1,46 @@
-import { EventFilters, useConfig } from '@/hooks';
-import { LinkedTableRow} from '@/types/event';
-import { Calendar, MapPin, Tag, RotateCcw, Search, X, Hash, BookOpen, Handshake, Users, Globe } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
+import type { EventFilterControls } from '@/hooks';
 import { Button } from '@/components/UI';
 import { FilterAccordion } from './FilterAccordion';
+import { FilterContent, FilterSearch } from './FilterContent';
 import { PastEventsToggle } from './PastEventsToggle';
-import { DateCustomRangeInputs } from '@/components/Filters/DateCustomRangeInputs';
-import { isDateFilterActive } from '@/utils/eventDateRange';
 import { countActiveFilters } from '@/utils/eventFilters';
-import {checkIconColor, getIcon} from "@/utils/iconResolver.ts";
+import { getVisibleFiltersFor } from '@/utils/filterDefinitions';
 
 interface FilterPanelProps {
-  filters: EventFilters;
-  onUpdateFilters: (filters: Partial<EventFilters>) => void;
-  onToggleRegion: (region: string) => void;
-  onToggleType: (type: string) => void;
-  onToggleTheme: (themeId: string) => void;
-  onTogglePartner: (partnerId: string) => void;
-  availablePartners: LinkedTableRow[];
-  onToggleAudience: (audience: string) => void;
-  onResetFilters: () => void;
-  stats: {
-    total: number;
-    filtered: number;
-    duringWeek: number;
-  };
-  availableThemes: LinkedTableRow[];
-  availableFormats: LinkedTableRow[];
-  availablePublics: LinkedTableRow[];
+  controls: EventFilterControls;
 }
 
-export function FilterPanel({
-  filters,
-  onUpdateFilters,
-  onToggleRegion,
-  onToggleType,
-  onToggleTheme,
-  onTogglePartner,
-  availablePartners,
-  onToggleAudience,
-  onResetFilters,
-  availableThemes,
-  availableFormats,
-  availablePublics,
-}: FilterPanelProps) {
-  const { helpers } = useConfig();
-  const { metropole: REGIONS_METRO, domtom: REGIONS_DOMTOM } = helpers.getRegionGroups();
-  
-  const dateFilterModes = helpers.getDateFilterModes();
-  const hasActiveFilters = countActiveFilters(filters) > 0;
+/** Panneau de filtres de la carte : un accordéon par filtre de `FILTER_DEFINITIONS`. */
+export function FilterPanel({ controls }: FilterPanelProps) {
+  const { filters, onUpdateFilters, onResetFilters } = controls;
+  const hasActiveFilters = countActiveFilters(filters, controls.defaultShowPastEvents) > 0;
+  const visibleFilters = getVisibleFiltersFor(controls);
 
   return (
     <div className="flex flex-col h-full font-inter">
       {/* Recherche intégrée */}
       <div className="p-4 border-b border-primary/10">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" />
-          <input
-            type="text"
-            value={filters.search}
-            onChange={(e) => onUpdateFilters({ search: e.target.value })}
-            placeholder="Rechercher..."
-            className="w-full pl-9 pr-9 py-2.5 bg-white border border-primary/20 rounded-lg text-sm text-text-primary placeholder:text-text-secondary/70 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-          />
-          {filters.search && (
-            <button
-              onClick={() => onUpdateFilters({ search: '' })}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-primary transition-colors"
-              aria-label="Effacer la recherche"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
+        <FilterSearch filters={filters} onUpdateFilters={onUpdateFilters} variant="panel" />
       </div>
 
       {/* Filtres en accordéon */}
       <div className="flex-1 overflow-y-auto scrollbar-thin">
-        {/* Filtre par date */}
-        <FilterAccordion
-          title="Période"
-          icon={<Calendar className="w-4 h-4" />}
-          defaultOpen={isDateFilterActive(filters.dateFilter, filters.dateFrom)}
-        >
-          <div className="space-y-2">
-            {dateFilterModes.map((modeObj) => {
-              const mode = modeObj.mode;
-              return (
-                <label
-                  key={mode}
-                  className="flex items-center gap-3 cursor-pointer group"
-                >
-                  <input
-                    type="radio"
-                    name="dateFilter"
-                    value={mode}
-                    checked={filters.dateFilter === mode}
-                    onChange={() =>
-                      onUpdateFilters({ dateFilter: mode as EventFilters['dateFilter'] })
-                    }
-                    className="w-4 h-4 text-primary border-primary/30 focus:ring-primary"
-                  />
-                  <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-                    {modeObj.label || mode}
-                  </span>
-                </label>
-              );
-            })}
-            {filters.dateFilter === 'custom' && (
-              <DateCustomRangeInputs filters={filters} onUpdateFilters={onUpdateFilters} />
-            )}
-          </div>
-        </FilterAccordion>
-
-        {/* Filtre par partenaire */}
-        {availablePartners.length > 0 && (
-          <FilterAccordion
-            title="Partenaires"
-            icon={<Handshake className="w-4 h-4" />}
-            defaultOpen={filters.partners.length > 0}
-            badge={filters.partners.length}
-          >
-            <div className="space-y-2">
-              {availablePartners.map((partner) => (
-                <label
-                  key={partner.id}
-                  className="flex items-center gap-3 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    checked={filters.partners.includes(partner.id)}
-                    onChange={() => onTogglePartner(partner.id)}
-                    className="w-4 h-4 text-accent-pink border-primary/30 rounded focus:ring-accent-pink"
-                  />
-                  {partner.logoUrl && (
-                    <img 
-                      src={partner.logoUrl} 
-                      alt={partner.name} 
-                      className="w-6 h-6 object-contain rounded-sm shadow-sm bg-white" 
-                    />
-                  )}
-                  <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-                    {partner.name}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </FilterAccordion>
-        )}
-
-        {/* Filtre par type avec pictos */}
-        {availableFormats.length > 0 && (
-        <FilterAccordion
-          title="Type d'événement"
-          icon={<Tag className="w-4 h-4" />}
-          defaultOpen={filters.types.length > 0}
-          badge={filters.types.length}
-        >
-          <div className="space-y-2">
-            {availableFormats.map((type) => {
-              const Icon =  getIcon(type.pictoName, Globe);
-              const typeColor = checkIconColor(type.colorHexa, "#D4DDE2");
-              return (
-                <label
-                  key={type.id}
-                  className="flex items-center gap-3 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    checked={filters.types.includes(type.id)}
-                    onChange={() => onToggleType(type.id)}
-                    className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
-                  />
-                  <div
-                    className="w-6 h-6 rounded-md flex items-center justify-center"
-                    style={{ backgroundColor: typeColor }}
-                  >
-                    <Icon className="w-3.5 h-3.5 text-white" />
-                  </div>
-                  <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-                    {type?.name}
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-        </FilterAccordion>
-        )}
-
-        {/* Filtre par thématique */}
-        {availableThemes.length > 0 && (
-        <FilterAccordion
-          title="Thématiques"
-          icon={<BookOpen className="w-4 h-4" />}
-          defaultOpen={filters.themes.length > 0}
-          badge={filters.themes.length}
-        >
-          <div className="space-y-2">
-            {availableThemes?.map((theme) => (
-              <label
-                key={theme.id}
-                className="flex items-center gap-3 cursor-pointer group"
-              >
-                <input
-                  type="checkbox"
-                  checked={filters.themes.includes(theme.id)}
-                  onChange={() => onToggleTheme(theme.id)}
-                  className="w-4 h-4 text-accent-pink border-primary/30 rounded focus:ring-accent-pink"
-                />
-                <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-                  {theme.name}
-                </span>
-              </label>
-            ))}
-          </div>
-        </FilterAccordion>
-        )}
-
-        {/* Filtre par public cible */}
-        {availablePublics.length > 0 && (
-        <FilterAccordion
-          title="Public cible"
-          icon={<Users className="w-4 h-4" />}
-          defaultOpen={filters.audiences.length > 0}
-          badge={filters.audiences.length}
-        >
-          <div className="space-y-2">
-            {availablePublics?.map((audience) => (
-              <label
-                key={audience.id}
-                className="flex items-center gap-3 cursor-pointer group"
-              >
-                <input
-                  type="checkbox"
-                  checked={filters.audiences.includes(audience.id)}
-                  onChange={() => onToggleAudience(audience.id)}
-                  className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
-                />
-                <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-                  {audience.name}
-                </span>
-              </label>
-            ))}
-          </div>
-        </FilterAccordion>
-        )}
-
-        {/* Filtre par code postal */}
-        <FilterAccordion
-          title="Code postal"
-          icon={<Hash className="w-4 h-4" />}
-          defaultOpen={!!filters.postalCode}
-        >
-          <div className="relative">
-            <input
-              type="text"
-              value={filters.postalCode}
-              onChange={(e) => {
-                // Permettre uniquement les chiffres
-                const value = e.target.value.replace(/\D/g, '').slice(0, 5);
-                onUpdateFilters({ postalCode: value });
-              }}
-              placeholder="Ex: 75, 75001..."
-              maxLength={5}
-              className="w-full px-3 py-2 bg-white border border-primary/20 rounded-lg text-sm text-text-primary placeholder:text-text-secondary/70 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-            />
-            {filters.postalCode && (
-              <button
-                onClick={() => onUpdateFilters({ postalCode: '' })}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-primary transition-colors"
-                aria-label="Effacer le code postal"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-          <p className="text-xs text-text-secondary mt-2">
-            Entrez un code postal ou son début (ex: 75 pour Paris)
-          </p>
-        </FilterAccordion>
-
-        {/* Filtre par région */}
-        <FilterAccordion
-          title="Région"
-          icon={<MapPin className="w-4 h-4" />}
-          defaultOpen={filters.regions.length > 0}
-          badge={filters.regions.length}
-        >
-          <div className="space-y-2">
-            {/* Métropole */}
-            <div className="space-y-2">
-              {REGIONS_METRO.map((region) => (
-                <label
-                  key={region}
-                  className="flex items-center gap-3 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    checked={filters.regions.includes(region)}
-                    onChange={() => onToggleRegion(region)}
-                    className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
-                  />
-                  <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-                    {region}
-                  </span>
-                </label>
-              ))}
-            </div>
-            
-            {/* DOM-TOM */}
-            <div className="pt-3 mt-3 border-t border-primary/10">
-              <p className="text-xs text-text-secondary mb-2 font-medium uppercase tracking-wide">Outre-mer</p>
-              <div className="space-y-2">
-                {REGIONS_DOMTOM.map((region) => (
-                  <label
-                    key={region}
-                    className="flex items-center gap-3 cursor-pointer group"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filters.regions.includes(region)}
-                      onChange={() => onToggleRegion(region)}
-                      className="w-4 h-4 text-primary border-primary/30 rounded focus:ring-primary"
-                    />
-                    <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-                      {region}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-        </FilterAccordion>
+        {visibleFilters.map((definition) => {
+          const Icon = definition.icon;
+          const count = definition.activeCount(filters);
+          return (
+            <FilterAccordion
+              key={definition.id}
+              title={definition.title}
+              icon={<Icon className="w-4 h-4" />}
+              defaultOpen={count > 0}
+              badge={count}
+            >
+              <FilterContent id={definition.id} variant="panel" controls={controls} />
+            </FilterAccordion>
+          );
+        })}
       </div>
 
       {/* Toggle événements passés */}

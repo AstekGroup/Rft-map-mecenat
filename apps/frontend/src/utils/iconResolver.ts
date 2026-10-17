@@ -2,6 +2,9 @@ import * as Icons from "lucide-react";
 import {LucideIcon} from "lucide-react";
 
 
+/** Couleur de repli d'un format dont la couleur Baserow est absente ou invalide. */
+export const DEFAULT_FORMAT_COLOR = "#D4DDE2";
+
 function isValidHexadecimalColor(color: string): boolean {
     return !!color && /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(color);
 }

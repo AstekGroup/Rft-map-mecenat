@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
-import { Event, LinkedTableRow } from '@/types/event';
-import {EventFilters, useConfig} from '@/hooks';
+import { Event } from '@/types/event';
+import { useConfig } from '@/hooks';
+import type { EventFilterControls } from '@/hooks';
 import { EventCard } from './EventCard';
 import { FilterPanel } from '@/components/Filters/FilterPanel';
 import { PastEventsToggle } from '@/components/Filters/PastEventsToggle';
@@ -10,15 +11,8 @@ import { countActiveFilters } from '@/utils/eventFilters';
 
 interface SidebarProps {
   events: Event[];
-  filters: EventFilters;
-  onUpdateFilters: (filters: Partial<EventFilters>) => void;
-  onToggleRegion: (region: string) => void;
-  onToggleType: (type: string) => void;
-  onToggleTheme: (themeId: string) => void;
-  onTogglePartner: (partnerId: string) => void;
-  availablePartners: LinkedTableRow[];
-  onToggleAudience: (audienceId: string) => void;
-  onResetFilters: () => void;
+  /** Filtres, actions et options : le même objet que celui de la barre de la liste. */
+  controls: EventFilterControls;
   selectedEvent: Event | null;
   onSelectEvent: (event: Event | null) => void;
   hoveredEvent: Event | null;
@@ -29,32 +23,19 @@ interface SidebarProps {
     duringWeek: number;
   };
   mapBounds?: MapBounds | null;
-  availableThemes: LinkedTableRow[];
-  availableFormats: LinkedTableRow[];
-  availablePublics: LinkedTableRow[];
 }
 
 export function Sidebar({
   events,
-  filters,
-  onUpdateFilters,
-  onToggleRegion,
-  onToggleType,
-  onToggleTheme,
-  onTogglePartner,
-  availablePartners,
-  onToggleAudience,
-  onResetFilters,
+  controls,
   selectedEvent,
   onSelectEvent,
   hoveredEvent,
   onHoverEvent,
   stats,
   mapBounds,
-  availableThemes,
-  availableFormats,
-  availablePublics,
 }: SidebarProps) {
+  const { filters, onUpdateFilters, onResetFilters } = controls;
   const { helpers } = useConfig();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<'list' | 'filters'>('list');
@@ -73,7 +54,7 @@ export function Sidebar({
     };
   }, [events, mapBounds]);
 
-  const activeFiltersCount = countActiveFilters(filters);
+  const activeFiltersCount = countActiveFilters(filters, controls.defaultShowPastEvents);
 
   if (isCollapsed) {
     return (
@@ -238,21 +219,7 @@ export function Sidebar({
             )}
           </div>
         ) : (
-          <FilterPanel
-            filters={filters}
-            onUpdateFilters={onUpdateFilters}
-            onToggleRegion={onToggleRegion}
-            onToggleType={onToggleType}
-            onToggleTheme={onToggleTheme}
-            onTogglePartner={onTogglePartner}
-            availablePartners={availablePartners}
-            onToggleAudience={onToggleAudience}
-            onResetFilters={onResetFilters}
-            stats={stats}
-            availableThemes={availableThemes}
-            availableFormats={availableFormats}
-            availablePublics={availablePublics}
-          />
+          <FilterPanel controls={controls} />
         )}
       </div>
 
