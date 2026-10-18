@@ -1,24 +1,21 @@
-# Project Vibe & Strategy - La Grande Semaine Végétale
+# Project Vibe & Strategy - Make Map
 
 ## Vision & Purpose
-Promouvoir une alimentation végétale accessible, gourmande et durable à travers une série d'événements nationaux.
+Permettre à n'importe quel événement national ou local de publier sa **carte interactive** : **1 code, N cartes**. Une carte = un événement (dates, marque, titres, données propres). Ce qui diffère d'une carte à l'autre vit dans un fichier de config (`app.config.json`) et dans Baserow, jamais dans le code.
 
-## MVP Carte Interactive - La Grande Semaine Végétale
-**Objectif** : Permettre aux citoyens de trouver facilement des événements près de chez eux.
+## MVP Carte Interactive
+**Objectif** : permettre aux citoyens de trouver facilement des événements près de chez eux.
 
-Application React standalone pour afficher les événements sur une carte de France interactive. Le design reprend la charte graphique LGSV (Palette de verts, typographie Poppins/Inter) tout en proposant une UX moderne et performante.
+Application React pour afficher les événements sur une carte de France interactive, avec une UX moderne et performante. L'identité visuelle (palette, polices) et les textes de chaque carte viennent de sa config.
 
-- **Client** : La Grande Semaine Végétale
 - **Type** : POC / MVP
-- **Data source** : API Baserow (via backend proxy)
+- **Data source** : API Baserow (via backend proxy, lecture seule)
 - **Hébergement** : Scaleway DEV1-S
 
 ## Tech Stack Strategy
 - **Frontend** : React + Vite + MapLibre GL JS + Supercluster + Tailwind CSS
-- **Backend** : NestJS + Cache-manager + Geocoding (API Adresse)
+- **Backend** : NestJS + cache mémoire + Geocoding (API Adresse)
 - **Deployment** : Docker + Docker Compose + Caddy (Reverse Proxy + HTTPS)
 
-## Branding Guidelines (LGSV)
-- **Ton** : Pédagogique, accessible, écologique, engageant.
-- **Couleurs** : Vert Principal (#3BAE5D), Vert Foncé (#1F7A3E), Beige (#F2EDE4).
-- **Typography** : Poppins (Titres), Inter (Corps).
+## Branding
+La marque d'une carte (nom, ton, couleurs, polices, logo) n'est **pas** décrite ici : elle vit dans la config de la carte (`app.*`, `texts.*`, `theme.*`). Voir [docs/audit/PERIMETRE-CONFIG-BASEROW.md](docs/audit/PERIMETRE-CONFIG-BASEROW.md) pour savoir qui porte quoi, et [AGENTS.md](AGENTS.md) pour les règles de contribution.
