@@ -67,7 +67,7 @@ export function buildHelpers(config: AppConfig | null): ConfigHelpers {
     const items = ENUM_MAP[cat];
     if (!items) return {};
     const map: Record<string, string> = {};
-    for (const item of items as any[]) {
+    for (const item of items) {
       map[item.id] = item.label;
     }
     return map;
@@ -80,8 +80,8 @@ export function buildHelpers(config: AppConfig | null): ConfigHelpers {
       return map[id] || id;
     },
     getText(section, key) {
-      const texts = (config?.texts as any)?.[section];
-      const value = texts?.[key];
+      const sections = config?.texts as Record<string, Record<string, unknown> | undefined> | undefined;
+      const value = sections?.[section]?.[key];
       // Texte absent : chaîne vide, jamais la clé brute (« mainTitle ») à l'écran. L'appelant
       // choisit son repli lisible ou masque l'élément.
       return typeof value === 'string' ? value : '';
