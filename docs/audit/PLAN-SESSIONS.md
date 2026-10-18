@@ -55,7 +55,7 @@ Ce fichier est **autonome** : une IA qui n'a pas vu la conversation d'origine do
 
 ### Environnement local de test
 
-- Baserow local jetable : `docker compose -f deploy/baserow-local/docker-compose.yml up -d`, puis `node scripts/seed-baserow/seed.mjs --bulk=1500` (écrit `apps/backend/.env`, gitignoré). Procédure, comptes et réinitialisation : `docs/audit/02-baserow-seed.md`. Ces fichiers sont dans l'arbre de travail non commité tant que la session 1 n'est pas faite.
+- Baserow local jetable : `docker compose -f deploy/baserow-local/docker-compose.yml up -d`, puis `node scripts/seed-baserow/seed.mjs` (1000 événements au total par défaut) (écrit `apps/backend/.env`, gitignoré). Procédure, comptes et réinitialisation : `docs/audit/02-baserow-seed.md`. Ces fichiers sont dans l'arbre de travail non commité tant que la session 1 n'est pas faite.
 - Backend : `pnpm back:dev` (port 3000). Frontend : `pnpm front:dev` (port 5173). Pour une 2ᵉ config : variable `APP_CONFIG_PATH=docs/audit/fixtures/app.config.second-map.json` côté backend.
 - Les scripts de `scripts/seed-baserow/` écrivent dans Baserow : **uniquement** vers l'instance Docker locale, jamais vers un vrai Baserow.
 

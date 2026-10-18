@@ -1,0 +1,113 @@
+{
+  "profile": "astek",
+  "app": {
+    "name": "Semaine d'Astek",
+    "shortName": "SDA",
+    "description": "Carte interactive des événements de la {{app.name}}",
+    "eventDates": {
+      "weekStart": "2026-11-23",
+      "weekEnd": "2026-11-29"
+    },
+    "url": "https://www.astek.net",
+    "locale": "fr"
+  },
+  "theme": {
+    "colors": {
+      "primary": "#009245",
+      "primary-dark": "#006B33",
+      "primary-light": "#99D3B5",
+      "text-primary": "#111111",
+      "text-green": "#006B33"
+    },
+    "fonts": {
+      "heading": "Montserrat",
+      "body": "Inter",
+      "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&family=Inter:wght@400;600&display=swap"
+    }
+  },
+  "texts": {
+    "meta": {
+      "title": "Carte Interactive - {{app.name}}",
+      "description": "Découvrez les événements de la {{app.name}} près de chez vous : conférences, ateliers et rencontres.",
+      "ogTitle": "Carte Interactive - {{app.name}}",
+      "ogDescription": "Découvrez les événements de la {{app.name}} près de chez vous : conférences, ateliers et rencontres.",
+      "iconRef": "https://www.astek.net/favicon.ico"
+    },
+    "home": {
+      "mainTitle": "{{app.name}}",
+      "mainDescription": "Retrouvez sur la carte tous les événements de la {{app.name}} : conférences, ateliers et rencontres, partout où Astek est présent.",
+      "ctaText": "Voir la carte des événements",
+      "ctaTextShort": "Découvrir les événements",
+      "editionLabel": "Édition",
+      "nearbySubtitle": "Près de chez vous",
+      "seeAll": "Tout voir",
+      "infoTitle": "C'est quoi la {{app.name}} ?",
+      "infoDescription": "Pendant une semaine, les équipes d'Astek et leurs partenaires organisent des événements pour partager leurs savoir-faire, échanger autour du numérique et se rencontrer.",
+      "sectionPresentiel": "Événements en présentiel"
+    }
+  },
+  "filters": {
+    "dateFilterModes": [
+      {
+        "mode": "all",
+        "label": "Toutes les dates"
+      },
+      {
+        "mode": "during-week",
+        "label": "Pendant la {{app.name}}"
+      },
+      {
+        "mode": "custom",
+        "label": "Dates personnalisées"
+      }
+    ]
+  },
+  "baserow": {
+    "moderationVisibleValue": "Accepté",
+    "fieldMapping": {
+      "title": "Nom de l'événement",
+      "description": "Description",
+      "startDate": "Date de début de l'événement",
+      "endDate": "Date de fin de l'événement",
+      "format": "Format",
+      "modality": "Type de l'événement",
+      "audience": "Public",
+      "theme": "Thématique",
+      "image": "Visuel de l'évènement",
+      "address": "Adresse du lieu",
+      "postalCode": "Code postal du lieu",
+      "city": "Ville du lieu",
+      "organizer": "Nom de la structure organisatrice",
+      "organizerFirstName": "Prénom de l'animateur",
+      "organizerLastName": "Nom de l'animateur",
+      "registrationUrl": "Lien d'inscription à l'événement",
+      "venueName": "Lieu",
+      "accessModalities": "Modalités spécifiques d'accès au lieu",
+      "videoConferenceUrl": "Lien de la visio",
+      "contactEmail": "Email contact événement",
+      "contactEmailFallback": "E-mail de l'animateur",
+      "contactPhone": "Téléphone inscription",
+      "organizerWebsite": "Site web de la structure",
+      "capacity": "Capacité d'accueil de l'événement",
+      "price": "Montant",
+      "tariff": "Tarif",
+      "partnerField": "Partenaires",
+      "moderation": "Modération de l'événement"
+    },
+    "mapping": {
+      "referenceFields": {
+        "name": "Nom",
+        "logo": "Logo",
+        "picto": "Picto",
+        "color": "Couleur"
+      },
+      "modality": {
+        "Présentiel": "presentiel",
+        "Distanciel": "distanciel",
+        "En ligne": "distanciel",
+        "Hybride": "presentiel"
+      },
+      "tariffFreeValue": "Gratuit"
+    }
+  }
+}
