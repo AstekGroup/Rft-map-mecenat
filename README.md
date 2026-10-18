@@ -47,11 +47,16 @@ cp apps/frontend/.env.example apps/frontend/.env
 |---|---|---|
 | `BASEROW_API_URL` | backend | URL de l'instance Baserow (ex: https://api.baserow.io) |
 | `BASEROW_API_TOKEN` | backend | Jeton de base de données Baserow |
-| `BASEROW_TABLE_ID` | backend | ID numérique de la table des événements |
-| `BASEROW_PARTNERS_TABLE_ID` | backend | ID numérique de la table des partenaires |
+| `BASEROW_EVENT_TABLE_ID` | backend | ID numérique de la table des événements |
 | `BASEROW_MODERATION_FIELD_ID` | backend | ID numérique du champ de modération |
+| `BASEROW_PARTNERS_TABLE_ID` | backend | ID numérique de la table des partenaires |
+| `BASEROW_THEMATIQUES_TABLE_ID` | backend | ID numérique de la table des thématiques |
+| `BASEROW_FORMATS_TABLE_ID` | backend | ID numérique de la table des formats |
+| `BASEROW_PUBLICS_TABLE_ID` | backend | ID numérique de la table des publics |
+| `APP_CONFIG_PATH` | backend | (optionnel) chemin du `app.config.json` de la carte ; absent : `app.config.json` à la racine |
+| `CORS_ORIGIN` | backend | (optionnel) origine autorisée par CORS |
+| `ALLOW_DEV_MODE` | backend | (optionnel, local seulement) autorise `?devMode=true` ; ignoré en production |
 | `VITE_API_URL` | frontend | URL du backend (`http://localhost:3000`) |
-| `VITE_MAPTILER_KEY` | frontend | Clé API MapTiler ([obtenir ici](https://cloud.maptiler.com/account/keys/)) |
 
 ### Lancer le projet
 
