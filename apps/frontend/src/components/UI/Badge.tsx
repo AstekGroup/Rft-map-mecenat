@@ -15,15 +15,11 @@ export function Badge({ type, size = 'md', variant = 'default' }: BadgeProps) {
     md: 'px-2.5 py-1 text-sm',
   };
 
-  // Style highlight : Vert foncé sur fond beige
+  // Style highlight : couleur primaire foncée du thème sur fond de surface du thème
   if (variant === 'highlight') {
     return (
       <span
-        className={`inline-flex items-center rounded-full font-semibold ${sizes[size]}`}
-        style={{
-          backgroundColor: '#F2EDE4',
-          color: '#1F7A3E',
-        }}
+        className={`inline-flex items-center rounded-full font-semibold bg-surface-beige text-primary-dark ${sizes[size]}`}
       >
         {label}
       </span>
