@@ -72,7 +72,7 @@ Proxy sécurisé NestJS pour l'API Baserow. Le token reste côté serveur.
 
 - **API** : `GET /api/events` · `GET /api/events/:id` · `GET /api/health`
 - Géocodage via [api-adresse.data.gouv.fr](https://adresse.data.gouv.fr) avec cache permanent
-- Cache TTL 5 min pour les données Baserow
+- Cache TTL 5 min pour les données Baserow : un événement modéré (accepté ou retiré) n'est visible qu'au plus 5 minutes plus tard, ou après un redémarrage du backend
 - `?devMode=true` pour bypasser le filtre de modération
 
 ### Frontend (`apps/frontend`)
