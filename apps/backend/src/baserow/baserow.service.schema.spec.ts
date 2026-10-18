@@ -154,7 +154,8 @@ describe('BaserowService.checkSchema', () => {
   });
 
   it('signale une variable de table de référence absente et poursuit le contrôle', async () => {
-    const { BASEROW_FORMATS_TABLE_ID: _omitted, ...env } = ENV;
+    const env = { ...ENV };
+    delete env.BASEROW_FORMATS_TABLE_ID;
     mockTables({ '1': eventColumns, ...referenceTables });
 
     await expect(buildService(config, env).checkSchema()).resolves.toEqual([]);

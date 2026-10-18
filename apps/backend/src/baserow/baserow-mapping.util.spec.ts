@@ -342,7 +342,18 @@ describe('parseCapacity', () => {
   });
 
   it('traite 0, vide, négatif, décimal et texte comme « non renseignée »', () => {
-    for (const value of [0, '0', '', null, undefined, -3, 2.5, 'illimité', '12 places', NaN]) {
+    for (const value of [
+      0,
+      '0',
+      '',
+      null,
+      undefined,
+      -3,
+      2.5,
+      'illimité',
+      '12 places',
+      NaN,
+    ]) {
       expect(parseCapacity(value)).toBeUndefined();
     }
   });
