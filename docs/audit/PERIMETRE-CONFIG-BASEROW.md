@@ -40,7 +40,7 @@ Validation : la config est contrôlée au démarrage du backend (`apps/backend/s
 |---|---|
 | Événements | Flux : formulaire public, table, modérateur passe la modération à la valeur `moderationVisibleValue`. Valeur absente ou vide : masqué. |
 | Référentiels | 4 tables lues par le backend. Libellé, couleur et picto d'un format, logo d'un partenaire. Le filtre d'un référentiel vide se masque ; un référentiel **en erreur** reste affiché avec un message (502 côté API, `/api/health` `degraded`). |
-| **Contrat du picto** | La valeur de la colonne `Picto` doit être un nom d'icône `lucide-react` exact (PascalCase, ex. `PenTool`) ; un nom inconnu donne l'icône de repli. L'acceptation de la forme kebab-case de lucide.dev (`pen-tool`) est planifiée ([PLAN-SESSIONS.md](PLAN-SESSIONS.md), Améliorations). Une couleur invalide donne le gris de repli. |
+| **Contrat du picto** | La valeur de la colonne `Picto` est un nom d'icône `lucide-react` : soit exact (PascalCase, ex. `PenTool`), soit en kebab-case tel que copié depuis lucide.dev (`pen-tool`, `arrow-down-0-1` donne `ArrowDown01`) ; les espaces en début et fin sont ignorés (`getIcon`, `apps/frontend/src/utils/iconResolver.ts`). Un nom vide ou inconnu donne l'icône de repli, sans message. Une couleur invalide donne le gris de repli. |
 | Ordre des options | Ordre des lignes de la table (plus de tri alphabétique). |
 | Format d'un événement | Un seul format retenu ; avertissement dans les logs s'il y en a plusieurs. |
 | Régions | Pas dans Baserow : déduites du code postal puis du géocodage. |
