@@ -6,6 +6,8 @@ import {
   extractImageUrl,
   computeIsDuringWeek,
   parseDateTime,
+  isEndBeforeStart,
+  parseCapacity,
   buildOrganizerContact,
   buildAccessibilityInfo,
 } from './baserow-mapping.util';
@@ -283,6 +285,66 @@ describe('parseDateTime', () => {
 
   it('retourne des chaînes vides pour une date invalide', () => {
     expect(parseDateTime('not-a-date')).toEqual({ date: '', time: '' });
+  });
+
+  it('lit la date et l’heure dans le même fuseau (Paris), quel que soit celui du serveur', () => {
+    // 22h30 UTC le 21/09 = 00h30 à Paris le 22/09 (cas E27 du jeu de test).
+    expect(parseDateTime('2026-09-21T22:30:00Z')).toEqual({
+      date: '2026-09-22',
+      time: '00:30',
+    });
+    // Heure d'hiver : 23h30 UTC = 00h30 à Paris le lendemain.
+    expect(parseDateTime('2026-12-31T23:30:00Z')).toEqual({
+      date: '2027-01-01',
+      time: '00:30',
+    });
+    // En journée, la date ne change pas.
+    expect(parseDateTime('2026-09-21T10:00:00Z')).toEqual({
+      date: '2026-09-21',
+      time: '12:00',
+    });
+  });
+});
+
+describe('isEndBeforeStart', () => {
+  it('détecte une fin antérieure au début (jour ou heure)', () => {
+    expect(
+      isEndBeforeStart('2026-09-25T18:00:00Z', '2026-09-24T09:00:00Z'),
+    ).toBe(true);
+    expect(
+      isEndBeforeStart('2026-09-25T18:00:00Z', '2026-09-25T09:00:00Z'),
+    ).toBe(true);
+  });
+
+  it('accepte une fin égale ou postérieure', () => {
+    expect(
+      isEndBeforeStart('2026-09-25T09:00:00Z', '2026-09-25T09:00:00Z'),
+    ).toBe(false);
+    expect(
+      isEndBeforeStart('2026-09-25T09:00:00Z', '2026-09-26T09:00:00Z'),
+    ).toBe(false);
+  });
+
+  it("ne conclut rien si une des dates manque ou n'est pas valide", () => {
+    expect(isEndBeforeStart(undefined, '2026-09-24T09:00:00Z')).toBe(false);
+    expect(isEndBeforeStart('2026-09-25T09:00:00Z', undefined)).toBe(false);
+    expect(isEndBeforeStart('2026-09-25T09:00:00Z', 'n’importe quoi')).toBe(
+      false,
+    );
+  });
+});
+
+describe('parseCapacity', () => {
+  it('garde un entier strictement positif, nombre ou texte numérique', () => {
+    expect(parseCapacity(40)).toBe(40);
+    expect(parseCapacity('40')).toBe(40);
+    expect(parseCapacity(' 12 ')).toBe(12);
+  });
+
+  it('traite 0, vide, négatif, décimal et texte comme « non renseignée »', () => {
+    for (const value of [0, '0', '', null, undefined, -3, 2.5, 'illimité', '12 places', NaN]) {
+      expect(parseCapacity(value)).toBeUndefined();
+    }
   });
 });
 

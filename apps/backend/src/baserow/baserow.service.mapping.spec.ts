@@ -12,6 +12,19 @@ import { buildTestConfig } from '../../test/test-config';
  * carte un vocabulaire sans rapport avec celui de la config par défaut pour le prouver.
  */
 type MultipleFormats = { id: string; title: string; formats: string[] };
+type Affected = { id: string; title: string };
+type Issues = {
+  multipleFormats: MultipleFormats[];
+  missingDate: Affected[];
+  endBeforeStart: Affected[];
+  invalidCapacity: Affected[];
+};
+const newIssues = (): Issues => ({
+  multipleFormats: [],
+  missingDate: [],
+  endBeforeStart: [],
+  invalidCapacity: [],
+});
 type Private = {
   transformRecord(
     record: BaserowRecord,
@@ -19,9 +32,10 @@ type Private = {
     themes: Map<string, unknown>,
     formats: Map<string, unknown>,
     publics: Map<string, unknown>,
-    issues?: { multipleFormats: MultipleFormats[] },
+    issues?: Issues,
   ): Record<string, unknown>;
   reportMultipleFormats(affected: MultipleFormats[]): void;
+  reportIssues(issues: Issues): void;
   fetchLinkedTableMap(tableName: string): Promise<Map<string, unknown>>;
 };
 
@@ -153,7 +167,7 @@ describe('BaserowService : noms de colonnes et valeurs venant de la config', () 
       service: Private,
       config: AppConfig,
       links: number[],
-      issues?: { multipleFormats: MultipleFormats[] },
+      issues?: Issues,
     ) {
       const { format, title } = config.baserow.fieldMapping;
       return service.transformRecord(
@@ -173,7 +187,7 @@ describe('BaserowService : noms de colonnes et valeurs venant de la config', () 
     it('retient le premier format lié et signale les autres', () => {
       const config = buildTestConfig();
       const service = buildService(config);
-      const issues = { multipleFormats: [] as MultipleFormats[] };
+      const issues = newIssues();
 
       const event = withFormats(service, config, [2, 1], issues);
 
@@ -186,7 +200,7 @@ describe('BaserowService : noms de colonnes et valeurs venant de la config', () 
     it('ne signale rien pour un seul format ou aucun format', () => {
       const config = buildTestConfig();
       const service = buildService(config);
-      const issues = { multipleFormats: [] as MultipleFormats[] };
+      const issues = newIssues();
 
       expect(withFormats(service, config, [1], issues).type).toEqual(atelier);
       expect(withFormats(service, config, [], issues).type).toBeUndefined();

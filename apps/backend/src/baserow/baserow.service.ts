@@ -19,6 +19,8 @@ import {
   extractImageUrl,
   computeIsDuringWeek,
   parseDateTime,
+  parseCapacity,
+  isEndBeforeStart,
   buildOrganizerContact,
   buildAccessibilityInfo,
   mapLinkedRow,
@@ -42,10 +44,29 @@ interface MultipleFormatsIssue {
   formats: string[];
 }
 
+/** Événement signalé dans un message agrégé (identifiant Baserow et titre, éventuellement vide). */
+interface AffectedEvent {
+  id: string;
+  title: string;
+}
+
 /** Écarts relevés pendant la transformation, journalisés une fois pour l'ensemble des événements. */
 interface TransformIssues {
   multipleFormats: MultipleFormatsIssue[];
+  /** Sans date de début valide : écartés de la carte et de la liste. */
+  missingDate: AffectedEvent[];
+  /** Date de fin antérieure au début : la fin est ignorée, l'événement reste publié. */
+  endBeforeStart: AffectedEvent[];
+  /** Capacité renseignée mais inexploitable (texte, négatif, décimal) : ignorée. */
+  invalidCapacity: AffectedEvent[];
 }
+
+const emptyIssues = (): TransformIssues => ({
+  multipleFormats: [],
+  missingDate: [],
+  endBeforeStart: [],
+  invalidCapacity: [],
+});
 
 const errorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
@@ -237,8 +258,8 @@ export class BaserowService implements OnApplicationBootstrap {
     if (records.length > 0) this.checkRecordColumns(records[0]);
 
     // 6. Transformer sans géocodage
-    const issues: TransformIssues = { multipleFormats: [] };
-    const partialEvents = records.map((r) =>
+    const issues = emptyIssues();
+    const transformed = records.map((r) =>
       this.transformRecord(
         r,
         partnersMap,
@@ -248,7 +269,11 @@ export class BaserowService implements OnApplicationBootstrap {
         issues,
       ),
     );
-    this.reportMultipleFormats(issues.multipleFormats);
+    this.reportIssues(issues);
+
+    // Un événement sans date ne peut être ni placé dans le temps ni filtré : on ne le publie
+    // pas (signalé dans les logs ci-dessus), plutôt que d'afficher « Invalid Date ».
+    const partialEvents = transformed.filter((e) => e.date !== '');
 
     // 7. Préparer le batch geocoding (seulement pour les événements présentiels)
     const itemsToGeocode = partialEvents
@@ -511,6 +536,56 @@ export class BaserowService implements OnApplicationBootstrap {
     return records;
   }
 
+  /** Journalise les écarts d'un chargement, un message agrégé par cause. */
+  private reportIssues(issues: TransformIssues): void {
+    this.reportMultipleFormats(issues.multipleFormats);
+    const fieldMapping = this.appConfig.get()?.baserow?.fieldMapping;
+    const startDate = fieldMapping?.startDate;
+    const endDate = fieldMapping?.endDate;
+    const capacity = fieldMapping?.capacity;
+    this.reportAffected(
+      'missing-date',
+      issues.missingDate,
+      `événement(s) sans date de début valide (colonne « ${startDate} ») : masqués de la carte et de la liste. Renseigner la date dans Baserow pour les publier`,
+    );
+    this.reportAffected(
+      'end-before-start',
+      issues.endBeforeStart,
+      `événement(s) dont la date de fin (colonne « ${endDate} ») précède le début : la fin est ignorée (événement ponctuel). Corriger la date dans Baserow`,
+    );
+    this.reportAffected(
+      'invalid-capacity',
+      issues.invalidCapacity,
+      `événement(s) avec une capacité inexploitable (colonne « ${capacity} » : un entier positif est attendu) : capacité ignorée`,
+    );
+  }
+
+  /**
+   * Message agrégé « N événement(s) … » avec 3 exemples ; répété seulement si la liste des
+   * événements concernés change (voir `warnOnce`).
+   */
+  private reportAffected(
+    kind: string,
+    affected: AffectedEvent[],
+    description: string,
+  ): void {
+    if (affected.length === 0) return;
+    this.warnOnce(
+      `${kind}:${affected.map((e) => e.id).join(',')}`,
+      `${affected.length} ${description}. Exemples : ${this.describeExamples(affected)}.`,
+    );
+  }
+
+  private describeExamples(affected: AffectedEvent[]): string {
+    const examples = affected
+      .slice(0, 3)
+      .map((e) => `« ${e.title || 'sans titre'} » (id ${e.id})`)
+      .join(' ; ');
+    const more =
+      affected.length > 3 ? ` et ${affected.length - 3} autre(s)` : '';
+    return `${examples}${more}`;
+  }
+
   /**
    * Avertit (un seul message pour tous les événements concernés) que des événements portent
    * plusieurs formats : l'application n'en garde qu'un, le premier lié dans Baserow. Le message
@@ -601,6 +676,17 @@ export class BaserowService implements OnApplicationBootstrap {
     const startDateTime = parseDateTime(startDateRaw);
     const endDateRaw = read<string>('endDate');
     const endDateTime = parseDateTime(endDateRaw);
+    const affected: AffectedEvent = {
+      id: String(record.id),
+      title: text('title'),
+    };
+    if (!startDateTime.date) issues?.missingDate.push(affected);
+    // Fin avant le début : on l'ignore (événement ponctuel) plutôt que d'afficher un intervalle
+    // incohérent. Sans début valide l'événement est de toute façon écarté.
+    const endBeforeStart = isEndBeforeStart(startDateRaw, endDateRaw);
+    if (endBeforeStart && startDateTime.date) {
+      issues?.endBeforeStart.push(affected);
+    }
 
     const modality = mapModality(
       read<BaserowSelect>('modality'),
@@ -654,14 +740,28 @@ export class BaserowService implements OnApplicationBootstrap {
 
     const price = read('price');
 
+    const capacityRaw = read('capacity');
+    const capacity = parseCapacity(capacityRaw);
+    // 0 et vide = « non renseignée » (normal) ; tout autre valeur rejetée est signalée.
+    if (
+      capacity === undefined &&
+      capacityRaw !== undefined &&
+      capacityRaw !== null &&
+      capacityRaw !== '' &&
+      capacityRaw !== 0 &&
+      capacityRaw !== '0'
+    ) {
+      issues?.invalidCapacity.push(affected);
+    }
+
     return {
       id: String(record.id),
       title: read<string>('title') || 'Événement sans titre',
       description: read<string>('description') || '',
       date: startDateTime.date,
       time: startDateTime.time,
-      endDate: endDateTime.date || undefined,
-      endTime: endDateTime.time || undefined,
+      endDate: endBeforeStart ? undefined : endDateTime.date || undefined,
+      endTime: endBeforeStart ? undefined : endDateTime.time || undefined,
       address: text('address'),
       city: text('city'),
       region: fallbackRegion,
@@ -687,7 +787,7 @@ export class BaserowService implements OnApplicationBootstrap {
         undefined,
       contactPhone: read<string>('contactPhone') || undefined,
       organizerWebsite: read<string>('organizerWebsite') || undefined,
-      capacity: read<number>('capacity') || undefined,
+      capacity,
       registeredCount: undefined,
       partners: partners.length > 0 ? partners : undefined,
       isFree: isFreeTariff(

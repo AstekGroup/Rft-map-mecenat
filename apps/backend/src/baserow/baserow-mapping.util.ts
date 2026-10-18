@@ -165,6 +165,13 @@ export function computeIsDuringWeek(
 // DateTime parsing
 // ============================================================
 
+/**
+ * Fuseau d'affichage des événements : la date et l'heure sont lues dans le même fuseau.
+ * (Avant, la date suivait le fuseau du serveur et l'heure celui de Paris : un événement à
+ * 22h30 UTC affichait « 21/09 00h30 » sur un serveur en UTC.)
+ */
+const DISPLAY_TIME_ZONE = 'Europe/Paris';
+
 export function parseDateTime(dateTimeString: string | undefined): {
   date: string;
   time: string;
@@ -175,17 +182,49 @@ export function parseDateTime(dateTimeString: string | undefined): {
     const dt = new Date(dateTimeString);
     if (isNaN(dt.getTime())) return { date: '', time: '' };
 
-    const date = dt.toLocaleDateString('fr-CA');
+    const date = dt.toLocaleDateString('fr-CA', {
+      timeZone: DISPLAY_TIME_ZONE,
+    });
     const time = dt.toLocaleTimeString('fr-FR', {
       hour: '2-digit',
       minute: '2-digit',
-      timeZone: 'Europe/Paris',
+      timeZone: DISPLAY_TIME_ZONE,
     });
 
     return { date, time };
   } catch {
     return { date: '', time: '' };
   }
+}
+
+/**
+ * Vrai si les deux dates sont valides et que la fin précède strictement le début
+ * (comparaison des instants, donc aussi le même jour avec une heure de fin antérieure).
+ */
+export function isEndBeforeStart(
+  startDateString: string | undefined,
+  endDateString: string | undefined,
+): boolean {
+  if (!startDateString || !endDateString) return false;
+  const start = new Date(startDateString).getTime();
+  const end = new Date(endDateString).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end)) return false;
+  return end < start;
+}
+
+/**
+ * Capacité d'accueil : entier strictement positif, sinon `undefined` (« non renseignée »).
+ * Accepte un nombre ou un texte numérique (colonne Baserow de type texte) ; 0, négatif,
+ * décimal ou texte non numérique ne sont pas une capacité exploitable.
+ */
+export function parseCapacity(value: unknown): number | undefined {
+  const parsed =
+    typeof value === 'number'
+      ? value
+      : typeof value === 'string' && /^\s*\d+\s*$/.test(value)
+        ? Number(value)
+        : NaN;
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
 }
 
 // ============================================================
