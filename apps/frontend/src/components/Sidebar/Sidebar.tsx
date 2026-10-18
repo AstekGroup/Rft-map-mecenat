@@ -37,6 +37,7 @@ export function Sidebar({
 }: SidebarProps) {
   const { filters, onUpdateFilters, onResetFilters } = controls;
   const { helpers } = useConfig();
+  const eventTitle = helpers.getText('home', 'mainTitle') || helpers.getEventName();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<'list' | 'filters'>('list');
 
@@ -227,7 +228,7 @@ export function Sidebar({
       <div className="p-4 bg-white border-t border-primary/10">
         <div className="flex items-center justify-between text-sm">
           <span className="text-text-secondary">
-            <span className="font-semibold text-primary">{stats.duringWeek}</span> pour {helpers.getText('home', 'mainTitle')}
+            <span className="font-semibold text-primary">{stats.duringWeek}</span> {eventTitle ? `pour ${eventTitle}` : "pendant l'événement"}
           </span>
           {activeTab === 'list' && activeFiltersCount > 0 && (
             <button

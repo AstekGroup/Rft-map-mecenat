@@ -41,6 +41,30 @@ describe('buildHelpers().getDateFilterModes', () => {
   });
 });
 
+describe('buildHelpers().getText / getEventName', () => {
+  const withTexts = (texts: unknown) =>
+    ({ ...makeConfig({}), texts }) as AppConfig;
+
+  it('renvoie le texte de la config', () => {
+    const config = withTexts({ home: { mainTitle: 'Bienvenue' } });
+    expect(buildHelpers(config).getText('home', 'mainTitle')).toBe('Bienvenue');
+  });
+
+  it('renvoie une chaîne vide, jamais la clé brute, si le texte, la section ou la config manque', () => {
+    const config = withTexts({ home: { mainTitle: 'Bienvenue' } });
+    expect(buildHelpers(config).getText('home', 'ctaText')).toBe('');
+    expect(buildHelpers(config).getText('inconnue', 'mainTitle')).toBe('');
+    expect(buildHelpers(withTexts(undefined)).getText('home', 'mainTitle')).toBe('');
+    expect(buildHelpers(null).getText('home', 'mainTitle')).toBe('');
+  });
+
+  it("renvoie le nom de l'événement de la config, ou une chaîne vide sans config", () => {
+    expect(buildHelpers(makeConfig({})).getEventName()).toBe('Événement de test');
+    expect(buildHelpers(makeConfig({ name: '  ' })).getEventName()).toBe('');
+    expect(buildHelpers(null).getEventName()).toBe('');
+  });
+});
+
 describe('buildHelpers().getEditionBadge', () => {
   it("combine le nom court et l'année de début de la config", () => {
     expect(buildHelpers(makeConfig({})).getEditionBadge()).toBe('EDT 2027');

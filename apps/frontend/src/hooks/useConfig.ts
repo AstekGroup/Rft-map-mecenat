@@ -3,8 +3,11 @@ import type { AppConfig } from '@/types/event';
 
 export interface ConfigHelpers {
   getEnumLabel: (category: keyof typeof ENUM_MAP, id: string) => string;
+  /** Texte de la config (`texts.<section>.<key>`) ; chaîne vide si absent (jamais la clé brute). */
   getText: (section: string, key: string) => string;
   getRegionGroups: () => { metropole: string[]; domtom: string[] };
+  /** Nom de l'événement (`app.name`) ; chaîne vide si la config ne le donne pas. */
+  getEventName: () => string;
   /** Badge d'édition « nom court + année » tiré de la config ; chaîne vide si la config ne les donne pas. */
   getEditionBadge: () => string;
   /** Modes du filtre de période : ceux de la config, sinon les seuls modes génériques. */
@@ -78,8 +81,13 @@ export function buildHelpers(config: AppConfig | null): ConfigHelpers {
     },
     getText(section, key) {
       const texts = (config?.texts as any)?.[section];
-      if (texts && texts[key]) return texts[key];
-      return key;
+      const value = texts?.[key];
+      // Texte absent : chaîne vide, jamais la clé brute (« mainTitle ») à l'écran. L'appelant
+      // choisit son repli lisible ou masque l'élément.
+      return typeof value === 'string' ? value : '';
+    },
+    getEventName() {
+      return config?.app?.name?.trim() ?? '';
     },
     getEditionBadge() {
       const shortName = config?.app?.shortName?.trim();
