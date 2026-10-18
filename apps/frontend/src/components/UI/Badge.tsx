@@ -10,6 +10,9 @@ export function Badge({ type, size = 'md', variant = 'default' }: BadgeProps) {
   const color = type?.colorHexa;
   const label = type?.name;
 
+  // Pas de nom (format absent) : aucun badge, plutôt qu'une pastille vide.
+  if (!label) return null;
+
   const sizes = {
     sm: 'px-2 py-0.5 text-xs',
     md: 'px-2.5 py-1 text-sm',

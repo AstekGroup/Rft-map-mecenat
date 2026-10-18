@@ -129,12 +129,14 @@ export function EventDetailPage() {
           <div className="p-6 md:p-8 border-b border-primary/10">
             {/* Badges */}
             <div className="flex flex-wrap items-center gap-2 mb-4">
-              <span
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-surface-beige text-primary-dark"
-              >
-                <Icon className="w-4 h-4" />
-                {event.type?.name}
-              </span>
+              {event.type?.name && (
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-surface-beige text-primary-dark"
+                >
+                  <Icon className="w-4 h-4" />
+                  {event.type.name}
+                </span>
+              )}
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-primary/10 text-primary-dark">
                 {event.modality === 'distanciel' ? (
                   <Video className="w-4 h-4" />
@@ -286,15 +288,17 @@ export function EventDetailPage() {
 
           {/* Format & Public (above description) */}
           <div className="p-6 md:p-8 border-b border-primary/10 grid md:grid-cols-2 gap-6">
-            {/* Format */}
-            <div>
-              <h3 className="font-poppins font-semibold text-sm text-primary/70 uppercase tracking-wide mb-2">
-                Format
-              </h3>
-              <p className="text-text-primary font-medium">
-                {event.type?.name}
-              </p>
-            </div>
+            {/* Format (masqué quand l'événement n'en a pas) */}
+            {event.type?.name && (
+              <div>
+                <h3 className="font-poppins font-semibold text-sm text-primary/70 uppercase tracking-wide mb-2">
+                  Format
+                </h3>
+                <p className="text-text-primary font-medium">
+                  {event.type.name}
+                </p>
+              </div>
+            )}
 
             {/* Public cible */}
             <div>
