@@ -44,7 +44,7 @@ Ce dépôt est **1 seul code pour N cartes** d'événements (une carte = un év�
 - [ ] Types partagés (`shared/types`) mis à jour **avant** les consommateurs ; `pnpm build` de la racine passe.
 - [ ] `pnpm lint` et `pnpm test` passent depuis la racine (0 erreur ; les avertissements connus sont listés dans « Commandes »).
 - [ ] Aucune variable d'environnement morte ou non documentée ; `.env.example` à jour.
-- [ ] Si le changement touche l'identité ou la config : vérifié avec **une seconde config** (voir `docs/audit/fixtures/`), sans toucher au code.
+- [ ] Si le changement touche l'identité ou la config : vérifié avec **une seconde config** (voir `docs/audit/fixtures/`), sans toucher au code. Les tests « deux cartes » (`apps/backend/src/config/deux-cartes.spec.ts`, `apps/frontend/tests/deux-cartes.spec.tsx`) le font automatiquement pour les titres, les dates et le thème : les garder verts, et les étendre si une nouvelle clé de config pilote l'affichage.
 - [ ] Docs concernées mises à jour (README de la zone, `docs/audit/SUIVI.md`).
 
 ## Où travailler : fichiers AGENTS par zone
