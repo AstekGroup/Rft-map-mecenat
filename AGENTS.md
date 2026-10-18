@@ -36,8 +36,6 @@ Ce dépôt est **1 seul code pour N cartes** d'événements (une carte = un év�
 
 ## Définition de terminé (checklist de PR)
 
-Cette checklist est reprise dans le modèle de PR [`.github/pull_request_template.md`](./.github/pull_request_template.md) : si l'une change, mettre l'autre à jour.
-
 - [ ] Aucun titre, nom de marque, date, e-mail/URL, couleur ou police propre à une carte dans le code (`rg -i "lgsv|semaine|végétal|#[0-9a-f]{6}"` sur les fichiers modifiés). Le wording générique de l'interface reste en dur.
 - [ ] Aucun nom de champ Baserow ni valeur de liste de choix ajouté hors de la config ; aucun libellé de référentiel métier en dur.
 - [ ] Nouveau **titre ou nom d'événement** → clé dans `texts.*` (type `AppConfig` + `app.config.json`), avec repli lisible si la clé manque. Le nom de l'événement s'écrit **une seule fois** (`app.name`) ; les autres titres le reprennent par gabarit (`"Carte - {{app.name}}"`).
