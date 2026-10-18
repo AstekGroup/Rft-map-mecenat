@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const BASE = (process.argv.find((a) => a.startsWith('--url='))?.slice(6) || 'http://localhost:8088').replace(/\/$/, '');
-if (!/localhost|127\.0\.0\.1/.test(BASE)) throw new Error('Refus : instance non locale');
+if (!['localhost', '127.0.0.1', '[::1]'].includes(new URL(BASE).hostname)) throw new Error('Refus : instance non locale');
 const scenario = process.argv[2];
 const FM = JSON.parse(readFileSync(resolve(ROOT, 'app.config.json'), 'utf8')).baserow.fieldMapping;
 const schema = JSON.parse(readFileSync(resolve(ROOT, 'scripts/seed-baserow/out/schema.json'), 'utf8'));
