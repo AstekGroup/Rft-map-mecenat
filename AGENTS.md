@@ -70,7 +70,7 @@ Cette checklist est reprise dans le modèle de PR [`.github/pull_request_templat
 
 Qualité (session 7) : `pnpm lint` couvre le frontend (ESLint, 3 avertissements connus), le backend (ESLint + Prettier, **sans** `--fix` ; `pnpm lint:fix` dans `apps/backend` pour corriger volontairement) et `shared/types` (`tsc --noEmit`). `pnpm test` couvre `shared/types` (contrat `AppConfig`), le backend et le frontend. Aucun de ces scripts ne modifie de fichier.
 
-Limites connues (preuves dans [docs/audit/JOURNAL.md](./docs/audit/JOURNAL.md)) : `pnpm build` génère `apps/frontend/index.html` (ignoré par git) depuis `index.template.html` : le modèle n'est jamais modifié ; le test e2e `apps/backend/test/app.e2e-spec.ts` est le modèle Nest périmé (il attend « Hello World! » sur `/` ; `pnpm test:e2e` échoue, constaté en session 7) et n'est pas lancé par `pnpm test`. Ne pas contourner un échec sans le dire.
+Limites connues (preuves dans [docs/audit/JOURNAL.md](./docs/audit/JOURNAL.md)) : `pnpm build` génère `apps/frontend/index.html` (ignoré par git) depuis `index.template.html` : le modèle n'est jamais modifié ; il n'y a plus de test e2e backend (le modèle Nest périmé et le script `test:e2e` ont été supprimés à l'étape 7 du plan de fin de refonte). Ne pas contourner un échec sans le dire.
 
 Environnement : `apps/backend/.env.example` et `apps/frontend/.env.example` (le backend lit `BASEROW_API_URL`, `BASEROW_API_TOKEN`, `BASEROW_EVENT_TABLE_ID`, `BASEROW_MODERATION_FIELD_ID`, `BASEROW_PARTNERS_TABLE_ID`, `BASEROW_THEMATIQUES_TABLE_ID`, `BASEROW_FORMATS_TABLE_ID`, `BASEROW_PUBLICS_TABLE_ID`, `PORT`, `CORS_ORIGIN`, `APP_CONFIG_PATH`, `ALLOW_DEV_MODE`).
 
