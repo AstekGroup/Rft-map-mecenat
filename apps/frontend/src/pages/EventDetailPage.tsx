@@ -21,6 +21,7 @@ import { useEvents } from '@/hooks';
 import { useConfig } from '@/hooks/useConfig';
 import { Loader2 } from 'lucide-react';
 import {getIcon} from "@/utils/iconResolver.ts";
+import { formatEventDate } from '@/utils/formatEventDate';
 
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -75,21 +76,14 @@ export function EventDetailPage() {
     );
   }
 
-  const formattedDate = new Date(event.date).toLocaleDateString('fr-FR', {
+  const longDate: Intl.DateTimeFormatOptions = {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
-  });
-
-  const formattedEndDate = event.endDate
-    ? new Date(event.endDate).toLocaleDateString('fr-FR', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      })
-    : null;
+  };
+  const formattedDate = formatEventDate(event.date, longDate);
+  const formattedEndDate = formatEventDate(event.endDate, longDate) || null;
 
   const Icon = getIcon(event.type?.pictoName, Globe);
 

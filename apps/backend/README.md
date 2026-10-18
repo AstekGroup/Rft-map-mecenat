@@ -88,7 +88,8 @@ src/
 ## Cache
 
 - **Géocodage** : Cache mémoire (Map) permanent pendant la durée de vie du process
-- **Événements** : Cache avec TTL de 5 minutes pour éviter de rappeler Baserow à chaque requête
+- **Événements** : Cache avec TTL de 5 minutes pour éviter de rappeler Baserow à chaque requête (30 secondes tant qu'une table de référence est en erreur)
+- **Délai de la modération** : un événement passé à la valeur de modération visible dans Baserow (ou retiré de celle-ci) n'apparaît (ou ne disparaît) qu'à l'expiration du cache, soit **au plus 5 minutes plus tard**, ou immédiatement après un redémarrage du backend. Il n'existe pas d'invalidation exposée.
 
 ## Sécurité
 

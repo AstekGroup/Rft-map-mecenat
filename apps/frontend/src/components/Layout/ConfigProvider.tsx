@@ -26,7 +26,7 @@ export function ConfigProvider({ children }: ConfigProviderProps) {
         injectFonts(data.theme.fonts);
       } catch (err) {
         if (cancelled) return;
-        console.warn('[ConfigProvider] Impossible de charger la config, utilisation des valeurs par défaut');
+        console.warn('[ConfigProvider] Impossible de charger la config (/api/config) : les pages qui en dépendent affichent un état d\'erreur');
         setError(err instanceof Error ? err : new Error('Erreur de chargement de la config'));
       } finally {
         if (!cancelled) setLoading(false);

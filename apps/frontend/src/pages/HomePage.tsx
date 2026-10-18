@@ -6,13 +6,14 @@ import { useConfig } from '@/hooks/useConfig';
 import { Event } from '@/types/event';
 import { Loader2 } from 'lucide-react';
 import {checkIconColor, getIcon} from "@/utils/iconResolver.ts";
+import { formatEventDate } from '@/utils/formatEventDate';
 
 function MiniEventCard({ event }: { event: Event }) {
   const { helpers } = useConfig();
   const Icon = getIcon(event.type?.pictoName, Globe);
   const typeColor = checkIconColor(event.type?.colorHexa, "#D4DDE2");
   const weekBadgeText = helpers.getEditionBadge();
-  const formattedDate = new Date(event.date).toLocaleDateString('fr-FR', {
+  const formattedDate = formatEventDate(event.date, {
     day: 'numeric',
     month: 'long',
   });
@@ -64,16 +65,8 @@ function MiniEventCard({ event }: { event: Event }) {
 }
 
 export function HomePage() {
-  const { config, helpers, loading: configLoading } = useConfig();
-
-  if (configLoading || !config) {
-    return (
-      <div className="min-h-screen bg-surface-offwhite flex items-center justify-center font-body">
-        <Loader2 className="w-12 h-12 text-primary animate-spin" />
-      </div>
-    );
-  }
-
+  const { config, helpers, loading: configLoading, error: configError } = useConfig();
+  // Les hooks passent avant tout `return` anticipé (règle des hooks de React).
   const { allEvents, loading } = useEvents();
 
   const presentielEvents = useMemo(() =>
@@ -84,9 +77,40 @@ export function HomePage() {
     [allEvents]
   );
 
-  const editionYear = config?.app?.eventDates?.weekStart?.split('-')[0];
-  const mainTitle = helpers.getText('home', 'mainTitle');
-  const editionLabel = helpers.getText('home', 'editionLabel');
+  if (configLoading) {
+    return (
+      <div className="min-h-screen bg-surface-offwhite flex items-center justify-center font-body">
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  // Sans config, les titres, dates et le thème de la carte sont inconnus : mieux vaut un état
+  // d'erreur explicite que des clés brutes ou une page vide.
+  if (configError || !config) {
+    return (
+      <div className="min-h-screen bg-surface-offwhite flex items-center justify-center font-body">
+        <div className="text-center max-w-md p-8" role="alert">
+          <h1 className="font-semibold text-xl mb-2">
+            La carte est momentanément indisponible
+          </h1>
+          <p className="mb-6">
+            La configuration de la carte n'a pas pu être chargée. Réessayez dans quelques instants.
+          </p>
+          <button onClick={() => window.location.reload()} className="btn-primary">
+            Réessayer
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const editionYear = config.app?.eventDates?.weekStart?.split('-')[0];
+  // Titre : celui de la config, à défaut le nom de l'événement ; jamais la clé brute.
+  const mainTitle = helpers.getText('home', 'mainTitle') || helpers.getEventName();
+  const editionLabel = [helpers.getText('home', 'editionLabel'), editionYear]
+    .filter(Boolean)
+    .join(' ');
   const mainDescription = helpers.getText('home', 'mainDescription');
   const ctaText = helpers.getText('home', 'ctaText');
   const sectionPresentiel = helpers.getText('home', 'sectionPresentiel');
@@ -100,22 +124,28 @@ export function HomePage() {
       {/* Hero Section */}
       <div className="bg-primary text-white py-16 px-4">
         <div className="max-w-5xl mx-auto text-center">
-          <h1 className="font-poppins text-4xl md:text-5xl font-bold mb-4">
-            {mainTitle}
-          </h1>
-          <p className="text-xl md:text-2xl text-white/90 mb-2 flex items-center justify-center gap-2">
-            <Calendar className="w-6 h-6" />
-            {editionLabel} {editionYear}
-          </p>
-          <p className="text-lg text-white/80 max-w-2xl mx-auto mt-4 font-body">
-            {mainDescription}
-          </p>
+          {mainTitle && (
+            <h1 className="font-poppins text-4xl md:text-5xl font-bold mb-4">
+              {mainTitle}
+            </h1>
+          )}
+          {editionLabel && (
+            <p className="text-xl md:text-2xl text-white/90 mb-2 flex items-center justify-center gap-2">
+              <Calendar className="w-6 h-6" />
+              {editionLabel}
+            </p>
+          )}
+          {mainDescription && (
+            <p className="text-lg text-white/80 max-w-2xl mx-auto mt-4 font-body">
+              {mainDescription}
+            </p>
+          )}
           <div className="mt-8">
             <Link
               to="/carte"
               className="inline-flex items-center gap-2 bg-accent-yellow text-text-primary px-8 py-3 rounded-button font-bold text-lg hover:bg-yellow-500 transition-colors shadow-lg"
             >
-              {ctaText}
+              {ctaText || 'Voir la carte'}
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
@@ -133,15 +163,17 @@ export function HomePage() {
                 <MapPin className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h2 className="font-poppins font-bold text-xl text-text-primary">{sectionPresentiel}</h2>
-                <p className="text-text-secondary text-sm">{nearbySubtitle}</p>
+                <h2 className="font-poppins font-bold text-xl text-text-primary">
+                  {sectionPresentiel || 'Événements en présentiel'}
+                </h2>
+                {nearbySubtitle && <p className="text-text-secondary text-sm">{nearbySubtitle}</p>}
               </div>
             </div>
             <Link
               to="/carte"
               className="text-primary font-semibold flex items-center gap-1 hover:underline"
             >
-              {seeAll}
+              {seeAll || 'Voir tout'}
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -160,14 +192,20 @@ export function HomePage() {
         </section>
 
         {/* Info Section */}
-        <div className="bg-primary/5 rounded-2xl p-8 text-center border border-primary/10">
-          <h3 className="font-poppins font-semibold text-xl text-primary-dark mb-3">
-            {infoTitle}
-          </h3>
-          <p className="text-text-primary max-w-3xl mx-auto leading-relaxed font-body">
-            {infoDescription}
-          </p>
-        </div>
+        {(infoTitle || infoDescription) && (
+          <div className="bg-primary/5 rounded-2xl p-8 text-center border border-primary/10">
+            {infoTitle && (
+              <h3 className="font-poppins font-semibold text-xl text-primary-dark mb-3">
+                {infoTitle}
+              </h3>
+            )}
+            {infoDescription && (
+              <p className="text-text-primary max-w-3xl mx-auto leading-relaxed font-body">
+                {infoDescription}
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

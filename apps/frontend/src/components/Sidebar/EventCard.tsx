@@ -4,6 +4,7 @@ import { Calendar, Clock, MapPin, BookOpen, Handshake, Globe } from 'lucide-reac
 import { Badge } from '@/components/UI';
 import {useConfig} from "@/hooks";
 import {checkIconColor, getIcon} from "@/utils/iconResolver.ts";
+import { formatEventDate } from '@/utils/formatEventDate';
 
 interface EventCardProps {
   event: Event;
@@ -24,7 +25,7 @@ function EventCardComponent({
 }: EventCardProps) {
   const {helpers} = useConfig();
   const editionBadge = helpers.getEditionBadge();
-  const formattedDate = new Date(event.date).toLocaleDateString('fr-FR', {
+  const formattedDate = formatEventDate(event.date, {
     day: 'numeric',
     month: 'short',
   });

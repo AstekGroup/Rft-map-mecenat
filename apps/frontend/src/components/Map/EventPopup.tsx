@@ -1,5 +1,6 @@
 import { Event } from '@/types/event';
 import { useConfig } from '@/hooks/useConfig';
+import { formatEventDate } from '@/utils/formatEventDate';
 import { Badge } from '@/components/UI';
 import { Calendar, Clock, MapPin, User, Mail, Eye, Video, Building } from 'lucide-react';
 
@@ -13,7 +14,7 @@ export function EventPopup({ event, onClose, onViewDetails }: EventPopupProps) {
   const { helpers } = useConfig();
   const modalityLabel = helpers.getEnumLabel('modalities', event.modality);
   const editionBadge = helpers.getEditionBadge();
-  const formattedDate = new Date(event.date).toLocaleDateString('fr-FR', {
+  const formattedDate = formatEventDate(event.date, {
     weekday: 'short',
     day: 'numeric',
     month: 'long',
