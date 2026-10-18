@@ -58,6 +58,5 @@ Depuis la racine : `pnpm back:dev`. `pnpm lint` ne modifie plus rien (session 7)
 
 ## Variables
 
-Copier `.env.example`. Lues par le code : `BASEROW_API_URL`, `BASEROW_API_TOKEN`, `BASEROW_EVENT_TABLE_ID`, `BASEROW_MODERATION_FIELD_ID`, `BASEROW_PARTNERS_TABLE_ID`, `BASEROW_THEMATIQUES_TABLE_ID`, `BASEROW_FORMATS_TABLE_ID`, `BASEROW_PUBLICS_TABLE_ID`, `PORT`, `CORS_ORIGIN`, `APP_CONFIG_PATH`, `ALLOW_DEV_MODE`. Le README mentionne `BASEROW_TABLE_ID` : **nom obsolète**.
-
-Pour développer sans toucher à un Baserow réel : instance locale + données de test dans [docs/audit/02-baserow-seed.md](../../docs/audit/02-baserow-seed.md).
+Copier `.env.example`. Lues par le code : `BASEROW_API_URL`, `BASEROW_API_TOKEN`, `BASEROW_EVENT_TABLE_ID`, `BASEROW_MODERATION_FIELD_ID`, `BASEROW_PARTNERS_TABLE_ID`, `BASEROW_THEMATIQUES_TABLE_ID`, `BASEROW_FORMATS_TABLE_ID`, `BASEROW_PUBLICS_TABLE_ID`, `PORT`, `CORS_ORIGIN`, `APP_CONFIG_PATH`, `ALLOW_DEV_MODE`.
+Pour développer sans toucher à un Baserow réel : instance locale + données de test dans [docs/audit/BASEROW-LOCAL.md](../../docs/audit/BASEROW-LOCAL.md).
