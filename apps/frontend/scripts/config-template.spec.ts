@@ -6,7 +6,7 @@ import { resolveConfigTemplates as resolveBackend } from '../../backend/src/conf
 
 const require = createRequire(import.meta.url);
 const { resolveConfigTemplates: resolveScript } = require('./config-template.cjs');
-const { buildIndexHtml } = require('./update-index-html.cjs');
+const { buildIndexHtml, escapeHtml } = require('./update-index-html.cjs');
 
 const root = resolve(__dirname, '../../..');
 const readJson = (rel: string) => JSON.parse(readFileSync(resolve(root, rel), 'utf8'));
@@ -56,10 +56,16 @@ describe('index.html généré depuis la config', () => {
     const other = readJson('docs/audit/fixtures/app.config.second-map.json');
     const htmlA = buildIndexHtml(template, raw);
     const htmlB = buildIndexHtml(template, other);
-    expect(htmlA).toContain(`<title>La super Carte Interactive - ${raw.app.name}</title>`);
-    expect(htmlB).toContain(`<title>La super Carte Interactive - ${other.app.name}</title>`);
-    expect(htmlB).toContain(`content="Carte Interactive - ${other.app.name}"`);
-    expect(htmlB).not.toContain(raw.app.name);
+    // Les titres attendus viennent de la config elle-même (gabarits résolus, HTML échappé), jamais
+    // d'une phrase écrite en dur : le test doit passer avec n'importe quelle config valide.
+    const meta = (cfg: typeof raw, key: 'title' | 'ogTitle') =>
+      escapeHtml(resolveBackend(cfg).texts.meta[key]);
+    expect(htmlA).toContain(`<title>${meta(raw, 'title')}</title>`);
+    expect(htmlB).toContain(`<title>${meta(other, 'title')}</title>`);
+    expect(htmlB).toContain(`content="${meta(other, 'ogTitle')}"`);
+    // Le nom de l'événement est repris dans les titres, et celui de l'autre carte n'y figure pas.
+    expect(meta(other, 'title')).toContain(escapeHtml(other.app.name));
+    expect(htmlB).not.toContain(escapeHtml(raw.app.name));
   });
 
   it('échappe les caractères HTML des valeurs de la config', () => {
