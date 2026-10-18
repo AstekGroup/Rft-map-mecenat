@@ -7,15 +7,15 @@ Ce dépôt suit le format ouvert [AGENTS.md](https://agents.md/) : instructions 
 Ce dépôt est **1 seul code pour N cartes** d'événements (une carte = un événement : dates, marque, titres, données propres). Il remplace des copies du projet adaptées à la main, qui ont dérivé. Chaque changement doit rapprocher le code de ce modèle, jamais l'en éloigner.
 
 1. **Un code, N cartes.** Aucune branche, copie de dossier ni `if (carte === …)` par événement. Ce qui diffère d'une carte à l'autre vit dans **le fichier de config de la carte** (`app.config.json`) ou dans **Baserow**, jamais dans le code.
-2. **Ce que porte la config** : identité de l'événement (nom, URL, e-mail de contact, logo), **titres et noms de l'événement** (clés `texts.*` existantes : `meta`, `home`), **dates**, **design** (couleurs, polices, rayons, ombres), paramètres de carte (centre, zoom, styles, clustering) et **correspondance avec le schéma Baserow** (`baserow.fieldMapping`, `baserow.mapping`).
+2. **Ce que porte la config** : identité de l'événement (nom, URL, e-mail de contact, logo), **titres et noms de l'événement** (clés `texts.*` existantes : `meta`, `home`), **dates**, **design** (couleurs, polices, rayons, ombres), et **correspondance avec le schéma Baserow** (`baserow.fieldMapping`, `baserow.mapping`).
 3. **Le wording générique de l'interface reste en dur, en français** (boutons, placeholders, libellés de contrôles). Seuls les titres et noms propres à l'événement passent par la config. La **carte et les régions** restent dans le code.
 4. **Pas de flags de fonctionnalités** : on prend toutes les fonctionnalités, pour toutes les cartes. Aucun filtre n'est masquable par la config ; seuls les filtres dont la table Baserow est vide se masquent d'eux-mêmes. Ne pas ajouter de `features.*`.
 5. **Aucun nom de champ Baserow en dehors du mapping.** Les noms de colonnes et les valeurs des listes de choix viennent de la config ; pas de valeur de repli française dans le code (`fm.x || 'Ville du lieu'` est interdit). Les identifiants de tables restent dans l'environnement du backend. Il n'y a **pas de schéma cible** : la carte doit fonctionner avec le schéma indiqué par la config.
 6. **Les référentiels viennent de Baserow** (formats, publics, thématiques, partenaires : libellés, couleurs, pictos, logos). Pas de liste de libellés métier dans le code.
 7. **Dégradation propre, jamais de casse silencieuse.** Un champ renommé, une table absente, une config incomplète ou un champ de modération manquant ne doivent ni faire planter la carte (HTTP 500 inutile), ni la rendre publique par défaut, ni vider des données **sans avertissement**. Valider la config et le schéma au démarrage, journaliser clairement, appliquer un repli explicite.
-8. **Codé en dur = refus en revue.** Voir la checklist ci-dessous. Si un compromis est inévitable, l'inscrire dans le plan ([docs/audit/PLAN-SESSIONS.md](./docs/audit/PLAN-SESSIONS.md)) plutôt que le cacher.
+8. **Codé en dur = refus en revue.** Voir la checklist ci-dessous. Si un compromis est inévitable, l'inscrire dans le plan ([docs/audit/PLAN-FIN-REFONTE.md](./docs/audit/PLAN-FIN-REFONTE.md)) plutôt que le cacher.
 
-> **Écart connu entre ces règles et le code actuel** : la refonte est **partielle** et se fait par sessions (voir [docs/audit/PLAN-SESSIONS.md](./docs/audit/PLAN-SESSIONS.md) et [docs/audit/SUIVI.md](./docs/audit/SUIVI.md)). Le code contient encore de la marque LGSV, des couleurs, des régions et des noms de champs en dur (liste prouvée avec `fichier:ligne` dans [docs/audit/04-cartographie.md](./docs/audit/04-cartographie.md), photo du 2026-10-16). Ne pas copier ces patterns existants : ce sont des dettes, pas des modèles.
+> **Écart connu entre ces règles et le code actuel** : la refonte est **presque terminée** côté code (vérification du 2026-10-19 : [docs/verdict.md](./docs/verdict.md)). Restent des résidus listés avec `fichier:ligne` dans le verdict et planifiés dans [docs/audit/PLAN-FIN-REFONTE.md](./docs/audit/PLAN-FIN-REFONTE.md) : couleurs de marque dans `Badge.tsx`, palette de marque par défaut en CSS, cas dégradés des pages carte et liste. Les **tests automatisés « deux cartes » sont à remettre** (étape 1 du plan). Ne pas copier ces patterns existants : ce sont des dettes, pas des modèles. État et prochaine action : [docs/audit/SUIVI.md](./docs/audit/SUIVI.md).
 
 ## Règles globales (tout le monorepo)
 
@@ -55,7 +55,7 @@ Ce dépôt est **1 seul code pour N cartes** d'événements (une carte = un év�
 | API NestJS + Baserow + géocodage | [apps/backend/AGENTS.md](./apps/backend/AGENTS.md) |
 | Types partagés `@make-map/types` (dont le type `AppConfig`) | [shared/types/AGENTS.md](./shared/types/AGENTS.md) |
 | Déploiement Docker / Scaleway | [deploy/AGENTS.md](./deploy/AGENTS.md) |
-| Plan de refonte, bilan, constats prouvés | [docs/audit/](./docs/audit/) (commencer par `SUIVI.md` puis `PLAN-SESSIONS.md`) |
+| Plan de refonte, bilan, constats prouvés | [docs/README.md](./docs/README.md) (index) ; commencer par [docs/audit/SUIVI.md](./docs/audit/SUIVI.md) puis [docs/audit/PLAN-FIN-REFONTE.md](./docs/audit/PLAN-FIN-REFONTE.md) |
 
 ## Commandes (depuis la racine)
 
@@ -64,7 +64,7 @@ Ce dépôt est **1 seul code pour N cartes** d'événements (une carte = un év�
 | Frontend + backend | `pnpm dev` |
 | Frontend seul / backend seul | `pnpm front:dev` · `pnpm back:dev` |
 | Build / lint / tests | `pnpm build` · `pnpm lint` · `pnpm test` |
-| Baserow local jetable + données de test | voir [docs/audit/02-baserow-seed.md](./docs/audit/02-baserow-seed.md) |
+| Baserow local jetable + données de test | voir [docs/audit/BASEROW-LOCAL.md](./docs/audit/BASEROW-LOCAL.md) |
 
 Qualité (session 7) : `pnpm lint` couvre le frontend (ESLint, 3 avertissements connus), le backend (ESLint + Prettier, **sans** `--fix` ; `pnpm lint:fix` dans `apps/backend` pour corriger volontairement) et `shared/types` (`tsc --noEmit`). `pnpm test` couvre `shared/types` (contrat `AppConfig`), le backend et le frontend. Aucun de ces scripts ne modifie de fichier.
 
@@ -74,6 +74,10 @@ Environnement : `apps/backend/.env.example` et `apps/frontend/.env.example` (le 
 
 ## Documentation associée
 
-- [docs/audit/PLAN-SESSIONS.md](./docs/audit/PLAN-SESSIONS.md) — plan de refonte en 9 sessions et workflow Git détaillé.
+- [docs/README.md](./docs/README.md) — index de la documentation de la refonte.
+- [docs/verdict.md](./docs/verdict.md) — vérification de la philosophie, état global.
+- [docs/audit/PLAN-FIN-REFONTE.md](./docs/audit/PLAN-FIN-REFONTE.md) — plan actif pour finir la refonte.
+- [docs/audit/PLAN-SESSIONS.md](./docs/audit/PLAN-SESSIONS.md) — workflow Git détaillé, décisions, historique des sessions.
+- [docs/audit/PERIMETRE-CONFIG-BASEROW.md](./docs/audit/PERIMETRE-CONFIG-BASEROW.md) — qui porte quoi (config, Baserow, code, environnement).
 - [docs/audit/SUIVI.md](./docs/audit/SUIVI.md) — état d'avancement, décisions, prochaine action.
 - [PROJECT_VIBE_CONF.md](./PROJECT_VIBE_CONF.md) — type de projet.

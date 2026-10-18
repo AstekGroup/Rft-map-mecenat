@@ -1,116 +1,64 @@
-# SUIVI — Bilan de la refonte (carte interactive multi-cartes)
+# SUIVI — Refonte « 1 code, N cartes »
 
 > **À lire en début de session. À mettre à jour en fin de session.**
-> Branche de travail : `audit/bilan-refonte` (aucun commit sur `main`).
-> Preuves : voir [JOURNAL.md](JOURNAL.md). Livrables : un fichier par étape dans ce dossier.
+> État au **2026-10-19**, sur `develop` après la PR #40. Preuves : [JOURNAL.md](JOURNAL.md). Vérification complète : [../verdict.md](../verdict.md). Plan actif : [PLAN-FIN-REFONTE.md](PLAN-FIN-REFONTE.md). Plan historique et workflow Git : [PLAN-SESSIONS.md](PLAN-SESSIONS.md).
 
-> **Vue d'ensemble condensée de tout le bilan : [SYNTHESE.md](SYNTHESE.md).**
+## Philosophie (rappel)
+
+1 seul code pour N cartes · 1 fichier de config par carte (identité et titres, dates, design, correspondance Baserow) · référentiels et données dans Baserow · un changement de structure Baserow ne casse pas la carte. Détail : [../../AGENTS.md](../../AGENTS.md).
 
 ## Convention de preuve
 
-Chaque constat porte un statut et une preuve :
+Chaque constat porte une preuve : `fichier:ligne` ou commande exécutée. Sans preuve : « non vérifié ».
 
-| Statut | Sens |
-|---|---|
-| `FAIT` | Implémenté et piloté par config/Baserow, vérifié |
-| `PARTIEL` | Implémenté en partie (précisé) |
-| `PAS FAIT` | Absent |
-| `EN DUR` | Fonctionne mais codé en dur (contraire à la philosophie) |
-| `NON VÉRIFIÉ` | Pas de preuve disponible (obligatoire si pas de preuve) |
+## Où on en est
 
-Preuve = `fichier:ligne` ou commande + extrait de sortie (dans JOURNAL.md).
+Vérifié le 2026-10-19 sur `origin/develop` (`2273bcb`) : `pnpm build`, `pnpm lint` (0 erreur, 3 avertissements connus) et `pnpm run test -- --force` verts (`shared/types` 5 tests, backend 227, frontend 133). Avancement estimé : environ 85 % (code ~95 %, robustesse ~90 %, qualité ~90 %, docs ~75 % avant ce nettoyage, déploiement ~10 %).
 
-## Philosophie cible (rappel)
-
-1 seul code pour N cartes · 1 fichier de config par carte (features, titre, textes, dates, design) · données de référence et structure pilotées par Baserow · un changement de structure Baserow ne doit pas casser la carte.
-
-## État des étapes
-
-| # | Étape | État | Livrable | Dernière mise à jour |
-|---|---|---|---|---|
-| 0 | Initialisation | **fait** | [00-inventaire.md](00-inventaire.md) | 2026-10-16 |
-| 1 | Lancement local | **fait** | [01-lancement.md](01-lancement.md) | 2026-10-16 |
-| 2 | Baserow + seed | **fait** | [02-baserow-seed.md](02-baserow-seed.md) | 2026-10-16 |
-| 3 | Validation fonctionnelle | **fait** (limites : mobile, partage, Docker) | [03-validation.md](03-validation.md) | 2026-10-16 |
-| 4 | Cartographie statique | **fait** | [04-cartographie.md](04-cartographie.md) | 2026-10-16 |
-| 5 | Branches non mergées | **fait** (2 passes ; merge d'essai des 2 branches `Refonte-*` : 61/61 tests front) | [05-branches.md](05-branches.md) | 2026-10-16 |
-| 6 | AGENTS.md | **appliqué, non commité, à valider** | [06-agents.md](06-agents.md) · [06-agents.diff](06-agents.diff) | 2026-10-16 |
-| 7 | Plan de suite | **fait, révisé** (périmètre du 16/10, voir note en tête) | [07-plan-de-suite.md](07-plan-de-suite.md) | 2026-10-16 |
-| 8 | Périmètre config vs Baserow (+ filtres) | **fait** (décisions Q-F1…Q-F7 à prendre) | [08-perimetre-config-vs-baserow.md](08-perimetre-config-vs-baserow.md) | 2026-10-16 |
-
-## Plan de refonte en 9 sessions (voir [PLAN-SESSIONS.md](PLAN-SESSIONS.md))
-
-| Session | État (2026-10-16) |
-|---|---|
-| 0 GitHub CLI | **faite** : `gh` 2.102.0, connecté (`ClementTro`, droit ADMIN) |
-| 1 Base Git | **faite** : PR #9 à #14 mergées dans `develop` ; `pnpm build` et `pnpm test` verts sur `develop`. Reste : PR `develop` → `main` et tag `v0.1.0` (validation du propriétaire). |
-| 2 Nettoyage et intégration | **faite** : PR unique #21 `chore/session-2-unifiee` mergée dans `develop` (commit `7c9e01c`, constaté en début de session 3 ; elle regroupait `docs/agents`, `chore/remove-airtable`, `chore/remove-dead-code`, `merge/refonte-unifier-outils-carte`, `merge/refonte-panneau-lateral` ; PR #15 à #20 fermées). Preuves dans JOURNAL. |
-| 3 Titres et identité pilotés par la config | **faite** : PR #22 (`feat/config-titres-identite`), #23 et #24 mergées dans `develop` (constaté en début de session 4). Gabarits `{{app.name}}` dans la config (backend), badge d'édition et libellés de période depuis la config, plus de repli de dates, `index.html` généré (idempotent), vérifié avec la seconde config. Preuves dans JOURNAL. |
-| 4 Baserow réglable par la config, config validée | **faite, PR #25, #26 et #27 mergées dans `develop`** (branches supprimées). `AppConfig` aligné ; 29 replis de noms de colonnes supprimés (colonnes de référence, valeurs de modalité, tarif gratuit et modération lus dans `baserow.mapping` / `moderationVisibleValue`) ; config validée au démarrage (le backend refuse de démarrer avec la liste des erreurs) ; colonnes de Baserow comparées à la config au démarrage et à chaque chargement (colonne absente nommée, colonne proche suggérée) ; seed adapté (`--config`). Vérifié sur le Baserow local : renommer une colonne puis adapter la config suffit (1250 événements, 1106 avec ville). Preuves dans JOURNAL. |
-| 5 Filtres | **faite, PR #29 et #30 mergées dans `develop`** (constaté en début de session 6). Détail d'origine : [#29](https://github.com/AstekGroup/Rft-map-mecenat/pull/29) `refactor/filtres-unifies`, puis [#30](https://github.com/AstekGroup/Rft-map-mecenat/pull/30) `fix/filtres-regles`. Une seule définition des filtres (`FILTER_DEFINITIONS`) pour le panneau de la carte et la barre de la liste (mêmes 8 filtres, vérifié dans le navigateur) ; règles : recherche multi-champs, « pendant l'événement » par recoupement, événements passés visibles automatiquement une fois l'événement terminé, un seul format (avertissement si plusieurs), ordre des options = ordre Baserow, référentiel en erreur ≠ vide (502, `/api/health` `degraded`, filtre affiché avec un message). Preuves dans JOURNAL. |
-| 6 Cas dégradés | **faite, PR #32 mergée dans `develop`** (constaté en début de session 7). Événement sans date masqué et journalisé (message agrégé) ; fin avant début ignorée et journalisée ; capacité numérique (entier positif) ; date et heure lues à Paris (E27) ; plus d'`Invalid Date` (`formatEventDate`) ; accueil : état d'erreur si `/api/config` échoue, plus de clé brute (`getText` renvoie `''`, repli sur le nom de l'événement) ; délai de modération documenté. Vérifié sur le Baserow local (1249 événements, E16 masqué, E26 sans fin, E27 à 00:30 le 22/09) et dans le navigateur. Preuves dans JOURNAL. |
-| 7 Qualité | **faite, PR #33, #34 et #35 à merger** vers `develop` (merge commit, ordre indifférent : branches indépendantes ; la PR de suivi est à merger en dernier). [#33](https://github.com/AstekGroup/Rft-map-mecenat/pull/33) `chore/qualite` : ESLint frontend (0 erreur, 3 avertissements connus), lint backend sans `--fix` (107 erreurs → 0 ; `lint:fix` explicite), `pnpm test` couvre `shared/types` (contrat `AppConfig` : les clés des deux configs doivent suivre le type, + `isCluster`), `VITE_MAPTILER_KEY` retirée, variables du README alignées. [#34](https://github.com/AstekGroup/Rft-map-mecenat/pull/34) `test/deux-cartes` : 9 tests backend et 7 tests frontend exécutent le même code avec la config du dépôt et la fixture « seconde carte » (titres, dates, thème, `isDuringWeek`) ; sensibilité vérifiée par mutation. [#35](https://github.com/AstekGroup/Rft-map-mecenat/pull/35) `docs/pr-template` : `.github/pull_request_template.md`. État intégré vérifié sans cache : `pnpm build`, `pnpm lint` (0 erreur) et `pnpm run test` verts (types 5, backend 15 suites, frontend 140 tests). Preuves dans JOURNAL. |
-| 7 bis Retrait « deux cartes » et modèle de PR | **faite, PR unique `chore/retrait-deux-cartes-pr-template`** (décision du propriétaire : pas de test automatisé « deux cartes », pas de modèle de PR). Retirés : `.github/pull_request_template.md`, `apps/backend/src/config/deux-cartes.spec.ts`, `apps/frontend/tests/deux-cartes.spec.tsx` ; `AGENTS.md` : la vérification avec une seconde config se fait **à la main**. Les lignes #34 et #35 ci-dessus restent comme historique. Preuves dans JOURNAL. |
-| 8 | non commencée |
-
-**Reporté (décision du propriétaire)** : la PR `develop` → `main` et les tags (`v0.1.0`, `v0.2.0`, `v0.3.0`, …) ne sont pas faits ; on reste sur `develop`.
-
-Prochaine action (à jour) : merger la PR `chore/retrait-deux-cartes-pr-template` (option « Create a merge commit ») vers `develop` ; puis lancer la **session 8** (déploiement). Les PR #33 à #37 sont mergées dans `develop`.
-
-Prochaine action (ancienne, fin de session 7, conservée pour l'historique) : merger #33, #34 et #35 (option « Create a merge commit ») puis la PR de suivi de la session 7 vers `develop` ; puis lancer la **session 8** (déploiement : `app.config.json` dans les images, vrai `docker build`, `compose up`, variables `BASEROW_*`). La PR #32 (session 6) est mergée dans `develop`. Reste au propriétaire : `develop` → `main` et le tag `v0.3.0` (reportés) ; le modèle de PR ne sera proposé par GitHub qu'une fois sur `main` (branche par défaut).
-
-Prochaine action (ancienne, session 6, conservée pour l'historique) : merger la PR de la session 6 (`fix/cas-degrades`) vers `develop` ; puis lancer la session 7. Les PR #28 à #31 (sessions 4 et 5) sont mergées dans `develop`.
-
-Prochaine action (ancienne, session 5, conservée pour l'historique) : merger, **dans cet ordre** et avec l'option « Create a merge commit », la PR #28 (suivi de la session 4), puis #29 et #30 (session 5) vers `develop` ; puis lancer la **session 6** (cas dégradés). Attention : à partir de cette session, une config invalide empêche le backend de démarrer ; toute config de carte doit contenir `baserow.mapping` (voir `app.config.json`). Restent aussi (propriétaire) : fermer les PR #7 et #8 si elles ne sont pas marquées mergées, supprimer `wip/audit-snapshot`, et demander à l'auteur l'accord pour supprimer les 3 branches obsolètes `add-dynamic-filters`, `modify-audiences-filters`, `modif_audience_filters`. PR `develop` → `main` et tags : reportés.
-
-Points relevés en session 3 pour la suite : `APP_CONFIG_PATH` invalide retombe silencieusement sur le fichier par défaut côté backend (**résolu en session 4** : erreur au démarrage) ; `HomePage` affiche « Édition » sans année si `eventDates` manque (non rejoué), `getText` renvoie la clé brute et un événement sans date affiche « Invalid Date » (constaté dans le navigateur ; session 6) ; le `Dockerfile` frontend devra fournir `app.config.json` et `index.template.html` est le seul modèle suivi (session 8).
-
-Points relevés en session 5 pour la suite : un test frontend (`formatFrDateRangeLabel`, `eventDateRange.spec.ts`) a expiré une fois en exécution parallèle lourde puis est repassé (non reproduit seul : à surveiller) ; `parseDateTime` prend la date dans le fuseau du serveur et l'heure à Paris (session 6, E27) ; `#D4DDE2` reste dupliqué dans 4 autres fichiers du front ; `App.tsx` est du code mort ; une table de référence dont la variable d'environnement est absente reste un avertissement + liste vide (pas une erreur) ; `EventsService.invalidateCache` ne vide que le cache des partenaires parmi les référentiels ; le test e2e `apps/backend/test/app.e2e-spec.ts` est le modèle Nest (attend « Hello World! » sur `/`) : probablement périmé, non vérifié (non exécuté par `pnpm test`) ; l'avertissement multi-format n'a pas été vu à l'écran (le seed n'a aucun événement à plusieurs formats).
-
-Points relevés en session 6 pour la suite : `parseDateTime` lit désormais la date à Paris (constat E27 de la session 5 **résolu**) ; les affichages `Invalid Date` et les clés brutes de l'accueil sont **résolus** (constats de la session 3) ; la page d'erreur de l'accueil s'affiche sans thème (couleurs et polices viennent de `/api/config`) ; `MapPage` et `EventsListPage` n'ont pas d'état d'erreur propre pour une config absente (leurs badges d'édition restent vides) ; le détail d'un événement sans format (E15) garde une section « Format » vide ; `App.tsx` reste du code mort ; le repli « Événement sans titre » reste en dur dans le backend (libellé générique) ; un test frontend sensible aux délais est à surveiller (session 5).
-
-Points relevés en session 7 pour la suite : le test e2e `apps/backend/test/app.e2e-spec.ts` est **prouvé périmé** (`pnpm test:e2e` échoue : le modèle Nest attend « Hello World! » sur `/`) et n'est pas lancé par `pnpm test` (à supprimer ou réécrire) ; les 3 avertissements du lint frontend (`MapView.tsx:79` et `:165`, `MapStyleSelector.tsx:12`) touchent au comportement des hooks et n'ont pas été corrigés ; le lint ne détecte ni couleur ni marque en dur (règle d'AGENTS vérifiée à la revue seulement) ; les tests « deux cartes » ne couvrent pas `MapPage` ni `EventsListPage` et utilisent les mêmes noms de colonnes Baserow dans les deux configs ; `prettier` n'est pas idempotent sur un bloc de `baserow.service.degraded.spec.ts` (deux passes nécessaires, `pnpm lint:fix` peut donc demander deux exécutions) ; `pnpm test --force` est refusé par pnpm (utiliser `pnpm run test -- --force` pour ignorer le cache turbo) ; la branche par défaut du dépôt est `main` (le modèle de PR n'y est donc actif qu'après `develop` → `main`).
-
-Points relevés en session 4 pour la suite : `root AGENTS.md` cite encore les paramètres de carte (centre, zoom…) comme contenu de la config alors que `AppConfigMap` est retiré (la carte reste dans le code) ; une table de référence en erreur renvoie toujours une liste vide (**résolu en session 5**) ; le titre de repli « Événement sans titre » reste en dur (session 6) ; le message d'erreur du rôle `moderation` dit « le champ sera vide » alors que la modération passe par l'ID de champ ; le contrôle de schéma lit une ligne par table (une table vide n'est pas contrôlable : avertissement).
-
-> Les parties ci-dessous (branche `audit/bilan-refonte`, « à commiter », etc.) décrivent l'état au moment de l'audit et sont **périmées** : cette branche est supprimée et le code corrigé est dans les PR de la session 1.
-
-## Point de mi-parcours (étapes 0 à 3, rédigé au début de la session 2)
-
-| Étape | Ce qu'on sait maintenant | Ce qui reste incertain |
+| Session | État | PR |
 |---|---|---|
-| 0 Inventaire | Branche `audit/bilan-refonte`, outillage OK, Docker démarré, doc obsolète (`map-interactive`, `DEVPLAN.md`, `BASEROW_TABLE_ID`) | Aucun |
-| 1 Lancement | Tests 119/119 OK, `vite build` OK. **`pnpm build` KO** (4 erreurs de types front), lint front sans config, lint back = bruit CRLF + `--fix`, **déploiement Docker non migré** (Airtable, `app.config.json` non copié) | Build Docker non exécuté |
-| 2 Baserow + seed | Baserow 2.4.1 local, seed idempotent (36 cas + 1500), API : 1536 / 1250 événements, fuseaux OK. Faille `?devMode=true` publique, cold start 30-50 s | Schéma réel de la prod non fourni (types déduits) |
-| 3 Validation | Carte, clusters, filtres, DOM-TOM, iframe OK. Bugs : `Invalid Date`, fin < début, config invalide fail-late, suppression du champ de modération = 500, cache sans invalidation. « 1 code N configs » prouvé pour thème/textes accueil/dates | Mobile, partage, géolocalisation, Safari/Firefox |
+| 0 GitHub CLI | faite | — |
+| 1 Base Git | faite | #9 à #14 |
+| 2 Nettoyage et intégration | faite | #21 (#15 à #20 fermées) |
+| 3 Titres et identité par la config | faite | #22, #23, #24 |
+| 4 Mapping Baserow, config validée | faite | #25, #26, #27, #28 |
+| 5 Filtres | faite | #29, #30, #31 |
+| 6 Cas dégradés | faite | #32 |
+| 7 Qualité | faite ; tests « deux cartes » et modèle de PR retirés par #38, **retrait annulé** (à remettre, étape 1) | #33 à #36, #38 |
+| Hors plan | seed à 1000 événements, test des métas, verdict | #37, #39, #40 |
+| 8 Déploiement | **non faite, hors du plan actif** | — |
 
-Lecture globale : **la base fonctionne** (données, API, carte, filtres), **la philosophie « 1 code N cartes » est atteinte à ~40 %** (thème, accueil, dates, noms de champs) et **la robustesse/déploiement est le point faible** (build, Docker, modération, validation de schéma/config).
+## Plan actif : PLAN-FIN-REFONTE.md
 
-Fait en session 2 : étapes 4 à 7 (cartographie, branches, AGENTS.md, plan de suite).
+| Étape | Sujet | État |
+|---|---|---|
+| 0 | Plan dans le dépôt, nettoyage de `docs/`, config Astek supprimée | **fait** (PR `docs/plan-fin-refonte`) |
+| 1 | Remettre les tests « deux cartes » et le modèle de PR | à faire |
+| 3 | Résidus en dur (`Badge.tsx`, palette par défaut, gris de repli) | à faire |
+| 4 | Cas dégradés restants (config absente sur carte et liste, section Format vide) | à faire |
+| 5 | README et `PROJECT_VIBE_CONF.md` neutres | à faire |
+| 6 | Filtre Modalité retiré de la carte ; picto kebab-case | à faire |
+| 7 | Ménage (`App.tsx`, e2e périmé, branches mergées, lint) | à faire |
+| 8 | Verdict final | à faire |
 
-## Décisions prises
+**Prochaine action** : merger la PR de l'étape 0 (option « Create a merge commit »), puis lancer l'étape 1 (`test/retablir-deux-cartes`).
 
-- **Périmètre (2026-10-16, propriétaire du projet)** : (1) déploiement et migration de données **hors périmètre** (on repart d'une base vide, nouveau schéma) ; (2) **seuls les titres/noms de l'événement** sont pilotés par la config, le **wording de l'interface reste en dur** ; (3) **pas de fonctionnalités activables** pour l'instant (piste : activation déduite des données) ; (4) **filtres** à cadrer (08 §3). Conséquences : A3/A4/A7/B1/B4/B6/D différés, C2 annulé, `AGENTS.md` à ajuster (08 §7, non fait).
-- **Précisions (2026-10-16, soir)** : **pas de schéma cible Baserow** → la carte doit fonctionner avec le schéma indiqué par la config (donc tout nom de colonne et toute valeur de liste de choix doivent être mappables) ; **carte et régions restent dans le code** ; **suppression du code mort** : d'accord mais **hors périmètre** ; **aucune modification de code** pendant cette phase (bilan seulement). Les clés existantes `texts.*` (meta, home) restent dans la config.
-- Baserow : instance **locale Docker** créée de zéro (choix utilisateur).
-- Référence « avant refonte » : `astek-jnr-map COMPARATIF/` (copie dupliquée pré-refonte, choix utilisateur).
-- Branches distantes : 3 sur 5 déjà intégrées dans `main` (SHA différents), 2 petites branches « Refonte » propres et sans conflit (05). Aucune suppression ni merge effectué.
-- AGENTS.md (5 fichiers) réécrits **dans l'arbre de travail**, non commités ; `CLAUDE.md` volontairement **non modifié** (décision Q2 attendue).
-- Aucun code applicatif modifié pendant le bilan (seuls ajouts : `docs/audit/`, `scripts/seed-baserow/`, `deploy/baserow-local/`, AGENTS.md).
+## Décisions en vigueur
 
-## Blocages / points ouverts
+- **Hors du plan actif (2026-10-19)** : session 8 (déploiement) et `develop` vers `main` avec tags. On reste sur `develop`.
+- **Tests « deux cartes » et modèle de PR (2026-10-19)** : à remettre ; leur retrait par #38 était une erreur. La vérification d'identité ou de config se fait avec `docs/audit/fixtures/app.config.second-map.json`.
+- **Config Astek (2026-10-19)** : supprimée (essai local sans valeur).
+- **Périmètre (2026-10-16)** : seuls les titres et noms de l'événement sont pilotés par la config, le wording de l'interface reste en dur ; pas de flags de fonctionnalités ; pas de schéma cible Baserow ; carte et régions dans le code ; Airtable retiré, pas de migration de données.
+- Toutes les décisions détaillées : [PLAN-SESSIONS.md](PLAN-SESSIONS.md), section « Décisions prises ».
 
-- Docker : CLI présent (26.1.1), démon non démarré au début de la session (voir 00-inventaire.md).
-- Le plan initial mentionnait un dossier imbriqué `astek-jnr-map/` : il **n'existe plus** dans le working tree (vérifié par `Test-Path`). Sans objet.
+## Points ouverts
 
-## Questions en attente (voir [07](07-plan-de-suite.md))
-
-Q1 couleur `primary` #AE3B5D (typo ?) · Q2 sort de `CLAUDE.md` · Q3 recherche limitée au titre · Q4 fonctions des copies à réintégrer (fournir les 4 autres copies) · Q5 un déploiement par carte ou multi-cartes · Q6 nom du bloc `features`.
-
-## Prochaine action exacte
-
-1. **Relire** `06-agents.diff` (ou `git diff` des 5 AGENTS.md) : accepter (commit sur `audit/bilan-refonte` + PR) ou refuser (`git checkout --`).
-2. Répondre à Q1–Q6.
-3. **Jalon J1 « Prod saine »** : **A1, A5, A6 faits** (session 3, voir JOURNAL, non commités, dans l'arbre de travail de `audit/bilan-refonte`). Reste : A2 (lockfile, `package-lock.json`), A3/A4 (déploiement Baserow + config dans les images + `docker build` réel), A7 (`frame-ancestors`), puis A8 (Q1), A9 (Q3), A10.
-   Fichiers de code touchés : `apps/frontend/src/types/event.ts`, `pages/MapPage.tsx`, `pages/EventsListPage.tsx`, `apps/backend/src/events/events.controller.ts` (+ spec), `apps/backend/src/baserow/baserow.service.ts` (+ nouveau `baserow.service.spec.ts`), `apps/backend/.env.example`, `scripts/seed-baserow/seed.mjs`. **À séparer de la branche d'audit avant PR** (changements ciblés).
-4. Nettoyage de l'environnement si besoin : `docker compose -f deploy/baserow-local/docker-compose.yml down` (ajouter `-v` pour effacer les données de test).
+- **PR #38** : sa description annonce le retrait du filtre Modalité de la carte et la conservation des tests « deux cartes ». Contenu réel : suppression des tests et du modèle de PR, rien sur les filtres. Le filtre Modalité est toujours sur la carte (étape 6).
+- `main` a 124 commits de retard sur `develop` (au 2026-10-19) : tout est sur `develop` ; le passage sur `main` est reporté.
+- Le test e2e `apps/backend/test/app.e2e-spec.ts` est périmé (`pnpm test:e2e` échoue) et n'est pas lancé par `pnpm test` ; `apps/frontend/src/App.tsx` est du code mort (étape 7).
+- Un test frontend sensible aux délais (`eventDateRange.spec.ts`) a expiré une fois en exécution parallèle lourde : à surveiller.
+- `prettier` n'est pas idempotent sur un bloc de `baserow.service.degraded.spec.ts` : `pnpm lint:fix` peut demander deux passes.
+- Le lint ne détecte ni couleur ni marque en dur (règle d'`AGENTS.md` vérifiée à la revue seulement) ; garde-fou optionnel à l'étape 7.
+- Schéma de la vraie base Baserow de production : jamais fourni (non vérifié) ; la carte doit fonctionner avec le schéma indiqué par la config.
+- Branches obsolètes `add-dynamic-filters`, `modify-audiences-filters`, `modif_audience_filters` : accord de leur auteur requis avant suppression.
+- Réglage GitHub à faire par le propriétaire : protéger `main` et `develop` (non vérifié).

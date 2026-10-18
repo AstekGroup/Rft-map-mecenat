@@ -3,6 +3,8 @@
 > Vérification du 2026-10-19 sur `origin/develop` au commit `2273bcb` (merge de la PR #39), dans un worktree propre (les fichiers locaux non commités `app.config.json` « Astek » et `app.config1.json` n'ont **pas** été pris en compte).
 > Périmètre : PR [#21](https://github.com/AstekGroup/Rft-map-mecenat/pull/21) à [#39](https://github.com/AstekGroup/Rft-map-mecenat/pull/39), toutes mergées dans `develop`. Référentiel : la philosophie de `AGENTS.md` (8 principes) et `docs/audit/PLAN-SESSIONS.md`.
 > Convention : chaque constat porte une preuve (`fichier:ligne` ou commande). « Non vérifié » quand je n'ai pas pu le confirmer.
+>
+> **Ce document est une photo datée du 2026-10-19.** Les suites données (décisions du propriétaire, plan, docs nettoyées) sont en §7 ; l'état courant est dans [audit/SUIVI.md](audit/SUIVI.md) et le plan dans [audit/PLAN-FIN-REFONTE.md](audit/PLAN-FIN-REFONTE.md). Il sera mis à jour à la dernière étape du plan.
 
 ## TL;DR
 
@@ -98,7 +100,9 @@ Estimation d'avancement (jugement, pas une mesure) :
 | Déploiement et mise en production | ~10 % |
 | **Global** | **~85 %** |
 
-## 6. Suite recommandée (par priorité)
+## 6. Suite recommandée (par priorité, telle qu'écrite le 2026-10-19)
+
+> Remplacée par le plan actif [audit/PLAN-FIN-REFONTE.md](audit/PLAN-FIN-REFONTE.md) : voir §7 pour ce qui a été décidé (points 1 et 2 exclus du plan, point 7 devenu « tests deux cartes remis »).
 
 1. **Session 8 — déploiement** : fournir `app.config.json` aux images (volume ou `APP_CONFIG_PATH` côté backend, config passée au build front), corriger ou supprimer `scripts/deploy.sh`, lancer un vrai `docker build` puis `compose up` avec le Baserow local, vérifier les variables `BASEROW_*`. Faire l'essai avec deux configs (`app.config.json` et `docs/audit/fixtures/app.config.second-map.json`).
 2. **`develop` → `main`** avec un tag (`v0.3.0`), une fois la session 8 validée.
@@ -107,3 +111,19 @@ Estimation d'avancement (jugement, pas une mesure) :
 5. **Améliorations du plan** : retrait de Modalité sur la carte, picto kebab-case.
 6. **Ménage** : supprimer `App.tsx` et le test e2e périmé, supprimer les branches mergées (dont `wip/audit-snapshot`), demander l'accord pour les 3 branches obsolètes.
 7. **À reconsidérer** : un garde-fou automatique minimal contre le codé en dur (ex. un test qui lance le `rg` de la checklist sur `apps/*/src`), puisque les tests « deux cartes » ont été retirés.
+
+## 7. Suites données au verdict (2026-10-19)
+
+Décisions du propriétaire après lecture du verdict :
+
+| Sujet | Décision | Où |
+|---|---|---|
+| Tests « deux cartes » (écart §4 point 9) | **Remis.** Leur retrait par la PR #38 était une erreur : c'est le filet de « 1 code, N cartes ». Le modèle de PR est remis avec eux. | [audit/PLAN-FIN-REFONTE.md](audit/PLAN-FIN-REFONTE.md) étape 1 |
+| Config Astek | **Supprimée** : essai local sans valeur (fichier `app.config.astek.json` retiré, modifications locales de `app.config.json` et `app.config1.json` abandonnées). | fait (étape 0) |
+| Session 8 (déploiement) et `develop` vers `main` | **Exclus du plan actif.** Le verdict les garde comme « non faits ». | [audit/SUIVI.md](audit/SUIVI.md) |
+| Écarts §4 points 4 à 6 (résidus en dur, cas dégradés) | Planifiés | étapes 3 et 4 |
+| Écart §4 point 7 (docs qui contredisent le code) | **Fait pour `docs/` et `AGENTS.md`** : documents d'audit obsolètes supprimés, `SUIVI.md`, `PLAN-SESSIONS.md`, `BASEROW-LOCAL.md`, `PERIMETRE-CONFIG-BASEROW.md` réécrits ou mis à jour, `docs/README.md` ajouté. Restent les README et `PROJECT_VIBE_CONF.md`. | étape 0 ; étape 5 |
+| Écart §4 point 1 (PR #38 mal décrite) | Noté dans `SUIVI.md` (points ouverts) ; le filtre Modalité reste à retirer de la carte | étape 6 |
+| Écart §4 point 8 (hygiène) | Planifié | étape 7 |
+
+Documents supprimés lors du nettoyage (photos du 2026-10-16, d'avant les correctifs, toujours récupérables dans l'historique git) : inventaire, lancement, validation, cartographie du codé en dur, branches, réécriture des `AGENTS.md`, ancien plan de suite, synthèse, captures d'écran. Ce verdict les remplace pour l'état du code.
