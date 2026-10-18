@@ -77,6 +77,31 @@ describe('useEvents', () => {
     expect(result.current.availablePartners).toEqual(partners);
   });
 
+  it('expose dans controls tout ce dont les écrans de filtres ont besoin', async () => {
+    const partners: LinkedTableRow[] = [{ id: 'part1', name: 'P1' }];
+    const formats: LinkedTableRow[] = [mockType];
+    vi.mocked(api.fetchEvents).mockResolvedValueOnce([
+      makeEvent({ id: 'a', region: 'Bretagne' }),
+      makeEvent({ id: 'b', region: 'Normandie' }),
+    ]);
+    vi.mocked(api.fetchPartners).mockResolvedValueOnce(partners);
+    vi.mocked(api.fetchFormats).mockResolvedValueOnce(formats);
+
+    const { result } = renderHook(() => useEvents());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.controls.availablePartners).toEqual(partners);
+    expect(result.current.controls.availableFormats).toEqual(formats);
+
+    act(() => result.current.controls.onToggleRegion('Bretagne'));
+    expect(result.current.controls.filters.regions).toEqual(['Bretagne']);
+    expect(result.current.events).toHaveLength(1);
+
+    act(() => result.current.controls.onResetFilters());
+    expect(result.current.controls.filters.regions).toEqual([]);
+    expect(result.current.events).toHaveLength(2);
+  });
+
   it('gère les erreurs de chargement', async () => {
     vi.mocked(api.fetchEvents).mockRejectedValueOnce(new Error('Network error'));
 

@@ -19,20 +19,10 @@ export function MapPage() {
     geojson,
     loading,
     error,
-    filters,
-    updateFilters,
-    resetFilters,
-    toggleRegion,
-    toggleType,
-    toggleTheme,
-    togglePartner,
-    availablePartners,
-    toggleAudience,
+    controls,
     stats,
-    availableThemes,
-    availableFormats,
-    availablePublics,
   } = useEvents();
+  const { filters, onUpdateFilters: updateFilters } = controls;
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [hoveredEvent, setHoveredEvent] = useState<Event | null>(null);
@@ -154,24 +144,13 @@ export function MapPage() {
       <div className="hidden sm:block">
         <Sidebar
           events={events}
-          filters={filters}
-          onUpdateFilters={updateFilters}
-          onToggleRegion={toggleRegion}
-          onToggleType={toggleType}
-          onToggleTheme={toggleTheme}
-          onTogglePartner={togglePartner}
-          availablePartners={availablePartners}
-          onToggleAudience={toggleAudience}
-          onResetFilters={resetFilters}
+          controls={controls}
           selectedEvent={selectedEvent}
           onSelectEvent={handleSidebarEventClick}
           hoveredEvent={hoveredEvent}
           onHoverEvent={setHoveredEvent}
           stats={stats}
           mapBounds={mapBounds}
-          availableThemes={availableThemes}
-          availableFormats={availableFormats}
-          availablePublics={availablePublics}
         />
       </div>
 
@@ -180,15 +159,7 @@ export function MapPage() {
         <div className="sm:hidden">
           <Sidebar
             events={events}
-            filters={filters}
-            onUpdateFilters={updateFilters}
-            onToggleRegion={toggleRegion}
-            onToggleType={toggleType}
-            onToggleTheme={toggleTheme}
-            onTogglePartner={togglePartner}
-            availablePartners={availablePartners}
-          onToggleAudience={toggleAudience}
-            onResetFilters={resetFilters}
+            controls={controls}
             selectedEvent={selectedEvent}
             onSelectEvent={(event) => {
               handleSidebarEventClick(event);
@@ -198,9 +169,6 @@ export function MapPage() {
             onHoverEvent={setHoveredEvent}
             stats={stats}
             mapBounds={mapBounds}
-            availableThemes={availableThemes}
-            availableFormats={availableFormats}
-            availablePublics={availablePublics}
           />
         </div>
       )}
