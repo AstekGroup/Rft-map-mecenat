@@ -6,8 +6,9 @@ import { isDateFilterActive } from '@/utils/eventDateRange';
 
 /**
  * Définition unique des filtres, partagée par le panneau de la carte (`FilterPanel`) et la barre
- * de la liste (`EventFiltersBar`) : mêmes filtres, même ordre, mêmes titres, mêmes règles
- * d'affichage. Ajouter ou retirer un filtre se fait ici, pas dans les écrans.
+ * de la liste (`EventFiltersBar`) : même ordre, mêmes titres, mêmes règles d'affichage. Un filtre
+ * est proposé sur les deux écrans, sauf si sa définition restreint `surfaces` (ex. Modalité : liste seulement).
+ * Ajouter ou retirer un filtre se fait ici, pas dans les écrans.
  * (La recherche texte et le bouton « événements passés » sont hors liste : les deux écrans les affichent toujours.)
  */
 export type FilterId =
@@ -30,8 +31,13 @@ export interface FilterReferences {
 
 export type ReferenceKey = keyof FilterReferences;
 
+/** Écran qui affiche les filtres : panneau de la carte (`panel`) ou barre de la liste (`bar`). */
+export type FilterSurface = 'panel' | 'bar';
+
 export interface FilterDefinition {
   id: FilterId;
+  /** Écrans où le filtre est proposé ; absent = partout. */
+  surfaces?: readonly FilterSurface[];
   /** Titre du groupe (wording générique de l'interface). */
   title: string;
   icon: LucideIcon;
@@ -47,6 +53,8 @@ export const FILTER_DEFINITIONS: readonly FilterDefinition[] = [
   {
     id: 'modality',
     title: 'Modalité',
+    // Sans effet utile sur la carte (les événements en ligne n'y ont pas de coordonnées) : liste seulement.
+    surfaces: ['bar'],
     icon: Globe,
     activeCount: (f) => Number(f.modality !== 'all'),
   },
@@ -111,9 +119,13 @@ export const FILTER_DEFINITIONS: readonly FilterDefinition[] = [
 export function getVisibleFilters(
   filters: EventFilters,
   references: FilterReferences,
+  surface: FilterSurface,
   unavailable: readonly ReferenceKey[] = [],
 ): FilterDefinition[] {
   return FILTER_DEFINITIONS.filter((definition) => {
+    if (definition.surfaces && !definition.surfaces.includes(surface)) {
+      return false;
+    }
     if (
       definition.reference &&
       references[definition.reference].length === 0 &&
@@ -132,7 +144,10 @@ export function getVisibleFilters(
 }
 
 /** Même chose à partir des `controls` que reçoivent les écrans de filtres. */
-export function getVisibleFiltersFor(controls: EventFilterControls): FilterDefinition[] {
+export function getVisibleFiltersFor(
+  controls: EventFilterControls,
+  surface: FilterSurface,
+): FilterDefinition[] {
   return getVisibleFilters(
     controls.filters,
     {
@@ -141,6 +156,7 @@ export function getVisibleFiltersFor(controls: EventFilterControls): FilterDefin
       themes: controls.availableThemes,
       publics: controls.availablePublics,
     },
+    surface,
     controls.unavailableReferences,
   );
 }
