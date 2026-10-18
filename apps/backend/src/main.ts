@@ -35,8 +35,8 @@ async function bootstrap() {
         logger.log(`Health check: http://localhost:${p}/api/health`);
         logger.log(`Events API: http://localhost:${p}/api/events`);
         return;
-      } catch (err: any) {
-        if (err.code === 'EADDRINUSE') {
+      } catch (err: unknown) {
+        if ((err as NodeJS.ErrnoException).code === 'EADDRINUSE') {
           logger.warn(`Port ${p} déjà utilisé, tentative sur ${p + 1}...`);
           continue;
         }

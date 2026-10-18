@@ -195,7 +195,7 @@ export class GeocodingService {
         return null;
       }
 
-      const data: BanResponse = await response.json();
+      const data = (await response.json()) as BanResponse;
       if (!data.features || data.features.length === 0) {
         // Fallback : essayer juste avec le code postal et la ville
         if (address) {
