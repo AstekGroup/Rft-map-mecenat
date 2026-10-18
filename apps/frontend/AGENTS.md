@@ -14,7 +14,7 @@ Application **React 18 + Vite** : carte MapLibre, clustering Supercluster. Elle 
 pnpm dev          # génère index.html puis lance Vite — http://localhost:5173
 pnpm build        # génère index.html depuis index.template.html + la config, puis tsc -b et vite build
 pnpm test         # Vitest
-pnpm lint         # ESLint (eslint.config.js) : 0 erreur ; 3 avertissements connus (dépendances de hooks dans MapView, export dans MapStyleSelector)
+pnpm lint         # ESLint (eslint.config.js) : 0 erreur ; 2 avertissements connus (dépendances de hooks dans `MapView`, documentés dans le code)
 ```
 
 Depuis la racine : `pnpm front:dev`. Le lint ne modifie aucun fichier. Ne pas ajouter de `any` : typer les réponses de l'API.

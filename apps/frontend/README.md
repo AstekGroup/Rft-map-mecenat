@@ -135,7 +135,7 @@ pnpm dev      # génère index.html puis lance Vite (localhost:5173)
 pnpm build    # génère index.html, tsc -b, vite build
 pnpm preview  # prévisualise le build
 pnpm test     # Vitest
-pnpm lint     # ESLint (0 erreur ; 3 avertissements connus)
+pnpm lint     # ESLint (0 erreur ; 2 avertissements connus)
 ```
 
 ## Performance
