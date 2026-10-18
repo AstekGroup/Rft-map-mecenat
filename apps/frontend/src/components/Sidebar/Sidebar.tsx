@@ -54,7 +54,7 @@ export function Sidebar({
     };
   }, [events, mapBounds]);
 
-  const activeFiltersCount = countActiveFilters(filters);
+  const activeFiltersCount = countActiveFilters(filters, controls.defaultShowPastEvents);
 
   if (isCollapsed) {
     return (

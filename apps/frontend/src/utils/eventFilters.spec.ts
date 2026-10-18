@@ -65,6 +65,15 @@ describe('countActiveFilters', () => {
       showPastEvents: true,
     })).toBe(11);
   });
+
+  it("ne compte « événements passés » que s'il s'écarte du défaut", () => {
+    // Avant la fin de l'événement : le défaut est de les masquer.
+    expect(countActiveFilters({ ...defaultFilters, showPastEvents: true }, false)).toBe(1);
+    expect(countActiveFilters({ ...defaultFilters, showPastEvents: false }, false)).toBe(0);
+    // Après la fin : le défaut est de les montrer, les masquer devient un filtre.
+    expect(countActiveFilters({ ...defaultFilters, showPastEvents: true }, true)).toBe(0);
+    expect(countActiveFilters({ ...defaultFilters, showPastEvents: false }, true)).toBe(1);
+  });
 });
 
 describe('matchesSearch', () => {

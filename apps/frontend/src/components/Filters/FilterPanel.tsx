@@ -14,7 +14,7 @@ interface FilterPanelProps {
 /** Panneau de filtres de la carte : un accordéon par filtre de `FILTER_DEFINITIONS`. */
 export function FilterPanel({ controls }: FilterPanelProps) {
   const { filters, onUpdateFilters, onResetFilters } = controls;
-  const hasActiveFilters = countActiveFilters(filters) > 0;
+  const hasActiveFilters = countActiveFilters(filters, controls.defaultShowPastEvents) > 0;
   const visibleFilters = getVisibleFiltersFor(controls);
 
   return (

@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { EventFilterControls, EventFilters } from '@/hooks';
 import type { LinkedTableRow } from '@/types/event';
 import { FILTER_DEFINITIONS, getVisibleFilters, type FilterId } from '@/utils/filterDefinitions';
 import { EventFiltersBar } from '@/components/Events/EventFiltersBar';
 import { FilterPanel } from './FilterPanel';
-import { SEARCH_PLACEHOLDER } from './FilterContent';
+import { SEARCH_PLACEHOLDER, UNAVAILABLE_LIST_MESSAGE } from './FilterContent';
 
 const defaultFilters: EventFilters = {
   search: '',
@@ -30,6 +31,7 @@ const rows = (prefix: string): LinkedTableRow[] => [
 function makeControls(overrides: Partial<EventFilterControls> = {}): EventFilterControls {
   return {
     filters: defaultFilters,
+    defaultShowPastEvents: false,
     onUpdateFilters: vi.fn(),
     onToggleRegion: vi.fn(),
     onToggleType: vi.fn(),
@@ -41,6 +43,7 @@ function makeControls(overrides: Partial<EventFilterControls> = {}): EventFilter
     availableThemes: rows('thème'),
     availableFormats: rows('format'),
     availablePublics: rows('public'),
+    unavailableReferences: [],
     ...overrides,
   };
 }
@@ -115,6 +118,35 @@ describe('filtres unifiés (panneau de la carte et barre de la liste)', () => {
     expect(bar).toEqual(panel);
   });
 
+  it('gardent affiché, sur les deux écrans, un filtre dont le référentiel est en erreur (≠ vide)', () => {
+    const controls = makeControls({
+      availableFormats: [],
+      availablePartners: [],
+      unavailableReferences: ['formats'],
+    });
+    const panel = shownOn('panel', controls);
+    const bar = shownOn('bar', controls);
+
+    expect(panel).toContain('format'); // en erreur : visible avec un message
+    expect(panel).not.toContain('partners'); // vide : masqué
+    expect(bar).toEqual(panel);
+  });
+
+  it.each([
+    ['panel', (c: EventFilterControls) => <FilterPanel controls={c} />],
+    ['bar', (c: EventFilterControls) => <EventFiltersBar controls={c} />],
+  ] as const)(
+    'expliquent que la liste est indisponible (%s) au lieu de n’afficher aucune option',
+    async (_name, build) => {
+      const controls = makeControls({ availableFormats: [], unavailableReferences: ['formats'] });
+      render(build(controls));
+
+      await userEvent.click(screen.getByRole('button', { name: new RegExp(`^${titleOf('format')}`) }));
+
+      expect(screen.getByText(UNAVAILABLE_LIST_MESSAGE)).toBeInTheDocument();
+    },
+  );
+
   it('ont le même champ de recherche', () => {
     const controls = makeControls();
     const panel = render(<FilterPanel controls={controls} />);
@@ -142,5 +174,10 @@ describe('getVisibleFilters', () => {
     const ids = getVisibleFilters(defaultFilters, { ...full, publics: [] }).map((d) => d.id);
     expect(ids).not.toContain('audiences');
     expect(ids).toContain('themes');
+  });
+
+  it('garde un filtre dont le référentiel est vide parce qu’il est en erreur', () => {
+    const ids = getVisibleFilters(defaultFilters, { ...full, publics: [] }, ['publics']).map((d) => d.id);
+    expect(ids).toContain('audiences');
   });
 });

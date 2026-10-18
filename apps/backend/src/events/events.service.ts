@@ -5,6 +5,8 @@ import { BaserowService } from '../baserow/baserow.service';
 interface CachedData {
   events: Event[];
   timestamp: number;
+  /** Durée de validité (ms) : courte quand le chargement était dégradé. */
+  ttl: number;
 }
 
 interface CachedLinkedTable {
@@ -24,6 +26,9 @@ export class EventsService {
   private formatsCache: CachedLinkedTable | null = null;
   private publicsCache: CachedLinkedTable | null = null;
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  // Quand une table de référence était en erreur, les événements ont été servis sans leurs
+  // partenaires/thématiques/formats/publics : on ne fige pas ce résultat 5 minutes.
+  private readonly DEGRADED_CACHE_TTL = 30 * 1000; // 30 secondes
 
   constructor(private readonly baserowService: BaserowService) {}
 
@@ -33,7 +38,7 @@ export class EventsService {
   async findAll(devMode = false): Promise<Event[]> {
     const cached = devMode ? this.devCache : this.cache;
 
-    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+    if (cached && Date.now() - cached.timestamp < cached.ttl) {
       this.logger.debug(
         `Cache hit (${devMode ? 'dev' : 'prod'}, âge: ${Math.round((Date.now() - cached.timestamp) / 1000)}s)`,
       );
@@ -43,7 +48,12 @@ export class EventsService {
     this.logger.log(`Cache miss, chargement depuis Baserow...`);
     const events = await this.baserowService.fetchEvents(devMode);
 
-    const newCache: CachedData = { events, timestamp: Date.now() };
+    const degraded = this.baserowService.degradedReferences();
+    const newCache: CachedData = {
+      events,
+      timestamp: Date.now(),
+      ttl: degraded.length > 0 ? this.DEGRADED_CACHE_TTL : this.CACHE_TTL,
+    };
     if (devMode) {
       this.devCache = newCache;
     } else {

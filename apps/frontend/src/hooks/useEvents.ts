@@ -2,7 +2,10 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Event, EventsGeoJSON, LinkedTableRow } from '@/types/event';
 import {fetchEvents, fetchPartners, eventsToGeoJSON, fetchThemes, fetchFormats, fetchPublics} from '@/services/api';
 import type { DateFilterMode } from '@/utils/eventDateRange';
+import { isEventOver } from '@/utils/eventDateRange';
 import { matchesFilters } from '@/utils/eventFilters';
+import type { ReferenceKey } from '@/utils/filterDefinitions';
+import { useConfig } from './useConfig';
 
 export interface EventFilters {
   search: string;
@@ -28,6 +31,8 @@ export interface EventFilters {
  */
 export interface EventFilterControls {
   filters: EventFilters;
+  /** Valeur de « événements passés » sans choix de l'utilisateur : vraie une fois l'événement terminé. */
+  defaultShowPastEvents: boolean;
   onUpdateFilters: (filters: Partial<EventFilters>) => void;
   onToggleRegion: (region: string) => void;
   onToggleType: (typeId: string) => void;
@@ -39,12 +44,30 @@ export interface EventFilterControls {
   availableThemes: LinkedTableRow[];
   availableFormats: LinkedTableRow[];
   availablePublics: LinkedTableRow[];
+  /**
+   * Référentiels que le backend n'a pas pu charger (erreur, à ne pas confondre avec un référentiel
+   * vide qui masque simplement le filtre) : le filtre reste affiché avec un message.
+   */
+  unavailableReferences: ReferenceKey[];
 }
 
 /** Filtres à sélection multiple (listes d'identifiants ou de noms de région). */
 type MultiValueFilterKey = 'regions' | 'types' | 'themes' | 'partners' | 'audiences';
 
-const initialFilters: EventFilters = {
+/**
+ * Filtres tenus dans l'état du hook. `showPastEvents` n'y figure pas : tant que l'utilisateur n'a
+ * pas touché au bouton, sa valeur se déduit de la config (événement terminé ou non).
+ */
+type StoredFilters = Omit<EventFilters, 'showPastEvents'>;
+
+type SettledReference = PromiseSettledResult<LinkedTableRow[]>;
+
+/** Convertit le résultat d'une requête de référentiel en résultat « réglé » (jamais de rejet). */
+function settle(request: Promise<LinkedTableRow[]>): Promise<SettledReference> {
+  return Promise.allSettled([request]).then(([result]) => result);
+}
+
+const initialFilters: StoredFilters = {
   search: '',
   dateFilter: 'all',
   dateFrom: '',
@@ -56,7 +79,6 @@ const initialFilters: EventFilters = {
   audiences: [],
   postalCode: '',
   modality: 'all',
-  showPastEvents: false,
 };
 
 export function useEvents() {
@@ -65,10 +87,25 @@ export function useEvents() {
   const [availableThemes, setAvailableThemes] = useState<LinkedTableRow[]>([]);
   const [availableFormats, setAvailableFormats] = useState<LinkedTableRow[]>([]);
   const [availablePublics, setAvailablePublics] = useState<LinkedTableRow[]>([]);
+  const [unavailableReferences, setUnavailableReferences] = useState<ReferenceKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [filters, setFilters] = useState<EventFilters>(initialFilters);
+  const [storedFilters, setFilters] = useState<StoredFilters>(initialFilters);
+  // Choix explicite de l'utilisateur pour « événements passés » ; null = laisser le défaut.
+  const [pastEventsChoice, setPastEventsChoice] = useState<boolean | null>(null);
   const [devMode, setDevMode] = useState(false);
+  const { config } = useConfig();
+
+  // Une fois l'événement terminé (lendemain de `app.eventDates.weekEnd`), la carte afficherait
+  // un écran vide : les événements passés deviennent alors visibles par défaut.
+  const defaultShowPastEvents = useMemo(
+    () => isEventOver(config?.app?.eventDates?.weekEnd),
+    [config],
+  );
+  const filters: EventFilters = useMemo(
+    () => ({ ...storedFilters, showPastEvents: pastEventsChoice ?? defaultShowPastEvents }),
+    [storedFilters, pastEventsChoice, defaultShowPastEvents],
+  );
 
   // Charger les données depuis le backend
   useEffect(() => {
@@ -77,20 +114,30 @@ export function useEvents() {
         setLoading(true);
         setError(null);
         
-        // Charger événements et les autres datas pour les filtres
-        const [eventsData, partnersData, themesData, formatsData, publicsData] = await Promise.all([
+        // Les événements sont indispensables (erreur si la requête échoue) ; chaque référentiel
+        // des filtres est indépendant : l'un en erreur ne casse ni la carte ni les autres filtres.
+        const [eventsData, partnersResult, themesResult, formatsResult, publicsResult] = await Promise.all([
           fetchEvents(devMode),
-          fetchPartners(),
-          fetchThemes(),
-          fetchFormats(),
-          fetchPublics(),
+          settle(fetchPartners()),
+          settle(fetchThemes()),
+          settle(fetchFormats()),
+          settle(fetchPublics()),
         ]);
-        
+
+        const unavailable: ReferenceKey[] = [];
+        const rowsOf = (key: ReferenceKey, result: SettledReference): LinkedTableRow[] => {
+          if (result.status === 'fulfilled') return result.value ?? [];
+          console.error(`[useEvents] Référentiel « ${key} » indisponible:`, result.reason);
+          unavailable.push(key);
+          return [];
+        };
+
         setEvents(eventsData);
-        setAvailablePartners(partnersData);
-        setAvailableThemes(themesData);
-        setAvailableFormats(formatsData);
-        setAvailablePublics(publicsData);
+        setAvailablePartners(rowsOf('partners', partnersResult));
+        setAvailableThemes(rowsOf('themes', themesResult));
+        setAvailableFormats(rowsOf('formats', formatsResult));
+        setAvailablePublics(rowsOf('publics', publicsResult));
+        setUnavailableReferences(unavailable);
       } catch (err) {
         console.error('[useEvents] Erreur lors du chargement:', err);
         setError(err instanceof Error ? err : new Error('Erreur lors du chargement des données'));
@@ -121,10 +168,12 @@ export function useEvents() {
 
   // Actions sur les filtres
   const updateFilters = useCallback((newFilters: Partial<EventFilters>) => {
+    const { showPastEvents, ...rest } = newFilters;
+    if (showPastEvents !== undefined) setPastEventsChoice(showPastEvents);
     setFilters((prev) => {
-      const next = { ...prev, ...newFilters };
-      const nextMode = newFilters.dateFilter ?? prev.dateFilter;
-      if (newFilters.dateFilter !== undefined && nextMode !== 'custom') {
+      const next = { ...prev, ...rest };
+      const nextMode = rest.dateFilter ?? prev.dateFilter;
+      if (rest.dateFilter !== undefined && nextMode !== 'custom') {
         next.dateFrom = '';
         next.dateTo = '';
       }
@@ -134,6 +183,7 @@ export function useEvents() {
 
   const resetFilters = useCallback(() => {
     setFilters(initialFilters);
+    setPastEventsChoice(null);
   }, []);
 
   // Ajoute la valeur à la sélection d'un filtre à choix multiples, ou la retire si elle y est déjà.
@@ -178,6 +228,7 @@ export function useEvents() {
 
   const controls: EventFilterControls = useMemo(() => ({
     filters,
+    defaultShowPastEvents,
     onUpdateFilters: updateFilters,
     onToggleRegion: toggleRegion,
     onToggleType: toggleType,
@@ -189,9 +240,10 @@ export function useEvents() {
     availableThemes,
     availableFormats,
     availablePublics,
+    unavailableReferences,
   }), [
-    filters, updateFilters, toggleRegion, toggleType, toggleTheme, togglePartner, toggleAudience,
-    resetFilters, availablePartners, availableThemes, availableFormats, availablePublics,
+    filters, defaultShowPastEvents, updateFilters, toggleRegion, toggleType, toggleTheme, togglePartner, toggleAudience,
+    resetFilters, availablePartners, availableThemes, availableFormats, availablePublics, unavailableReferences,
   ]);
 
   return {

@@ -104,13 +104,23 @@ export const FILTER_DEFINITIONS: readonly FilterDefinition[] = [
  * Filtres à afficher pour l'état courant : on retire ceux dont le référentiel Baserow est vide
  * et ceux qui n'ont pas de sens pour la modalité choisie (sauf s'ils sont déjà actifs, pour
  * qu'une sélection ne devienne jamais invisible).
+ *
+ * Un référentiel `unavailable` (erreur de chargement) n'est PAS un référentiel vide : son filtre
+ * reste affiché, avec un message (voir `FilterContent`), au lieu de disparaître sans explication.
  */
 export function getVisibleFilters(
   filters: EventFilters,
   references: FilterReferences,
+  unavailable: readonly ReferenceKey[] = [],
 ): FilterDefinition[] {
   return FILTER_DEFINITIONS.filter((definition) => {
-    if (definition.reference && references[definition.reference].length === 0) return false;
+    if (
+      definition.reference &&
+      references[definition.reference].length === 0 &&
+      !unavailable.includes(definition.reference)
+    ) {
+      return false;
+    }
     if (
       definition.hiddenForModality === filters.modality &&
       definition.activeCount(filters) === 0
@@ -123,12 +133,16 @@ export function getVisibleFilters(
 
 /** Même chose à partir des `controls` que reçoivent les écrans de filtres. */
 export function getVisibleFiltersFor(controls: EventFilterControls): FilterDefinition[] {
-  return getVisibleFilters(controls.filters, {
-    partners: controls.availablePartners,
-    formats: controls.availableFormats,
-    themes: controls.availableThemes,
-    publics: controls.availablePublics,
-  });
+  return getVisibleFilters(
+    controls.filters,
+    {
+      partners: controls.availablePartners,
+      formats: controls.availableFormats,
+      themes: controls.availableThemes,
+      publics: controls.availablePublics,
+    },
+    controls.unavailableReferences,
+  );
 }
 
 /** Nombre de filtres actifs dans les définitions communes (hors recherche et événements passés). */

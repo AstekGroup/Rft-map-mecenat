@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { BadGatewayException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventsController } from './events.controller';
 import { EventsService } from './events.service';
+import { ReferenceTableError } from '../baserow/baserow.errors';
 import type { Event, LinkedTableRow } from '@make-map/types';
 
 const mockEvent: Event = {
@@ -165,6 +166,37 @@ describe('EventsController', () => {
       const result = await controller.findAllPublics();
       expect(eventsService.findAllPublics).toHaveBeenCalled();
       expect(result).toEqual([mockPublic]);
+    });
+  });
+
+  describe('référentiel en erreur', () => {
+    it.each([
+      ['partners', 'findAllPartners', 'BASEROW_PARTNERS_TABLE'],
+      ['themes', 'findAllThemes', 'BASEROW_THEMATIQUES_TABLE'],
+      ['formats', 'findAllFormats', 'BASEROW_FORMATS_TABLE'],
+      ['publics', 'findAllPublics', 'BASEROW_PUBLICS_TABLE'],
+    ] as const)(
+      'répond 502 (et non une liste vide) quand la table %s est illisible',
+      async (_label, method, table) => {
+        eventsService[method].mockRejectedValueOnce(
+          new ReferenceTableError(table, 'Baserow 500'),
+        );
+
+        await expect(controller[method]()).rejects.toThrow(BadGatewayException);
+      },
+    );
+
+    it('ne masque pas les autres erreurs (bug inattendu)', async () => {
+      const boom = new Error('bug inattendu');
+      eventsService.findAllFormats.mockRejectedValueOnce(boom);
+
+      await expect(controller.findAllFormats()).rejects.toBe(boom);
+    });
+
+    it("garde une liste vide légitime : table vide n'est pas une erreur", async () => {
+      eventsService.findAllFormats.mockResolvedValueOnce([]);
+
+      await expect(controller.findAllFormats()).resolves.toEqual([]);
     });
   });
 

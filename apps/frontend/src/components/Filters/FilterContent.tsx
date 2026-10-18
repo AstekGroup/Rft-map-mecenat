@@ -71,10 +71,24 @@ interface ReferenceOptionsProps {
   onToggle: (id: string) => void;
   lead: 'none' | 'logo' | 'picto';
   variant: FilterVariant;
+  /** La liste n'a pas pu être chargée : message d'erreur à la place des options (≠ liste vide). */
+  unavailable?: boolean;
 }
 
+export const UNAVAILABLE_LIST_MESSAGE = 'Liste momentanément indisponible. Réessayez dans quelques instants.';
+
 /** Options d'un référentiel Baserow, dans l'ordre où l'API les renvoie (ordre des lignes dans Baserow). */
-function ReferenceOptions({ rows, selected, onToggle, lead, variant }: ReferenceOptionsProps) {
+function ReferenceOptions({ rows, selected, onToggle, lead, variant, unavailable }: ReferenceOptionsProps) {
+  if (unavailable && rows.length === 0) {
+    return (
+      <p
+        role="status"
+        className={`text-sm text-text-secondary ${variant === 'panel' ? '' : 'p-3 min-w-[220px]'}`}
+      >
+        {UNAVAILABLE_LIST_MESSAGE}
+      </p>
+    );
+  }
   return (
     <div className={variant === 'panel' ? 'space-y-2' : 'p-2 space-y-1 min-w-[220px]'}>
       {rows.map((row) => (
@@ -321,6 +335,7 @@ export function FilterContent({ id, variant, controls }: FilterContentProps) {
           onToggle={controls.onTogglePartner}
           lead="logo"
           variant={variant}
+          unavailable={controls.unavailableReferences.includes('partners')}
         />
       );
     case 'format':
@@ -331,6 +346,7 @@ export function FilterContent({ id, variant, controls }: FilterContentProps) {
           onToggle={controls.onToggleType}
           lead="picto"
           variant={variant}
+          unavailable={controls.unavailableReferences.includes('formats')}
         />
       );
     case 'themes':
@@ -341,6 +357,7 @@ export function FilterContent({ id, variant, controls }: FilterContentProps) {
           onToggle={controls.onToggleTheme}
           lead="none"
           variant={variant}
+          unavailable={controls.unavailableReferences.includes('themes')}
         />
       );
     case 'audiences':
@@ -351,6 +368,7 @@ export function FilterContent({ id, variant, controls }: FilterContentProps) {
           onToggle={controls.onToggleAudience}
           lead="none"
           variant={variant}
+          unavailable={controls.unavailableReferences.includes('publics')}
         />
       );
     case 'postalCode':
