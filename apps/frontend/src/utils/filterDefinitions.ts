@@ -8,6 +8,8 @@ import { isDateFilterActive } from '@/utils/eventDateRange';
  * Définition unique des filtres, partagée par le panneau de la carte (`FilterPanel`) et la barre
  * de la liste (`EventFiltersBar`) : mêmes filtres, même ordre, mêmes titres, mêmes règles
  * d'affichage. Ajouter ou retirer un filtre se fait ici, pas dans les écrans.
+ * Seule exception : un filtre peut être réservé à un écran via `surfaces` (la modalité n'a pas d'objet
+ * sur la carte : les événements en ligne n'y ont pas de position).
  * (La recherche texte et le bouton « événements passés » sont hors liste : les deux écrans les affichent toujours.)
  */
 export type FilterId =
@@ -30,8 +32,13 @@ export interface FilterReferences {
 
 export type ReferenceKey = keyof FilterReferences;
 
+/** Écran qui affiche les filtres : panneau de la carte ou barre de la liste. */
+export type FilterSurface = 'panel' | 'bar';
+
 export interface FilterDefinition {
   id: FilterId;
+  /** Écrans qui proposent ce filtre ; absent = les deux. */
+  surfaces?: readonly FilterSurface[];
   /** Titre du groupe (wording générique de l'interface). */
   title: string;
   icon: LucideIcon;
@@ -47,6 +54,7 @@ export const FILTER_DEFINITIONS: readonly FilterDefinition[] = [
   {
     id: 'modality',
     title: 'Modalité',
+    surfaces: ['bar'],
     icon: Globe,
     activeCount: (f) => Number(f.modality !== 'all'),
   },
@@ -101,19 +109,24 @@ export const FILTER_DEFINITIONS: readonly FilterDefinition[] = [
 ];
 
 /**
- * Filtres à afficher pour l'état courant : on retire ceux dont le référentiel Baserow est vide
- * et ceux qui n'ont pas de sens pour la modalité choisie (sauf s'ils sont déjà actifs, pour
- * qu'une sélection ne devienne jamais invisible).
+ * Filtres à afficher sur un écran pour l'état courant : on retire ceux qui ne sont pas prévus pour
+ * cet écran (`surfaces`), ceux dont le référentiel Baserow est vide et ceux qui n'ont pas de sens
+ * pour la modalité choisie (sauf s'ils sont déjà actifs, pour qu'une sélection ne devienne jamais
+ * invisible).
  *
  * Un référentiel `unavailable` (erreur de chargement) n'est PAS un référentiel vide : son filtre
  * reste affiché, avec un message (voir `FilterContent`), au lieu de disparaître sans explication.
  */
 export function getVisibleFilters(
+  surface: FilterSurface,
   filters: EventFilters,
   references: FilterReferences,
   unavailable: readonly ReferenceKey[] = [],
 ): FilterDefinition[] {
   return FILTER_DEFINITIONS.filter((definition) => {
+    if (definition.surfaces && !definition.surfaces.includes(surface)) {
+      return false;
+    }
     if (
       definition.reference &&
       references[definition.reference].length === 0 &&
@@ -132,8 +145,12 @@ export function getVisibleFilters(
 }
 
 /** Même chose à partir des `controls` que reçoivent les écrans de filtres. */
-export function getVisibleFiltersFor(controls: EventFilterControls): FilterDefinition[] {
+export function getVisibleFiltersFor(
+  surface: FilterSurface,
+  controls: EventFilterControls,
+): FilterDefinition[] {
   return getVisibleFilters(
+    surface,
     controls.filters,
     {
       partners: controls.availablePartners,

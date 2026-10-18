@@ -64,6 +64,10 @@ function barShows(id: FilterId): boolean {
 
 const ALL_IDS = FILTER_DEFINITIONS.map((d) => d.id);
 
+/** La modalité est réservée à la barre de la liste : le panneau de la carte ne la propose pas. */
+const PANEL_IDS = ALL_IDS.filter((id) => id !== 'modality');
+const withoutModality = (ids: FilterId[]) => ids.filter((id) => id !== 'modality');
+
 function shownOn(screenName: 'panel' | 'bar', controls: EventFilterControls): FilterId[] {
   const { unmount } = render(
     screenName === 'panel' ? <FilterPanel controls={controls} /> : <EventFiltersBar controls={controls} />,
@@ -75,13 +79,26 @@ function shownOn(screenName: 'panel' | 'bar', controls: EventFilterControls): Fi
 }
 
 describe('filtres unifiés (panneau de la carte et barre de la liste)', () => {
-  it('proposent les mêmes filtres quand tous les référentiels sont remplis', () => {
+  it('proposent les mêmes filtres quand tous les référentiels sont remplis, sauf la modalité (liste seulement)', () => {
     const controls = makeControls();
     const panel = shownOn('panel', controls);
     const bar = shownOn('bar', controls);
 
-    expect(panel).toEqual(ALL_IDS);
-    expect(bar).toEqual(panel);
+    expect(panel).toEqual(PANEL_IDS);
+    expect(bar).toEqual(ALL_IDS);
+    expect(withoutModality(bar)).toEqual(panel);
+  });
+
+  it('n’affichent la modalité que sur la liste : le panneau de la carte ne la propose pas', () => {
+    const controls = makeControls();
+
+    const panel = render(<FilterPanel controls={controls} />);
+    expect(panel.queryByRole('button', { name: /^Modalité/ })).not.toBeInTheDocument();
+    expect(panel.queryByRole('button', { name: 'En ligne' })).not.toBeInTheDocument();
+    panel.unmount();
+
+    const bar = render(<EventFiltersBar controls={controls} />);
+    expect(bar.getByRole('button', { name: 'En ligne' })).toBeInTheDocument();
   });
 
   it('masquent les mêmes filtres quand un référentiel Baserow est vide, sans lier un filtre à un autre', () => {
@@ -93,7 +110,7 @@ describe('filtres unifiés (panneau de la carte et barre de la liste)', () => {
     expect(panel).toContain('themes');
     expect(panel).not.toContain('format');
     expect(panel).not.toContain('partners');
-    expect(bar).toEqual(panel);
+    expect(withoutModality(bar)).toEqual(panel);
   });
 
   it('masquent les mêmes filtres pour la modalité « en ligne » (code postal et région sans objet)', () => {
@@ -103,7 +120,7 @@ describe('filtres unifiés (panneau de la carte et barre de la liste)', () => {
 
     expect(panel).not.toContain('postalCode');
     expect(panel).not.toContain('region');
-    expect(bar).toEqual(panel);
+    expect(withoutModality(bar)).toEqual(panel);
   });
 
   it('gardent visible un filtre déjà utilisé même quand la modalité le rend sans objet', () => {
@@ -115,7 +132,7 @@ describe('filtres unifiés (panneau de la carte et barre de la liste)', () => {
 
     expect(panel).toContain('region');
     expect(panel).not.toContain('postalCode');
-    expect(bar).toEqual(panel);
+    expect(withoutModality(bar)).toEqual(panel);
   });
 
   it('gardent affiché, sur les deux écrans, un filtre dont le référentiel est en erreur (≠ vide)', () => {
@@ -129,7 +146,7 @@ describe('filtres unifiés (panneau de la carte et barre de la liste)', () => {
 
     expect(panel).toContain('format'); // en erreur : visible avec un message
     expect(panel).not.toContain('partners'); // vide : masqué
-    expect(bar).toEqual(panel);
+    expect(withoutModality(bar)).toEqual(panel);
   });
 
   it.each([
@@ -167,17 +184,22 @@ describe('getVisibleFilters', () => {
   };
 
   it('garde l\'ordre de FILTER_DEFINITIONS et tous les filtres si tout est rempli', () => {
-    expect(getVisibleFilters(defaultFilters, full).map((d) => d.id)).toEqual(ALL_IDS);
+    expect(getVisibleFilters('bar', defaultFilters, full).map((d) => d.id)).toEqual(ALL_IDS);
+  });
+
+  it('retire de chaque écran les filtres qui ne lui sont pas destinés (modalité : liste seulement)', () => {
+    expect(getVisibleFilters('panel', defaultFilters, full).map((d) => d.id)).toEqual(PANEL_IDS);
+    expect(getVisibleFilters('bar', defaultFilters, full).map((d) => d.id)).toContain('modality');
   });
 
   it('retire un filtre dont le référentiel est vide', () => {
-    const ids = getVisibleFilters(defaultFilters, { ...full, publics: [] }).map((d) => d.id);
+    const ids = getVisibleFilters('bar', defaultFilters, { ...full, publics: [] }).map((d) => d.id);
     expect(ids).not.toContain('audiences');
     expect(ids).toContain('themes');
   });
 
   it('garde un filtre dont le référentiel est vide parce qu’il est en erreur', () => {
-    const ids = getVisibleFilters(defaultFilters, { ...full, publics: [] }, ['publics']).map((d) => d.id);
+    const ids = getVisibleFilters('bar', defaultFilters, { ...full, publics: [] }, ['publics']).map((d) => d.id);
     expect(ids).toContain('audiences');
   });
 });

@@ -15,7 +15,7 @@ interface FilterPanelProps {
 export function FilterPanel({ controls }: FilterPanelProps) {
   const { filters, onUpdateFilters, onResetFilters } = controls;
   const hasActiveFilters = countActiveFilters(filters, controls.defaultShowPastEvents) > 0;
-  const visibleFilters = getVisibleFiltersFor(controls);
+  const visibleFilters = getVisibleFiltersFor('panel', controls);
 
   return (
     <div className="flex flex-col h-full font-inter">
