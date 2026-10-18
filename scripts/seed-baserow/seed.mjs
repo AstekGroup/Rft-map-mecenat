@@ -13,8 +13,12 @@
  * NB : exception assumée à la règle "Baserow en lecture seule" : cette règle concerne
  * le BACKEND de l'application, pas cet outil de dev qui cible une instance Docker locale.
  *
+ * Volume : 1000 événements au total par défaut (cas manuels + événements générés).
+ * `--total=N` change le total ; `--bulk=N` fixe directement le nombre d'événements générés
+ * (en plus des cas manuels) et l'emporte sur `--total`.
+ *
  * Usage :
- *   node scripts/seed-baserow/seed.mjs [--bulk=1500] [--url=http://localhost:8088] [--no-env] [--config=chemin/app.config.json]
+ *   node scripts/seed-baserow/seed.mjs [--total=1000 | --bulk=964] [--url=http://localhost:8088] [--no-env] [--config=chemin/app.config.json]
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -29,7 +33,18 @@ const args = Object.fromEntries(
   }),
 );
 const BASE = (args.url || process.env.BASEROW_LOCAL_URL || 'http://localhost:8088').replace(/\/$/, '');
-const BULK = parseInt(args.bulk || '0', 10);
+const DEFAULT_TOTAL = 1000;
+function intArg(name, fallback) {
+  if (args[name] === undefined) return fallback;
+  const n = Number(args[name]);
+  if (!Number.isInteger(n) || n < 0) {
+    console.error(`--${name} doit être un entier positif ou nul (reçu : ${args[name]}).`);
+    process.exit(1);
+  }
+  return n;
+}
+const TOTAL = intArg('total', DEFAULT_TOTAL);
+const BULK_OVERRIDE = intArg('bulk', null);
 const ADMIN = {
   name: 'Admin LGSV',
   email: process.env.BASEROW_LOCAL_EMAIL || 'admin@lgsv.local',
@@ -476,6 +491,8 @@ async function main() {
   PARTNERS.forEach(([name], i) => (idByName[`partners:${name}`] = pIds[i]));
 
   // --- Événements
+  // `--bulk` explicite sinon complète les cas manuels jusqu'à `--total` (jamais négatif).
+  const BULK = BULK_OVERRIDE ?? Math.max(0, TOTAL - hand().length);
   const events = [...hand(), ...bulk(BULK)];
   const imageCache = new Map();
   const getImage = async (rgb) => {

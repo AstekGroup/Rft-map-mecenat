@@ -17,8 +17,9 @@ Date : 2026-10-16 · Statuts : voir [SUIVI.md](SUIVI.md) · Preuves : [JOURNAL.m
 # 1. Démarrer Baserow (premier démarrage ~2-3 min)
 docker compose -f deploy/baserow-local/docker-compose.yml up -d
 
-# 2. Créer schéma + données (36 cas limites ; --bulk=1500 ajoute 1500 événements pour le clustering)
-node scripts/seed-baserow/seed.mjs --bulk=1500
+# 2. Créer schéma + données : 1000 événements au total par défaut (36 cas limites + 964 générés
+#    pour le clustering). --total=N change le total ; --bulk=N fixe le nombre de générés.
+node scripts/seed-baserow/seed.mjs
 
 # 3. Backend + frontend
 pnpm back:dev   # (ou pnpm --filter @make-map/backend build puis node apps/backend/dist/main)
@@ -48,7 +49,7 @@ Points d'ambiguïté (à confirmer sur la vraie base) :
 - **Type du champ de modération** : le type TS dit `string`, le filtre est `filter__field_<id>__contains_word`. Seed en single select ; filtre fonctionnel (voir ci-dessous).
 - **`Visibilité sur la cartographie`** : mappé (`visibility`) mais **jamais lu** par `transformRecord` (`baserow.service.ts:268-378`) : type sans enjeu côté code actuel.
 
-## Jeux de données (cas limites) — 36 événements + 1500 générés
+## Jeux de données (cas limites) — 36 événements + 964 générés (1000 au total par défaut)
 
 | Catégorie | Cas (clé du seed) |
 |---|---|
@@ -60,7 +61,7 @@ Points d'ambiguïté (à confirmer sur la vraie base) :
 | Contenu | titre/description très longs + `<script>` + HTML (`E21`), doublons de titre (`E30`,`E31`) |
 | Liens/relations | multi thèmes/publics/partenaires (`E22`), partenaire sans logo, **format avec picto inexistant + couleur invalide** (`E28`), **format sans picto ni couleur** (`E29`) |
 | Tarif | payant 15 € (`E18`), gratuit implicite (`E19`) |
-| Volume | `--bulk=1500` : ~80 % acceptés, ~12 % en attente, ~8 % refusés ; 30 villes (dont DOM-TOM) × 6 numéros de rue (adresses BAN réelles) |
+| Volume | 964 générés par défaut (`--total=1000`) : ~80 % acceptés, ~12 % en attente, ~8 % refusés ; 30 villes (dont DOM-TOM) × 6 numéros de rue (adresses BAN réelles) |
 
 ## Résultat de validation de l'étape (critère « terminé »)
 
