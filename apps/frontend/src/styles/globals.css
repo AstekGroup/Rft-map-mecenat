@@ -8,20 +8,20 @@
 /* Base styles */
 @layer base {
 :root {
-  --color-primary-rgb: 59 174 93;
-  --color-primary-dark-rgb: 31 122 62;
-  --color-primary-light-rgb: 167 215 181;
-  --color-accent-yellow-rgb: 244 197 66;
-  --color-accent-red-rgb: 228 106 93;
-  --color-surface-beige-rgb: 242 237 228;
-  --color-surface-offwhite-rgb: 247 247 242;
+  --color-primary-rgb: 37 99 235;
+  --color-primary-dark-rgb: 30 64 175;
+  --color-primary-light-rgb: 191 219 254;
+  --color-accent-yellow-rgb: 234 179 8;
+  --color-accent-red-rgb: 220 38 38;
+  --color-surface-beige-rgb: 241 245 249;
+  --color-surface-offwhite-rgb: 248 250 252;
   --color-surface-white-rgb: 255 255 255;
-  --color-text-primary-rgb: 46 46 46;
-  --color-text-secondary-rgb: 105 114 125;
+  --color-text-primary-rgb: 30 41 59;
+  --color-text-secondary-rgb: 100 116 139;
   --color-text-light-rgb: 255 255 255;
-  --color-text-green-rgb: 31 122 62;
-  --font-heading: 'Roboto';
-  --font-body: 'Open Sans';
+  --color-text-green-rgb: 30 64 175;
+  --font-heading: system-ui;
+  --font-body: system-ui;
   --font-heading-weight: '900';
   --font-body-weight: '400';
   --radius-button: 999px;
@@ -50,7 +50,7 @@ h1, h2, h3, h4, h5, h6 {
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: rgb(var(--color-primary-rgb, 59 174 93)) rgb(var(--color-surface-beige-rgb, 242 237 228));
+    scrollbar-color: rgb(var(--color-primary-rgb)) rgb(var(--color-surface-beige-rgb));
   }
   
   .scrollbar-thin::-webkit-scrollbar {
@@ -58,17 +58,17 @@ h1, h2, h3, h4, h5, h6 {
   }
   
   .scrollbar-thin::-webkit-scrollbar-track {
-    background: rgb(var(--color-surface-beige-rgb, 242 237 228));
+    background: rgb(var(--color-surface-beige-rgb));
     border-radius: 3px;
   }
   
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: rgb(var(--color-primary-rgb, 59 174 93));
+    background: rgb(var(--color-primary-rgb));
     border-radius: 3px;
   }
   
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: rgb(var(--color-primary-dark-rgb, 31 122 62));
+    background: rgb(var(--color-primary-dark-rgb));
   }
 }
 
@@ -121,7 +121,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .cluster-marker:hover {
   transform: scale(1.1);
-  box-shadow: 0 4px 15px rgba(59, 174, 93, 0.5);
+  box-shadow: 0 4px 15px rgb(var(--color-primary-rgb) / 0.5);
 }
 
 /* Event marker styles */
