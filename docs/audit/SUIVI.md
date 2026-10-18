@@ -24,7 +24,7 @@ Vérifié le 2026-10-19 sur `origin/develop` (`2273bcb`) : `pnpm build`, `pnpm l
 | 4 Mapping Baserow, config validée | faite | #25, #26, #27, #28 |
 | 5 Filtres | faite | #29, #30, #31 |
 | 6 Cas dégradés | faite | #32 |
-| 7 Qualité | faite ; tests « deux cartes » et modèle de PR retirés par #38, **retrait annulé** (à remettre, étape 1) | #33 à #36, #38 |
+| 7 Qualité | faite ; tests « deux cartes » et modèle de PR retirés par #38, **retrait annulé** (rétablis à l'étape 1) | #33 à #36, #38 |
 | Hors plan | seed à 1000 événements, test des métas, verdict | #37, #39, #40 |
 | 8 Déploiement | **non faite, hors du plan actif** | — |
 
@@ -33,7 +33,7 @@ Vérifié le 2026-10-19 sur `origin/develop` (`2273bcb`) : `pnpm build`, `pnpm l
 | Étape | Sujet | État |
 |---|---|---|
 | 0 | Plan dans le dépôt, nettoyage de `docs/`, config Astek supprimée | **fait** (PR `docs/plan-fin-refonte`) |
-| 1 | Remettre les tests « deux cartes » et le modèle de PR | à faire |
+| 1 | Remettre les tests « deux cartes » et le modèle de PR | **fait** (branche `test/retablir-deux-cartes`) |
 | 3 | Résidus en dur (`Badge.tsx`, palette par défaut, gris de repli) | à faire |
 | 4 | Cas dégradés restants (config absente sur carte et liste, section Format vide) | à faire |
 | 5 | README et `PROJECT_VIBE_CONF.md` neutres | à faire |
@@ -41,12 +41,12 @@ Vérifié le 2026-10-19 sur `origin/develop` (`2273bcb`) : `pnpm build`, `pnpm l
 | 7 | Ménage (`App.tsx`, e2e périmé, branches mergées, lint) | à faire |
 | 8 | Verdict final | à faire |
 
-**Prochaine action** : merger la PR de l'étape 0 (option « Create a merge commit »), puis lancer l'étape 1 (`test/retablir-deux-cartes`).
+**Prochaine action** : merger les PR chaînées dans l'ordre (option « Create a merge commit »), en commençant par l'étape 1 (`test/retablir-deux-cartes`).
 
 ## Décisions en vigueur
 
 - **Hors du plan actif (2026-10-19)** : session 8 (déploiement) et `develop` vers `main` avec tags. On reste sur `develop`.
-- **Tests « deux cartes » et modèle de PR (2026-10-19)** : à remettre ; leur retrait par #38 était une erreur. La vérification d'identité ou de config se fait avec `docs/audit/fixtures/app.config.second-map.json`.
+- **Tests « deux cartes » et modèle de PR (2026-10-19)** : remis (étape 1) ; leur retrait par #38 était une erreur. La vérification d'identité ou de config se fait avec `docs/audit/fixtures/app.config.second-map.json`.
 - **Config Astek (2026-10-19)** : supprimée (essai local sans valeur).
 - **Périmètre (2026-10-16)** : seuls les titres et noms de l'événement sont pilotés par la config, le wording de l'interface reste en dur ; pas de flags de fonctionnalités ; pas de schéma cible Baserow ; carte et régions dans le code ; Airtable retiré, pas de migration de données.
 - Toutes les décisions détaillées : [PLAN-SESSIONS.md](PLAN-SESSIONS.md), section « Décisions prises ».

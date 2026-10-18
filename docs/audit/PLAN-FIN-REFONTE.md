@@ -48,12 +48,12 @@ L'étape 1 d'abord : les tests « deux cartes » servent de filet pour les étap
 
 Branche `test/retablir-deux-cartes`.
 
-- [ ] Restaurer par `git revert` (un commit chacun) : `20df18a` (tests), `f4b14a8` et `425e487` (modèle de PR et `AGENTS.md`). Fichiers attendus : `apps/backend/src/config/deux-cartes.spec.ts` (origine `73431e7`), `apps/frontend/tests/deux-cartes.spec.tsx` (origine `dfdaa79`), `.github/pull_request_template.md` (origine `bab2417`).
-- [ ] Vérifier que les tests passent avec le code actuel ; les adapter si le code a bougé, **sans affaiblir** les assertions.
-- [ ] Vérifier la sensibilité par mutation (écrire temporairement un titre en dur, constater un test rouge, annuler).
-- [ ] Ne comparer que la config du dépôt et `docs/audit/fixtures/app.config.second-map.json`.
-- [ ] `AGENTS.md` : rétablir la phrase du modèle de PR (ligne 39) et la case « les tests deux cartes le font automatiquement » (ligne 47, qui dit aujourd'hui « pas de test automatisé »).
-- [ ] Docs : `PLAN-SESSIONS.md` (retirer la décision « pas de test deux cartes » et la section « Retirer le test… », qui deviennent une note « annulé »), `SUIVI.md`, `JOURNAL.md`.
+- [x] Restaurer par `git revert` (un commit chacun) : `20df18a` (tests) et `f4b14a8` (modèle de PR et `AGENTS.md`) ; `425e487` n'est pas dans l'historique de `develop` (commit d'une branche abandonnée), rien à annuler. Fichiers rétablis : `apps/backend/src/config/deux-cartes.spec.ts`, `apps/frontend/tests/deux-cartes.spec.tsx`, `.github/pull_request_template.md`.
+- [x] Vérifier que les tests passent avec le code actuel (backend 236, frontend 140, aucune adaptation nécessaire).
+- [x] Vérifier la sensibilité par mutation (badge `'LGSV 2026'` en dur dans `getEditionBadge` : 2 tests rouges, annulé).
+- [x] Ne comparer que la config du dépôt et `docs/audit/fixtures/app.config.second-map.json` (déjà le cas dans les deux fichiers).
+- [x] `AGENTS.md` : phrase du modèle de PR (ligne 39) et case « les tests deux cartes le font automatiquement » (ligne 49) rétablies par les reverts ; paragraphe « Écart connu » mis à jour.
+- [x] Docs : `PLAN-SESSIONS.md` déjà à jour à l'étape 0 ; `SUIVI.md`, `JOURNAL.md` mis à jour.
 - Fait quand : `rg -i "deux-cartes|pull_request_template"` retrouve les trois fichiers et leurs références ; `pnpm test` vert.
 
 ### 3. Résidus en dur (verdict, écarts 4 et 5)

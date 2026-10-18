@@ -144,3 +144,12 @@ Décision du propriétaire : **la PR `develop` → `main` et les tags (`v0.1.0`,
 - Branche `docs/plan-fin-refonte` : plan copié dans [PLAN-FIN-REFONTE.md](PLAN-FIN-REFONTE.md) ; [PLAN-SESSIONS.md](PLAN-SESSIONS.md) et [SUIVI.md](SUIVI.md) mis à jour ; `02-baserow-seed.md` réécrit en [BASEROW-LOCAL.md](BASEROW-LOCAL.md) et `08-perimetre-config-vs-baserow.md` en [PERIMETRE-CONFIG-BASEROW.md](PERIMETRE-CONFIG-BASEROW.md) (état courant) ; `docs/README.md` ajouté ; supprimés : `00-inventaire`, `01-lancement`, `03-validation`, `04-cartographie`, `05-branches`, `06-agents`, `07-plan-de-suite`, `SYNTHESE`, les 5 captures (1,8 Mo) et `fixtures/app.config.astek.json`. Entrées de la phase d'audit retirées de ce journal.
 - Références corrigées : `AGENTS.md` (ligne 10 : plus de paramètres de carte dans la config ; paragraphe « écart connu » ; liens vers les documents supprimés), `apps/backend/AGENTS.md` (lien du Baserow local, phrase sur le README obsolète). Recherche des références mortes (`rg "0[0-8]-[a-z-]+\.md|SYNTHESE\.md|02-baserow-seed|08-perimetre|captures/|app\.config\.astek"`) : aucune hors verdict et plan.
 - Non vérifié : `seed.mjs` ne refuse pas une URL non locale (contrairement à `robustness.mjs`) ; garde-fou à ajouter.
+
+## Plan de fin de refonte : étape 1, tests « deux cartes » et modèle de PR (2026-10-19)
+
+- Départ : `develop` à `9cfcb45` (PR #41 mergée), `git status` propre. Branche `test/retablir-deux-cartes`.
+- `git revert` de `20df18a` (tests) puis de `f4b14a8` (modèle de PR, `AGENTS.md`) : 2 commits, aucun conflit. `425e487` n'est pas un ancêtre de `develop` (`git merge-base --is-ancestor` : code 1), rien à annuler. Fichiers rétablis : `apps/backend/src/config/deux-cartes.spec.ts`, `apps/frontend/tests/deux-cartes.spec.tsx`, `.github/pull_request_template.md`.
+- Tests avec le code actuel, sans adaptation : `pnpm run test -- --force` : backend 15 suites / 236 tests, frontend 11 fichiers / 140 tests.
+- Mutation : `getEditionBadge` remplacé temporairement par `return 'LGSV 2026';` → `deux-cartes.spec.tsx` : 2 tests rouges (« donne le badge… » et « ne laisse rien de la première carte… ») ; modification annulée (`git checkout`).
+- `AGENTS.md` : paragraphe « Écart connu » mis à jour (tests rétablis).
+- Constat annexe : `apps/backend/AGENTS.md` et `apps/frontend/AGENTS.md` portent encore des mentions périmées (lint `--fix`, « pas de config ESLint », `VITE_MAPTILER_KEY`) : à traiter à l'étape 5.
