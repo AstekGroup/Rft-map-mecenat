@@ -14,9 +14,11 @@
 pnpm dev          # nest start --watch — port 3000 par défaut
 pnpm build
 pnpm test         # Jest
+pnpm lint         # ESLint + Prettier, sans modifier les fichiers
+pnpm lint:fix     # même contrôle avec --fix (correction volontaire)
 ```
 
-Depuis la racine : `pnpm back:dev`. Attention : `pnpm lint` du backend lance ESLint avec `--fix` (il **modifie** les fichiers) et signale beaucoup de bruit CRLF — voir [01-lancement](../../docs/audit/01-lancement.md).
+Depuis la racine : `pnpm back:dev`. `pnpm lint` ne modifie plus rien (session 7) et passe à 0 erreur. Dans les `*.spec.ts`, les règles `no-unsafe-*`, `unbound-method` et `require-await` sont désactivées (mocks Jest) ; le code applicatif garde le contrôle strict : typer les réponses JSON (`as MonType`), pas de `any`.
 
 ## API
 
