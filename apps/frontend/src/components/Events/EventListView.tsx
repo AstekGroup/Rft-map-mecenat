@@ -5,6 +5,7 @@ import { Pagination } from '@/components/UI/Pagination';
 import { useConfig } from '@/hooks/useConfig';
 import {Calendar, Clock, Users, Accessibility, MapPin, Video, BookOpen, HelpCircle} from 'lucide-react';
 import {checkIconColor, getIcon} from "@/utils/iconResolver.ts";
+import { formatEventDate } from '@/utils/formatEventDate';
 
 const ITEMS_PER_PAGE = 24;
 
@@ -125,7 +126,7 @@ export function EventListView({ events }: EventListViewProps) {
                     <p className="flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                       <span>
-                        {new Date(event.date).toLocaleDateString('fr-FR', {
+                        {formatEventDate(event.date, {
                           day: 'numeric',
                           month: 'long',
                         })}
