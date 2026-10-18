@@ -14,9 +14,10 @@ Application **React 18 + Vite** : carte MapLibre, clustering Supercluster. Elle 
 pnpm dev          # Vite — http://localhost:5173
 pnpm build        # génère index.html depuis index.template.html + la config, puis tsc -b et vite build
 pnpm test         # Vitest
+pnpm lint         # ESLint (eslint.config.js) : 0 erreur ; 3 avertissements connus (dépendances de hooks dans MapView, export dans MapStyleSelector)
 ```
 
-Depuis la racine : `pnpm front:dev`. Limite connue : le lint frontend n'a pas de config ESLint.
+Depuis la racine : `pnpm front:dev`. Le lint ne modifie aucun fichier. Ne pas ajouter de `any` : typer les réponses de l'API.
 
 **Une compilation par carte** : les métas de `index.html` (titre, description, Open Graph, icône) sont écrites à la compilation. Pour une autre carte : `APP_CONFIG_PATH=<chemin absolu de la config> pnpm build` (sans la variable : `app.config.json` à la racine). `index.html` est un fichier généré et ignoré par git ; on ne modifie que `index.template.html`. Un placeholder absent du modèle ou une valeur manquante dans la config fait échouer le script avec un message clair.
 
@@ -55,4 +56,4 @@ Depuis la racine : `pnpm front:dev`. Limite connue : le lint frontend n'a pas de
 
 ## Variables
 
-Voir `.env.example`. Seule `VITE_API_URL` est lue par le code. `VITE_MAPTILER_KEY` est documentée dans d'anciens fichiers mais **jamais lue** : ne pas s'y fier (retrait prévu en session 7).
+Voir `.env.example`. Seule `VITE_API_URL` est lue par le code. L'ancienne variable `VITE_MAPTILER_KEY` (jamais lue) a été retirée (session 7) : ne pas la réintroduire sans consommateur.

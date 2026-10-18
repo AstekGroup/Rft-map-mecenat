@@ -69,12 +69,14 @@ describe('BaserowService.fetchEvents : cas dégradés', () => {
 
   it('masque les événements sans date de début et le journalise une fois, avec des exemples', async () => {
     const { title, startDate } = config.baserow.fieldMapping;
-    service.fetchRecords = jest.fn().mockResolvedValue([
-      record(1, { [title]: 'Daté', [startDate]: '2026-05-06T10:00:00Z' }),
-      record(2, { [title]: 'Sans date', [startDate]: null }),
-      record(3, { [title]: 'Date illisible', [startDate]: 'pas une date' }),
-      record(4, { [title]: 'Sans colonne de date' }),
-    ]);
+    service.fetchRecords = jest
+      .fn()
+      .mockResolvedValue([
+        record(1, { [title]: 'Daté', [startDate]: '2026-05-06T10:00:00Z' }),
+        record(2, { [title]: 'Sans date', [startDate]: null }),
+        record(3, { [title]: 'Date illisible', [startDate]: 'pas une date' }),
+        record(4, { [title]: 'Sans colonne de date' }),
+      ]);
 
     const events = await service.fetchEvents();
     expect(events.map((e) => e.id)).toEqual(['1']);
@@ -163,7 +165,11 @@ describe('BaserowService.fetchEvents : cas dégradés', () => {
       record(2, { [title]: 'Texte', [startDate]: start, [capacity]: '25' }),
       record(3, { [title]: 'Zéro', [startDate]: start, [capacity]: 0 }),
       record(4, { [title]: 'Vide', [startDate]: start, [capacity]: null }),
-      record(5, { [title]: 'Illimité', [startDate]: start, [capacity]: 'illimité' }),
+      record(5, {
+        [title]: 'Illimité',
+        [startDate]: start,
+        [capacity]: 'illimité',
+      }),
       record(6, { [title]: 'Négatif', [startDate]: start, [capacity]: -5 }),
     ]);
 
@@ -177,7 +183,9 @@ describe('BaserowService.fetchEvents : cas dégradés', () => {
       undefined,
       undefined,
     ]);
-    const found = messages().filter((m) => m.includes('capacité inexploitable'));
+    const found = messages().filter((m) =>
+      m.includes('capacité inexploitable'),
+    );
     expect(found).toHaveLength(1);
     expect(found[0]).toContain('2 événement(s)');
     expect(found[0]).toContain(`colonne « ${capacity} »`);

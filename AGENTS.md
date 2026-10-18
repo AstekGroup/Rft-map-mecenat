@@ -42,7 +42,7 @@ Ce dépôt est **1 seul code pour N cartes** d'événements (une carte = un év�
 - [ ] Pas de flag `features.*` ni de `if (carte === …)`.
 - [ ] Cas dégradés couverts : donnée absente, champ renommé, config incomplète, API en erreur (pas de `Invalid Date`, pas de clé brute affichée, pas de 500 inutile).
 - [ ] Types partagés (`shared/types`) mis à jour **avant** les consommateurs ; `pnpm build` de la racine passe.
-- [ ] `pnpm lint` et `pnpm test` passent (voir « Commandes » : les scripts actuels ont des limites connues).
+- [ ] `pnpm lint` et `pnpm test` passent depuis la racine (0 erreur ; les avertissements connus sont listés dans « Commandes »).
 - [ ] Aucune variable d'environnement morte ou non documentée ; `.env.example` à jour.
 - [ ] Si le changement touche l'identité ou la config : vérifié avec **une seconde config** (voir `docs/audit/fixtures/`), sans toucher au code.
 - [ ] Docs concernées mises à jour (README de la zone, `docs/audit/SUIVI.md`).
@@ -66,7 +66,9 @@ Ce dépôt est **1 seul code pour N cartes** d'événements (une carte = un év�
 | Build / lint / tests | `pnpm build` · `pnpm lint` · `pnpm test` |
 | Baserow local jetable + données de test | voir [docs/audit/02-baserow-seed.md](./docs/audit/02-baserow-seed.md) |
 
-Limites connues (preuves dans [docs/audit/01-lancement.md](./docs/audit/01-lancement.md) et [docs/audit/JOURNAL.md](./docs/audit/JOURNAL.md)) : le lint frontend n'est pas configuré ; `pnpm lint` du backend utilise `--fix` (modifie les fichiers) ; `pnpm test` ne couvre pas `shared/types` ; `pnpm build` génère `apps/frontend/index.html` (ignoré par git) depuis `index.template.html` : le modèle n'est jamais modifié. Ne pas contourner ces échecs sans le dire.
+Qualité (session 7) : `pnpm lint` couvre le frontend (ESLint, 3 avertissements connus), le backend (ESLint + Prettier, **sans** `--fix` ; `pnpm lint:fix` dans `apps/backend` pour corriger volontairement) et `shared/types` (`tsc --noEmit`). `pnpm test` couvre `shared/types` (contrat `AppConfig`), le backend et le frontend. Aucun de ces scripts ne modifie de fichier.
+
+Limites connues (preuves dans [docs/audit/JOURNAL.md](./docs/audit/JOURNAL.md)) : `pnpm build` génère `apps/frontend/index.html` (ignoré par git) depuis `index.template.html` : le modèle n'est jamais modifié ; le test e2e `apps/backend/test/app.e2e-spec.ts` est le modèle Nest périmé (il attend « Hello World! » sur `/` ; `pnpm test:e2e` échoue, constaté en session 7) et n'est pas lancé par `pnpm test`. Ne pas contourner un échec sans le dire.
 
 Environnement : `apps/backend/.env.example` et `apps/frontend/.env.example` (le backend lit `BASEROW_API_URL`, `BASEROW_API_TOKEN`, `BASEROW_EVENT_TABLE_ID`, `BASEROW_MODERATION_FIELD_ID`, `BASEROW_PARTNERS_TABLE_ID`, `BASEROW_THEMATIQUES_TABLE_ID`, `BASEROW_FORMATS_TABLE_ID`, `BASEROW_PUBLICS_TABLE_ID`, `PORT`, `CORS_ORIGIN`, `APP_CONFIG_PATH`, `ALLOW_DEV_MODE`).
 

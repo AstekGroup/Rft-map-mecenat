@@ -24,6 +24,10 @@ Package **`@make-map/types`** : contrat TypeScript partagé entre frontend et ba
 
 ```bash
 pnpm build
+pnpm test    # Vitest : isCluster + contrat de types (tests/app-config.contract.test-d.ts)
+pnpm lint    # tsc --noEmit sur src et tests
 ```
 
-Depuis la racine : `pnpm build --filter=@make-map/types`. Limite : `pnpm test` à la racine **ne couvre pas** ce package.
+Depuis la racine : `pnpm build --filter=@make-map/types`. `pnpm test` à la racine couvre ce package (session 7).
+
+**Contrat `AppConfig`** : `tests/app-config.contract.test-d.ts` compare, niveau par niveau, les clés de `app.config.json` et de `docs/audit/fixtures/app.config.second-map.json` au type `AppConfig` : toute clé de config inconnue du type, ou toute clé obligatoire du type absente de la config, fait échouer le test en nommant la clé. Ajouter une clé à `AppConfig` impose donc de l'ajouter aux deux configs. Les tests vivent dans `tests/` (hors `src/`, donc hors du `dist` publié).

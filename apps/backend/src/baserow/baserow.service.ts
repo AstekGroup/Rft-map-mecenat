@@ -523,7 +523,7 @@ export class BaserowService implements OnApplicationBootstrap {
         );
       }
 
-      const data: BaserowResponse<BaserowRecord> = await response.json();
+      const data = (await response.json()) as BaserowResponse<BaserowRecord>;
       records.push(...data.results);
 
       if (data.next) {

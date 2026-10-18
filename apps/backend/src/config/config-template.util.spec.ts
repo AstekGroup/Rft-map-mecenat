@@ -4,7 +4,12 @@ describe('resolveConfigTemplates', () => {
   it('remplace un gabarit par la valeur du chemin indiqué', () => {
     const config = {
       app: { name: 'Les Journées du Test' },
-      texts: { home: { mainTitle: '{{app.name}}', info: "C'est quoi {{ app.name }} ?" } },
+      texts: {
+        home: {
+          mainTitle: '{{app.name}}',
+          info: "C'est quoi {{ app.name }} ?",
+        },
+      },
     };
     const resolved = resolveConfigTemplates(config);
     expect(resolved.texts.home.mainTitle).toBe('Les Journées du Test');
@@ -60,9 +65,12 @@ describe('resolveConfigTemplates', () => {
     expect(warn.mock.calls[0][0]).toContain('t');
   });
 
-  it("remplace une cible non textuelle (objet) par une chaîne vide et le signale", () => {
+  it('remplace une cible non textuelle (objet) par une chaîne vide et le signale', () => {
     const warn = jest.fn();
-    const resolved = resolveConfigTemplates({ app: { name: 'N' }, t: '{{app}}' }, warn);
+    const resolved = resolveConfigTemplates(
+      { app: { name: 'N' }, t: '{{app}}' },
+      warn,
+    );
     expect(resolved.t).toBe('');
     expect(warn).toHaveBeenCalledTimes(1);
   });
