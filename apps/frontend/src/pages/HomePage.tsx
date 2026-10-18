@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { MapPin, Globe, Calendar, ArrowRight, Clock, Users } from 'lucide-react';
 import { useEvents } from '@/hooks';
 import { useConfig } from '@/hooks/useConfig';
+import { ConfigErrorState } from '@/components/Layout/ConfigErrorState';
 import { Event } from '@/types/event';
 import { Loader2 } from 'lucide-react';
 import {DEFAULT_FORMAT_COLOR, checkIconColor, getIcon} from "@/utils/iconResolver.ts";
@@ -88,21 +89,7 @@ export function HomePage() {
   // Sans config, les titres, dates et le thème de la carte sont inconnus : mieux vaut un état
   // d'erreur explicite que des clés brutes ou une page vide.
   if (configError || !config) {
-    return (
-      <div className="min-h-screen bg-surface-offwhite flex items-center justify-center font-body">
-        <div className="text-center max-w-md p-8" role="alert">
-          <h1 className="font-semibold text-xl mb-2">
-            La carte est momentanément indisponible
-          </h1>
-          <p className="mb-6">
-            La configuration de la carte n'a pas pu être chargée. Réessayez dans quelques instants.
-          </p>
-          <button onClick={() => window.location.reload()} className="btn-primary">
-            Réessayer
-          </button>
-        </div>
-      </div>
-    );
+    return <ConfigErrorState />;
   }
 
   const editionYear = config.app?.eventDates?.weekStart?.split('-')[0];
