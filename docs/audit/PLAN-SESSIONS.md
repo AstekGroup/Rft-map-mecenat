@@ -24,7 +24,7 @@ todos:
     content: "Session 6 : cas dégradés (sans date, fin avant début, capacité, accueil sans config)"
     status: pending
   - id: s7
-    content: "Session 7 : qualité (lint, tests, test deux cartes, modèle de PR)"
+    content: "Session 7 : qualité (lint, tests ; la vérification « deux cartes » se fait à la main)"
     status: pending
   - id: s8
     content: "Session 8 : déploiement en dernier (config dans les images, docker build réel)"
@@ -227,14 +227,50 @@ Situation de départ vérifiée : branche `audit/bilan-refonte` au même commit 
 ### Session 7 : qualité et filet de sécurité
 
 - Branche `chore/qualite` : configurer ESLint côté front ; retirer `--fix` du lint backend ; `pnpm test` couvre aussi `shared/types` ; supprimer la variable morte `VITE_MAPTILER_KEY` des docs et du Dockerfile.
-- Branche `test/deux-cartes` : test automatisé « deux cartes » (même code, deux configs dont la fixture existante) vérifiant titres, dates et thème.
-- Branche `docs/pr-template` : modèle de PR avec la checklist de `AGENTS.md`.
+- Décision du propriétaire : **pas de test automatisé « deux cartes »** et **pas de modèle de PR**. La vérification avec une seconde config (`docs/audit/fixtures/`) reste manuelle, à chaque changement qui touche l'identité ou la config ; la checklist de PR reste celle de `AGENTS.md`. Ces deux éléments existent déjà dans le dépôt (PR #34 et #35) : leur retrait est planifié dans « Améliorations ».
 - Fait quand : `pnpm build`, `pnpm lint` et `pnpm test` passent depuis la racine sur une machine propre ; PR `develop` vers `main` prête (tag `v0.3.0`).
 
 ### Session 8 : déploiement (en dernier)
 
 - Branche `chore/deploiement` : fournir `app.config.json` aux images Docker, lancer un vrai `docker build` puis `compose up`, vérifier les variables `BASEROW_*` posées en session 2. Aucun travail sur WordPress.
 - Fait quand : l'application démarre depuis les images et sert une carte.
+
+## Améliorations
+
+Deux changements du frontend, indépendants : une branche courte depuis `develop` et une PR chacun, commits `type(front): sujet`. `pnpm lint`, `pnpm test` et `pnpm build` verts avant chaque PR.
+
+### Picto : accepter le nom Lucide copié depuis lucide.dev
+
+- Constat : la colonne `Picto` des tables de référence est lue telle quelle par le backend (`firstSelectValue`, `apps/backend/src/baserow/baserow-mapping.util.ts`), puis cherchée dans `lucide-react` par `getIcon` (`apps/frontend/src/utils/iconResolver.ts`, `name in Icons`). lucide.dev donne le nom en kebab-case (`pen-tool`), alors que `lucide-react` exporte `PenTool` : une valeur copiée depuis le site tombe sur l'icône par défaut, sans message.
+- Branche `feat/picto-kebab-case` (frontend uniquement, backend inchangé) :
+  - `getIcon` essaie d'abord le nom tel quel (le PascalCase continue de fonctionner), puis sa conversion kebab-case vers PascalCase (découper sur `-`, majuscule à chaque segment, concaténer : `pen-tool` donne `PenTool`, `arrow-down-0-1` donne `ArrowDown01`) ; espaces en début et fin ignorés ; nom inconnu ou vide : repli inchangé (globe ou point d'interrogation selon l'écran).
+  - Nouveau `iconResolver.spec.ts` (aucun test n'existe aujourd'hui) : PascalCase, kebab-case, nom avec chiffres, espaces, nom inconnu, valeur vide ou `undefined`.
+  - Docs : mettre à jour la ligne « Contrat du picto » de `docs/audit/08-perimetre-config-vs-baserow.md` (le PascalCase exact n'est plus exigé) et la mention des pictos dans `apps/frontend/AGENTS.md`.
+- Fait quand : `pen-tool` et `PenTool` donnent la même icône dans Baserow, vérifié sur la table Formats du Baserow local ; un nom inconnu garde l'icône par défaut.
+
+### Carte : retirer le filtre « Modalité » (Tous, En ligne, Présentiel)
+
+- Constat : les événements en ligne n'ont pas de coordonnées et sont exclus de la carte (`eventsToGeoJSON`, `apps/frontend/src/services/api.ts` lignes 102-107), et « hybride » est rabattu sur présentiel : sur la carte, ce filtre n'a pas d'effet utile. La carte a déjà un bouton « Événements en ligne » vers `/evenements?modality=distanciel` (`MapPage.tsx`). L'état des filtres est local à chaque page (un appel à `useEvents` par page) : sur la carte, la modalité vaut toujours `all`, aucune sélection ne reste coincée une fois le filtre retiré.
+- Contrainte : la règle 6 de `apps/frontend/AGENTS.md` impose **une seule définition des filtres** pour le panneau et la barre. On la garde, sans second tableau de filtres.
+- Branche `refactor/filtre-modalite-carte` :
+  - `apps/frontend/src/utils/filterDefinitions.ts` : type `FilterSurface = 'panel' | 'bar'`, champ optionnel `surfaces?: readonly FilterSurface[]` dans `FilterDefinition` (absent = partout), `surfaces: ['bar']` sur le filtre `modality` ; `getVisibleFilters` et `getVisibleFiltersFor` reçoivent la surface et retirent les filtres qui n'y figurent pas.
+  - `FilterPanel.tsx` appelle avec `'panel'`, `EventFiltersBar.tsx` avec `'bar'` (la barre de la liste ne change pas).
+  - Tests : adapter `apps/frontend/src/components/Filters/filtresUnifies.spec.tsx` (le test « proposent les mêmes filtres » exclut `modality` du panneau) et ajouter un test : le panneau n'affiche pas « Modalité », la barre l'affiche.
+  - Docs : règle 6 de `apps/frontend/AGENTS.md` (« même liste, même ordre », sauf la modalité, réservée à la liste).
+- Fait quand : sur `/carte`, plus d'accordéon « Modalité » et le bouton « Événements en ligne » mène toujours à la liste filtrée ; sur `/evenements`, le filtre Modalité est toujours là.
+
+### Retirer le test « deux cartes » et le modèle de PR déjà présents
+
+- Constat (vérifié par `git ls-files` sur `develop`) : les trois fichiers existent et sont suivis par git :
+  - `.github/pull_request_template.md` (PR #35) ;
+  - `apps/backend/src/config/deux-cartes.spec.ts` (PR #34) ;
+  - `apps/frontend/tests/deux-cartes.spec.tsx` (PR #34) ; le dossier `apps/frontend/tests/` ne contient que ce fichier (il disparaît avec lui).
+- Branche `chore/retrait-deux-cartes-pr-template` :
+  - supprimer ces trois fichiers (`git rm`) ;
+  - `AGENTS.md` : retirer la phrase de la ligne 39 (« Cette checklist est reprise dans le modèle de PR … ») et réécrire la ligne 49 pour une vérification **manuelle** avec une seconde config (`docs/audit/fixtures/`), sans les tests `deux-cartes` ;
+  - `docs/audit/SUIVI.md` : noter le retrait (les lignes qui décrivent #34 et #35 restent comme historique de la session 7) ;
+  - ne pas toucher `docs/audit/fixtures/` ni les autres tests qui lisent la fixture (`config-validation.util.spec.ts`, `config-template.spec.ts`, contrat `shared/types`).
+- Fait quand : `rg -i "deux-cartes|pull_request_template"` ne remonte plus rien hors historique (`docs/audit/JOURNAL.md`, `SUIVI.md`) ; `pnpm lint` et `pnpm test` verts (le nombre de tests baisse de 16 : 9 backend et 7 frontend).
 
 ## Explicitement hors du plan
 
