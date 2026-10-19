@@ -36,6 +36,12 @@ COPY --from=builder /app/deployed/package.json ./
 # Copier le dist buildé
 COPY --from=builder /app/apps/backend/dist ./dist
 
+# Config de la carte (app.config-<CARTE>.json), embarquée : une image = une carte.
+# Pas de valeur par défaut : l'argument est obligatoire (le compose refuse un build sans APP_CONFIG_FILE).
+ARG APP_CONFIG_FILE
+COPY ${APP_CONFIG_FILE} /app/app.config.json
+ENV APP_CONFIG_PATH=/app/app.config.json
+
 ENV NODE_ENV=production
 ENV PORT=8080
 
