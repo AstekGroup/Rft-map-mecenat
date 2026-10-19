@@ -10,17 +10,39 @@ function isValidHexadecimalColor(color: string): boolean {
 }
 
 
+/**
+ * `pen-tool` (nom affiché par lucide.dev) → `PenTool` (export de `lucide-react`) ;
+ * `arrow-down-0-1` → `ArrowDown01`.
+ */
+function kebabToPascalCase(name: string): string {
+    return name
+        .split("-")
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join("");
+}
+
+/**
+ * Icône `lucide-react` d'un nom de picto (colonne `Picto` des référentiels Baserow).
+ * Accepte le nom exact (`PenTool`) puis la forme kebab-case de lucide.dev (`pen-tool`) ;
+ * espaces en début et fin ignorés. Nom vide ou inconnu : `defaultIcon`.
+ */
 export function getIcon(name: string | null | undefined, defaultIcon: LucideIcon): LucideIcon {
 
-    if(!name || !(name in Icons)){
+    const trimmed = name?.trim();
+    if (!trimmed) {
         return defaultIcon;
     }
 
-    const Icon = Icons[name as keyof typeof Icons];
+    const exportName = [trimmed, kebabToPascalCase(trimmed)].find((candidate) => candidate in Icons);
+    if (!exportName) {
+        return defaultIcon;
+    }
+
+    const Icon = Icons[exportName as keyof typeof Icons];
 
     // On vérifie que l'export est bien un composant React
     if (typeof Icon !== "object" && typeof Icon !== "function") {
-        console.warn(`"${name}" is not a valid icon`);
+        console.warn(`"${exportName}" is not a valid icon`);
         return defaultIcon;
     }
     return Icon as LucideIcon;
