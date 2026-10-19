@@ -38,7 +38,7 @@ Ce dépôt est **1 seul code pour N cartes** d'événements (une carte = un év�
 
 Cette checklist est reprise dans le modèle de PR [`.github/pull_request_template.md`](./.github/pull_request_template.md) : si l'une change, mettre l'autre à jour.
 
-- [ ] Aucun titre, nom de marque, date, e-mail/URL, couleur ou police propre à une carte dans le code (`rg -i "lgsv|semaine|végétal|#[0-9a-f]{6}"` sur les fichiers modifiés). Le wording générique de l'interface reste en dur.
+- [ ] Aucun titre, nom de marque, date, e-mail/URL, couleur ou police propre à une carte dans le code (`rg -i "lgsv|semaine|végétal|#[0-9a-f]{6}"` sur les fichiers modifiés ; `apps/frontend/tests/pas-de-code-en-dur.spec.ts` lance ces recherches sur `apps/*/src` et `shared/types/src`). Le wording générique de l'interface reste en dur.
 - [ ] Aucun nom de champ Baserow ni valeur de liste de choix ajouté hors de la config ; aucun libellé de référentiel métier en dur.
 - [ ] Nouveau **titre ou nom d'événement** → clé dans `texts.*` (type `AppConfig` + `app.config.json`), avec repli lisible si la clé manque. Le nom de l'événement s'écrit **une seule fois** (`app.name`) ; les autres titres le reprennent par gabarit (`"Carte - {{app.name}}"`).
 - [ ] Pas de flag `features.*` ni de `if (carte === …)`.
@@ -68,9 +68,9 @@ Cette checklist est reprise dans le modèle de PR [`.github/pull_request_templat
 | Build / lint / tests | `pnpm build` · `pnpm lint` · `pnpm test` |
 | Baserow local jetable + données de test | voir [docs/audit/BASEROW-LOCAL.md](./docs/audit/BASEROW-LOCAL.md) |
 
-Qualité (session 7) : `pnpm lint` couvre le frontend (ESLint, 3 avertissements connus), le backend (ESLint + Prettier, **sans** `--fix` ; `pnpm lint:fix` dans `apps/backend` pour corriger volontairement) et `shared/types` (`tsc --noEmit`). `pnpm test` couvre `shared/types` (contrat `AppConfig`), le backend et le frontend. Aucun de ces scripts ne modifie de fichier.
+Qualité (session 7) : `pnpm lint` couvre le frontend (ESLint, 2 avertissements connus, dans `MapView.tsx`), le backend (ESLint + Prettier, **sans** `--fix` ; `pnpm lint:fix` dans `apps/backend` pour corriger volontairement) et `shared/types` (`tsc --noEmit`). `pnpm test` couvre `shared/types` (contrat `AppConfig`), le backend et le frontend. Aucun de ces scripts ne modifie de fichier.
 
-Limites connues (preuves dans [docs/audit/JOURNAL.md](./docs/audit/JOURNAL.md)) : `pnpm build` génère `apps/frontend/index.html` (ignoré par git) depuis `index.template.html` : le modèle n'est jamais modifié ; le test e2e `apps/backend/test/app.e2e-spec.ts` est le modèle Nest périmé (il attend « Hello World! » sur `/` ; `pnpm test:e2e` échoue, constaté en session 7) et n'est pas lancé par `pnpm test`. Ne pas contourner un échec sans le dire.
+Limites connues (preuves dans [docs/audit/JOURNAL.md](./docs/audit/JOURNAL.md)) : `pnpm build` génère `apps/frontend/index.html` (ignoré par git) depuis `index.template.html` : le modèle n'est jamais modifié ; il n'y a plus de test e2e backend (le modèle Nest périmé et le script `test:e2e` ont été supprimés à l'étape 7 du plan de fin de refonte). Ne pas contourner un échec sans le dire.
 
 Environnement : `apps/backend/.env.example` et `apps/frontend/.env.example` (le backend lit `BASEROW_API_URL`, `BASEROW_API_TOKEN`, `BASEROW_EVENT_TABLE_ID`, `BASEROW_MODERATION_FIELD_ID`, `BASEROW_PARTNERS_TABLE_ID`, `BASEROW_THEMATIQUES_TABLE_ID`, `BASEROW_FORMATS_TABLE_ID`, `BASEROW_PUBLICS_TABLE_ID`, `PORT`, `CORS_ORIGIN`, `APP_CONFIG_PATH`, `ALLOW_DEV_MODE`).
 

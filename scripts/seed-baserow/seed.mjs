@@ -33,6 +33,21 @@ const args = Object.fromEntries(
   }),
 );
 const BASE = (args.url || process.env.BASEROW_LOCAL_URL || 'http://localhost:8088').replace(/\/$/, '');
+// Garde-fou : ce script ÉCRIT dans Baserow. Il ne doit jamais viser autre chose qu'une instance locale.
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
+let baseHost;
+try {
+  baseHost = new URL(BASE).hostname;
+} catch {
+  console.error(`Refus : URL Baserow invalide (${BASE}).`);
+  process.exit(1);
+}
+if (!LOCAL_HOSTS.has(baseHost)) {
+  console.error(
+    `Refus : ${BASE} n'est pas une instance locale (localhost, 127.0.0.1 ou ::1 attendus). Ce script écrit dans Baserow.`,
+  );
+  process.exit(1);
+}
 const DEFAULT_TOTAL = 1000;
 function intArg(name, fallback) {
   if (args[name] === undefined) return fallback;

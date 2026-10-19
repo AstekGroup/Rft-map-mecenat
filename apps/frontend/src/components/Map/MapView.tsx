@@ -8,7 +8,7 @@ import { EventsGeoJSON, Event, isCluster, MapFeature } from '@/types/event';
 import { ClusterMarker } from './ClusterMarker';
 import { EventMarker } from './EventMarker';
 import { EventPopup } from './EventPopup';
-import { MAP_STYLES } from './MapStyleSelector';
+import { MAP_STYLES } from './mapStyles';
 import { DOMTOMInset } from './DOMTOMInset';
 import { ZoomIn, ZoomOut, Crosshair } from 'lucide-react';
 
@@ -73,7 +73,9 @@ export function MapView({
     }
   }, [onMapFlyToReady, smoothFlyTo]);
 
-  // Initialisation de la carte
+  // Initialisation de la carte.
+  // Avertissement ESLint connu (exhaustive-deps, `onMoveEnd`) : volontairement non corrigé, car
+  // ajouter la dépendance changerait l'identité du callback et le comportement des hooks.
   const onMapLoad = useCallback(() => {
     onMoveEnd();
   }, []);
@@ -148,7 +150,9 @@ export function MapView({
   );
 
   // Ancre dynamique : choisit la direction d'ouverture du popup
-  // selon la position du marqueur à l'écran pour éviter les chevauchements
+  // selon la position du marqueur à l'écran pour éviter les chevauchements.
+  // Avertissement ESLint connu (exhaustive-deps, `viewport`) : `viewport` sert de déclencheur,
+  // la position à l'écran (`map.project`) change quand la carte bouge ; ne pas le retirer.
   const popupAnchor = useMemo((): 'bottom' | 'top' | 'left' | 'right' => {
     if (!selectedEvent || !mapRef.current) return 'bottom';
     const map = mapRef.current;
