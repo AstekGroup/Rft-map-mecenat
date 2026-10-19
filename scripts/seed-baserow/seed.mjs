@@ -2,8 +2,9 @@
 /**
  * Seed Baserow LOCAL pour l'audit et le dev (outil de dev, JAMAIS en production).
  *
- * - Crée (idempotent) un compte admin, une base "LGSV test", 5 tables
- *   (Événements, Partenaires, Thématiques, Formats, Publics) et leurs champs.
+ * - Crée (idempotent) un compte admin, une base "LGSV test", 6 tables
+ *   (Événements, Partenaires, Thématiques, Formats, Publics, Couleurs) et leurs champs.
+ *   La table Couleurs est remplie depuis docs/baserow/palette-couleurs.csv (100 couleurs nommées).
  * - Vide puis recharge les lignes : le résultat est reproductible à chaque exécution.
  * - Écrit apps/backend/.env (gitignoré) avec les IDs de tables, de champ et le jeton.
  * - Écrit scripts/seed-baserow/out/schema.json (schéma réel créé).
@@ -184,7 +185,14 @@ async function ensureTable(db, name, primaryName) {
 
 async function ensureField(ctx, def) {
   const existing = ctx.fields.find((f) => f.name === def.name);
-  if (existing) return existing;
+  if (existing && (existing.type === def.type || existing.primary)) return existing;
+  if (existing) {
+    // Schéma local périmé (ex. ancienne colonne « Couleur » en liste de choix, remplacée par un
+    // lien vers la table « Couleurs ») : on supprime la colonne pour la recréer au bon type.
+    log(`Colonne "${def.name}" de "${ctx.table.name}" : type ${existing.type} remplacé par ${def.type}`);
+    await api('DELETE', `/api/database/fields/${existing.id}/`);
+    ctx.fields = ctx.fields.filter((f) => f.id !== existing.id);
+  }
   const created = await api('POST', `/api/database/fields/table/${ctx.table.id}/`, def);
   ctx.fields.push(created);
   return created;
@@ -238,32 +246,54 @@ async function uploadImage(name, w, h, rgb) {
   return { name: res.name, visible_name: name };
 }
 
+// ---------------------------------------------------------------- Couleurs
+// Palette de 100 couleurs nommées (nom, code hexadécimal) : même fichier que celui que les admins
+// importent dans Baserow (docs/baserow/couleurs.md). Les tables de référence ne portent pas de code :
+// elles pointent vers une ligne de la table « Couleurs » par son nom.
+const PALETTE_PATH = resolve(ROOT, 'docs/baserow/palette-couleurs.csv');
+const PALETTE = readFileSync(PALETTE_PATH, 'utf8')
+  .split(/\r?\n/)
+  .slice(1)
+  .filter((line) => line.trim())
+  .map((line) => {
+    const i = line.lastIndexOf(',');
+    return [line.slice(0, i), line.slice(i + 1)];
+  });
+// Cas limite : un code que le frontend refuse (couleur de repli attendue).
+const INVALID_COLOR = ['[TEST] Couleur invalide', 'rouge'];
+const COLORS_TABLE = 'Couleurs';
+const COLORS_HEX_COLUMN = 'Hexa';
+// Colonne de choix (lien vers « Couleurs ») que voient les admins ; la colonne `REF.color` de la
+// config en est la recherche (lookup) qui renvoie le code hexadécimal au backend.
+const COLOR_LINK_COLUMN = REF.color === 'Couleur' ? 'Couleur (choix)' : 'Couleur';
+
 // ---------------------------------------------------------------- Référentiels
+// [libellé, picto, nom de la couleur dans la palette]
 const FORMATS = [
-  ['Atelier de cuisine', 'ChefHat', '#E8793A'],
-  ['Dégustation ou menu végétal', 'Utensils', '#3BAE5D'],
-  ['Visite de jardin / potager ou cueillette', 'Sprout', '#7BB661'],
-  ['Atelier pédagogique ou formation', 'GraduationCap', '#4A90D9'],
-  ['Conférence/webinaire/table-ronde', 'Mic', '#9B59B6'],
-  ['Festival', 'PartyPopper', '#E74C8C'],
-  ['Autres', 'Sparkles', '#C9C3C1'],
+  ['Atelier de cuisine', 'ChefHat', 'Orange mandarine'],
+  ['Dégustation ou menu végétal', 'Utensils', 'Vert prairie'],
+  ['Visite de jardin / potager ou cueillette', 'Sprout', 'Vert feuille'],
+  ['Atelier pédagogique ou formation', 'GraduationCap', 'Bleu ciel'],
+  ['Conférence/webinaire/table-ronde', 'Mic', 'Violet améthyste'],
+  ['Festival', 'PartyPopper', 'Rose bonbon'],
+  ['Autres', 'Sparkles', 'Gris clair'],
   // Cas limites référentiel : picto inexistant + couleur invalide, puis sans picto ni couleur
-  ['[TEST] Format picto/couleur invalides', 'IconeQuiNexistePas', 'rouge'],
+  ['[TEST] Format picto/couleur invalides', 'IconeQuiNexistePas', INVALID_COLOR[0]],
   ['[TEST] Format sans picto ni couleur', null, null],
 ];
 const PUBLICS = [
-  ['Tout public', 'Users', '#3BAE5D'],
-  ['Familles / enfants', 'Baby', '#F5A623'],
-  ["Salariés d'une entreprise", 'Briefcase', '#4A90D9'],
-  ['Professionnels', 'Building2', '#9B59B6'],
-  ['Scolaires', 'School', '#E74C3C'],
+  ['Tout public', 'Users', 'Vert prairie'],
+  ['Familles / enfants', 'Baby', 'Jaune soleil'],
+  ["Salariés d'une entreprise", 'Briefcase', 'Bleu ciel'],
+  ['Professionnels', 'Building2', 'Violet améthyste'],
+  ['Scolaires', 'School', 'Rouge tomate'],
 ];
 const THEMES = [
-  ['Cuisine végétale', 'Carrot', '#E8793A'],
-  ['Santé & nutrition', 'HeartPulse', '#E74C3C'],
-  ['Biodiversité', 'Bug', '#7BB661'],
-  ['Agriculture', 'Tractor', '#8E6B3E'],
-  ['Climat & environnement', 'Leaf', '#2E8B57'],
+  ['Cuisine végétale', 'Carrot', 'Orange mandarine'],
+  ['Santé & nutrition', 'HeartPulse', 'Rouge tomate'],
+  ['Biodiversité', 'Bug', 'Vert feuille'],
+  ['Agriculture', 'Tractor', 'Brun noisette'],
+  ['Climat & environnement', 'Leaf', 'Vert sapin'],
 ];
 const PARTNERS = [
   ['Association Légumineuses & Co', [255, 190, 120]],
@@ -395,19 +425,23 @@ async function main() {
 
   // --- Tables (référentiels d'abord)
   const T = {};
+  T.colors = await ensureTable(db, COLORS_TABLE, REF.name);
   T.formats = await ensureTable(db, 'Formats', REF.name);
   T.publics = await ensureTable(db, 'Publics', REF.name);
   T.themes = await ensureTable(db, 'Thématiques', REF.name);
   T.partners = await ensureTable(db, 'Partenaires', REF.name);
   T.events = await ensureTable(db, 'Événements', FM.title);
 
+  const colorHex = await ensureField(T.colors, { name: COLORS_HEX_COLUMN, type: 'text' });
+
   const pictosOf = (list) => [...new Set(list.map((r) => r[1]).filter(Boolean))];
-  const colorsOf = (list) => [...new Set(list.map((r) => r[2]).filter(Boolean))];
   const refFields = {};
   for (const [key, list] of [['formats', FORMATS], ['publics', PUBLICS], ['themes', THEMES]]) {
     const picto = await ensureField(T[key], { name: REF.picto, type: 'multiple_select', select_options: opts(pictosOf(list), 'light-green') });
-    const couleur = await ensureField(T[key], { name: REF.color, type: 'multiple_select', select_options: opts(colorsOf(list), 'light-orange') });
-    refFields[key] = { picto, couleur };
+    // Choix : lien vers « Couleurs » (une seule couleur). Lecture : recherche du code hexadécimal.
+    const colorLink = await ensureField(T[key], { name: COLOR_LINK_COLUMN, type: 'link_row', link_row_table_id: T.colors.table.id, has_related_field: false, link_row_multiple_relationships: false });
+    await ensureField(T[key], { name: REF.color, type: 'lookup', through_field_id: colorLink.id, target_field_id: colorHex.id });
+    refFields[key] = { picto };
   }
   await ensureField(T.partners, { name: REF.logo, type: 'file' });
 
@@ -461,7 +495,7 @@ async function main() {
       await api('POST', `/api/database/rows/table/${ctx.table.id}/batch-delete/`, { items: page.results.map((r) => r.id) });
     }
   }
-  for (const ctx of [T.events, T.partners, T.themes, T.publics, T.formats]) await clear(ctx);
+  for (const ctx of [T.events, T.partners, T.themes, T.publics, T.formats, T.colors]) await clear(ctx);
 
   async function insert(ctx, items) {
     const ids = [];
@@ -474,12 +508,19 @@ async function main() {
 
   // --- Référentiels
   const idByName = {};
+  // Table « Couleurs » d'abord : les référentiels y pointent par le nom.
+  const colorRows = [...PALETTE, INVALID_COLOR];
+  const colorIds = await insert(T.colors, colorRows.map(([name, hex]) => ({ [REF.name]: name, [COLORS_HEX_COLUMN]: hex })));
+  colorRows.forEach(([name], i) => (idByName[`colors:${name}`] = colorIds[i]));
   for (const [key, list] of [['formats', FORMATS], ['publics', PUBLICS], ['themes', THEMES]]) {
-    const items = list.map(([name, picto, color]) => ({
-      [REF.name]: name,
-      [REF.picto]: picto ? [optId(refFields[key].picto, picto)] : [],
-      [REF.color]: color ? [optId(refFields[key].couleur, color)] : [],
-    }));
+    const items = list.map(([name, picto, color]) => {
+      if (color && idByName[`colors:${color}`] === undefined) throw new Error(`Couleur "${color}" absente de la palette (${PALETTE_PATH})`);
+      return {
+        [REF.name]: name,
+        [REF.picto]: picto ? [optId(refFields[key].picto, picto)] : [],
+        [COLOR_LINK_COLUMN]: color ? [idByName[`colors:${color}`]] : [],
+      };
+    });
     const ids = await insert(T[key], items);
     list.forEach(([name], i) => (idByName[`${key}:${name}`] = ids[i]));
   }
