@@ -49,11 +49,11 @@ Il n'existe **pas de schéma cible** : la carte doit fonctionner avec le schéma
 
 ## 4. Filtres
 
-Une **seule définition** (`apps/frontend/src/utils/filterDefinitions.ts`, `FILTER_DEFINITIONS`) pour le panneau de la carte (`FilterPanel`) et la barre de la liste (`EventFiltersBar`) : mêmes filtres, même ordre, mêmes titres, mêmes règles. La recherche et le bouton « événements passés » sont hors liste, toujours affichés.
+Une **seule définition** (`apps/frontend/src/utils/filterDefinitions.ts`, `FILTER_DEFINITIONS`) pour le panneau de la carte (`FilterPanel`) et la barre de la liste (`EventFiltersBar`) : même ordre, mêmes titres, mêmes règles, sauf Modalité qui n'est proposée que dans la barre de la liste (surfaces: ['bar']). La recherche et le bouton « événements passés » sont hors liste, toujours affichés.
 
 | Filtre | Source des options | Masqué quand |
 |---|---|---|
-| Modalité | code (tous, présentiel, en ligne) | jamais (retrait de la carte planifié, étape 6 du plan actif) |
+| Modalité | code (tous, présentiel, en ligne) | jamais (barre de la liste seulement, absent du panneau de la carte) |
 | Période | `filters.dateFilterModes` (config) | jamais |
 | Partenaires, Type d'événement, Thématiques, Public cible | Baserow (référentiels) | référentiel vide ; **pas** s'il est en erreur |
 | Code postal, Région | saisie, liste de régions du code | modalité « en ligne » (sauf filtre déjà actif) |

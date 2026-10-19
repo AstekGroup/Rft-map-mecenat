@@ -76,7 +76,7 @@ export function EventFiltersBar({ controls }: EventFiltersBarProps) {
     availablePublics,
   } = controls;
   const { helpers } = useConfig();
-  const visibleFilters = getVisibleFiltersFor(controls);
+  const visibleFilters = getVisibleFiltersFor(controls, 'bar');
   const hasActiveFilters = countActiveFilters(filters, defaultShowPastEvents) > 0;
 
   // Collecte des tags actifs
