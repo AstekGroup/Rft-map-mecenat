@@ -97,7 +97,7 @@
         "name": "Nom",
         "logo": "Logo",
         "picto": "Picto",
-        "color": "Couleur"
+        "color": "Couleur (hexa)"
       },
       "modality": {
         "Présentiel": "presentiel",

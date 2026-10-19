@@ -3,6 +3,7 @@ import {
   mapModality,
   isFreeTariff,
   mapReferenceRecord,
+  normalizeHexColor,
   extractImageUrl,
   computeIsDuringWeek,
   parseDateTime,
@@ -95,6 +96,25 @@ describe('mapReferenceRecord', () => {
     });
   });
 
+  it('lit le code couleur renvoyé par une recherche (lookup) sur la table Couleurs', () => {
+    // Forme renvoyée par Baserow 2.4 pour un lookup : `[{ id: <ligne liée>, value: <code> }]`.
+    const row = mapReferenceRecord(
+      { id: 8, Libellé: 'Atelier', Teinte: [{ id: 17, value: '#E8793A' }] },
+      FIELDS,
+    );
+    expect(row.colorHexa).toBe('#E8793A');
+  });
+
+  it("laisse la couleur vide quand aucune couleur n'est choisie", () => {
+    expect(
+      mapReferenceRecord({ id: 9, Libellé: 'Autres', Teinte: [] }, FIELDS)
+        .colorHexa,
+    ).toBeUndefined();
+    expect(
+      mapReferenceRecord({ id: 9, Libellé: 'Autres' }, FIELDS).colorHexa,
+    ).toBeUndefined();
+  });
+
   it("ignore les colonnes aux noms par défaut quand la config en désigne d'autres", () => {
     const row = mapReferenceRecord(
       { id: 1, Nom: 'Ancien nom', Libellé: 'Nouveau nom' },
@@ -117,6 +137,30 @@ describe('mapReferenceRecord', () => {
       FIELDS,
     );
     expect(row.logoUrl).toBe('https://example.com/logo.png');
+  });
+});
+
+describe('normalizeHexColor', () => {
+  it('ne touche pas à un code correct', () => {
+    expect(normalizeHexColor('#E8793A')).toBe('#E8793A');
+    expect(normalizeHexColor('#abc')).toBe('#abc');
+  });
+
+  it('retire les espaces et ajoute le # oublié', () => {
+    expect(normalizeHexColor('  #E8793A ')).toBe('#E8793A');
+    expect(normalizeHexColor('E8793A')).toBe('#E8793A');
+    expect(normalizeHexColor(' fff ')).toBe('#fff');
+  });
+
+  it('transmet une valeur invalide telle quelle (le frontend la refuse)', () => {
+    expect(normalizeHexColor('rouge')).toBe('rouge');
+    expect(normalizeHexColor('#12345')).toBe('#12345');
+  });
+
+  it('renvoie undefined pour une valeur absente ou vide', () => {
+    expect(normalizeHexColor(undefined)).toBeUndefined();
+    expect(normalizeHexColor('')).toBeUndefined();
+    expect(normalizeHexColor('   ')).toBeUndefined();
   });
 });
 
