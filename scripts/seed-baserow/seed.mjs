@@ -3,7 +3,8 @@
  * Seed Baserow LOCAL pour l'audit et le dev (outil de dev, JAMAIS en production).
  *
  * - Crée (idempotent) un compte admin, une base "LGSV test", 5 tables
- *   (Événements, Partenaires, Thématiques, Formats, Publics) et leurs champs.
+ *   (Événements, Partenaires, Thématiques, Formats, Publics) et leurs champs —
+ *   schéma partagé avec l'initialisation de production (scripts/baserow-init), voir schema.mjs.
  * - Vide puis recharge les lignes : le résultat est reproductible à chaque exécution.
  * - Écrit apps/backend/.env (gitignoré) avec les IDs de tables, de champ et le jeton.
  * - Écrit scripts/seed-baserow/out/schema.json (schéma réel créé).
@@ -24,6 +25,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deflateSync } from 'node:zlib';
+import { makeApi, waitReady, authenticate, ensureSchema } from './schema.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const args = Object.fromEntries(
@@ -77,146 +79,9 @@ if (!MODALITY_LABEL.Présentiel || !MODALITY_LABEL.Distanciel) {
 const TARIFF_LABEL = (token) => (token === 'Gratuit' ? TARIFF_FREE : token);
 console.log(`[seed] Config : ${CONFIG_PATH}`);
 
-// ---------------------------------------------------------------- HTTP
-let jwt = null;
-async function api(method, path, body, { token = 'jwt', raw = false } = {}) {
-  const headers = {};
-  if (token === 'jwt' && jwt) headers.Authorization = `JWT ${jwt}`;
-  let payload;
-  if (body instanceof FormData) payload = body;
-  else if (body !== undefined) {
-    headers['Content-Type'] = 'application/json';
-    payload = JSON.stringify(body);
-  }
-  const res = await fetch(`${BASE}${path}`, { method, headers, body: payload });
-  const text = await res.text();
-  let json;
-  try {
-    json = text ? JSON.parse(text) : null;
-  } catch {
-    json = text;
-  }
-  if (raw) return { status: res.status, json };
-  if (!res.ok) {
-    throw new Error(`${method} ${path} -> ${res.status} ${typeof json === 'string' ? json : JSON.stringify(json)}`);
-  }
-  return json;
-}
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// ---------------------------------------------------------------- HTTP (client partagé, voir schema.mjs)
 const log = (...a) => console.log('[seed]', ...a);
-
-async function waitReady() {
-  for (let i = 0; i < 120; i++) {
-    try {
-      const r = await fetch(`${BASE}/api/_health/`);
-      if (r.ok) return;
-    } catch {
-      /* pas prêt */
-    }
-    if (i % 5 === 0) log(`Baserow pas prêt (${BASE}), attente...`);
-    await sleep(5000);
-  }
-  throw new Error(`Baserow injoignable sur ${BASE}`);
-}
-
-async function authenticate() {
-  const signup = await api(
-    'POST',
-    '/api/user/',
-    { ...ADMIN, language: 'fr', authenticate: true },
-    { token: null, raw: true },
-  );
-  if (signup.status === 200) {
-    jwt = signup.json.access_token ?? signup.json.token;
-    log('Compte admin créé');
-    return;
-  }
-  const login = await api(
-    'POST',
-    '/api/user/token-auth/',
-    { email: ADMIN.email, password: ADMIN.password },
-    { token: null },
-  );
-  jwt = login.access_token ?? login.token;
-  log('Connecté avec le compte admin existant');
-}
-
-// ---------------------------------------------------------------- Schéma
-async function ensureWorkspaceAndDb() {
-  const workspaces = await api('GET', '/api/workspaces/');
-  let workspace = workspaces[0];
-  if (!workspace) {
-    workspace = await api('POST', '/api/workspaces/', { name: 'LGSV' });
-    log('Workspace "LGSV" créé');
-  }
-  const apps = await api('GET', `/api/applications/workspace/${workspace.id}/`);
-  let db = apps.find((a) => a.type === 'database' && a.name === DB_NAME);
-  if (!db) {
-    db = await api('POST', `/api/applications/workspace/${workspace.id}/`, {
-      name: DB_NAME,
-      type: 'database',
-    });
-    log(`Base "${DB_NAME}" créée`);
-  }
-  return { workspace, db };
-}
-
-async function ensureTable(db, name, primaryName) {
-  const tables = await api('GET', `/api/database/tables/database/${db.id}/`);
-  let table = tables.find((t) => t.name === name);
-  if (!table) {
-    table = await api('POST', `/api/database/tables/database/${db.id}/`, {
-      name,
-      data: [[primaryName]],
-      first_row_header: true,
-    });
-    log(`Table "${name}" créée`);
-  }
-  let fields = await api('GET', `/api/database/fields/table/${table.id}/`);
-  const primary = fields.find((f) => f.primary);
-  if (primary && primary.name !== primaryName) {
-    await api('PATCH', `/api/database/fields/${primary.id}/`, { name: primaryName });
-    fields = await api('GET', `/api/database/fields/table/${table.id}/`);
-  }
-  return { table, fields };
-}
-
-async function ensureField(ctx, def) {
-  const existing = ctx.fields.find((f) => f.name === def.name);
-  if (existing && (existing.type === def.type || existing.primary)) {
-    return def.select_options && !existing.primary ? syncSelectOptions(ctx, existing, def.select_options) : existing;
-  }
-  if (existing) {
-    // Schéma local périmé (ex. ancienne colonne « Couleur » en liste de choix multiple, remplacée
-    // par une liste de choix simple) : on supprime la colonne pour la recréer au bon type.
-    log(`Colonne "${def.name}" de "${ctx.table.name}" : type ${existing.type} remplacé par ${def.type}`);
-    await api('DELETE', `/api/database/fields/${existing.id}/`);
-    ctx.fields = ctx.fields.filter((f) => f.id !== existing.id);
-  }
-  const created = await api('POST', `/api/database/fields/table/${ctx.table.id}/`, def);
-  ctx.fields.push(created);
-  return created;
-}
-
-// Liste de choix existante : ajoute les options manquantes et aligne leur pastille sur le seed
-// (les options existantes gardent leur identifiant, les lignes qui les utilisent restent valides).
-async function syncSelectOptions(ctx, field, wanted) {
-  const current = field.select_options || [];
-  const merged = current.map((o) => {
-    const w = wanted.find((x) => x.value === o.value);
-    return w ? { ...o, color: w.color } : o;
-  });
-  for (const w of wanted) if (!current.some((o) => o.value === w.value)) merged.push(w);
-  const unchanged =
-    merged.length === current.length && merged.every((o, i) => o.color === current[i].color);
-  if (unchanged) return field;
-  const updated = await api('PATCH', `/api/database/fields/${field.id}/`, { select_options: merged });
-  ctx.fields = ctx.fields.map((f) => (f.id === field.id ? updated : f));
-  return updated;
-}
-
-const opts = (values, color = 'light-blue') => values.map((value) => ({ value, color }));
+const { api, setJwt } = makeApi(BASE);
 
 // ---------------------------------------------------------------- Images PNG générées
 function crc32(buf) {
@@ -437,66 +302,34 @@ function bulk(n) {
 
 // ---------------------------------------------------------------- Main
 async function main() {
-  await waitReady();
-  await authenticate();
-  const { workspace, db } = await ensureWorkspaceAndDb();
+  await waitReady(BASE, () => log(`Baserow pas prêt (${BASE}), attente...`));
+  const auth = await authenticate(api, ADMIN);
+  setJwt(auth.token);
+  log(auth.created ? 'Compte admin créé' : 'Connecté avec le compte admin existant');
 
-  // --- Tables (référentiels d'abord)
-  const T = {};
-  T.formats = await ensureTable(db, 'Formats', REF.name);
-  T.publics = await ensureTable(db, 'Publics', REF.name);
-  T.themes = await ensureTable(db, 'Thématiques', REF.name);
-  T.partners = await ensureTable(db, 'Partenaires', REF.name);
-  T.events = await ensureTable(db, 'Événements', FM.title);
-
-  const pictosOf = (list) => [...new Set(list.map((r) => r[1]).filter(Boolean))];
-  const refFields = {};
-  for (const [key, list] of [['formats', FORMATS], ['publics', PUBLICS], ['themes', THEMES]]) {
-    const picto = await ensureField(T[key], { name: REF.picto, type: 'multiple_select', select_options: opts(pictosOf(list), 'light-green') });
-    const couleur = await ensureField(T[key], {
-      name: REF.color,
-      type: 'single_select',
-      select_options: COLOR_OPTIONS.map(([value, color]) => ({ value, color })),
-    });
-    refFields[key] = { picto, couleur };
-  }
-  await ensureField(T.partners, { name: REF.logo, type: 'file' });
-
-  // --- Champs des événements (noms = fieldMapping, sauf champs "formulaire" additionnels)
-  const E = T.events;
-  const linkField = (name, tableId) => ensureField(E, { name, type: 'link_row', link_row_table_id: tableId, has_related_field: false });
-  const f = {};
-  f.description = await ensureField(E, { name: FM.description, type: 'long_text' });
-  f.start = await ensureField(E, { name: FM.startDate, type: 'date', date_format: 'ISO', date_include_time: true, date_time_format: '24' });
-  f.end = await ensureField(E, { name: FM.endDate, type: 'date', date_format: 'ISO', date_include_time: true, date_time_format: '24' });
-  f.format = await linkField(FM.format, T.formats.table.id);
-  f.modality = await ensureField(E, { name: FM.modality, type: 'single_select', select_options: opts(MODALITY_OPTIONS) });
-  f.audience = await linkField(FM.audience, T.publics.table.id);
-  f.theme = await linkField(FM.theme, T.themes.table.id);
-  f.partners = await linkField(FM.partnerField, T.partners.table.id);
-  f.image = await ensureField(E, { name: FM.image, type: 'file' });
-  f.address = await ensureField(E, { name: FM.address, type: 'text' });
-  f.postalCode = await ensureField(E, { name: FM.postalCode, type: 'text' });
-  f.city = await ensureField(E, { name: FM.city, type: 'text' });
-  f.organizer = await ensureField(E, { name: FM.organizer, type: 'text' });
-  f.firstName = await ensureField(E, { name: FM.organizerFirstName, type: 'text' });
-  f.lastName = await ensureField(E, { name: FM.organizerLastName, type: 'text' });
-  f.registrationUrl = await ensureField(E, { name: FM.registrationUrl, type: 'text' });
-  f.venue = await ensureField(E, { name: FM.venueName, type: 'text' });
-  f.access = await ensureField(E, { name: FM.accessModalities, type: 'multiple_select', select_options: opts(ACCESS, 'light-gray') });
-  f.visio = await ensureField(E, { name: FM.videoConferenceUrl, type: 'text' });
-  f.contactEmail = await ensureField(E, { name: FM.contactEmail, type: 'text' });
-  f.contactEmailFallback = await ensureField(E, { name: FM.contactEmailFallback, type: 'text' });
-  f.phone = await ensureField(E, { name: FM.contactPhone, type: 'text' });
-  f.website = await ensureField(E, { name: FM.organizerWebsite, type: 'text' });
-  f.capacity = await ensureField(E, { name: FM.capacity, type: 'number', number_decimal_places: 0 });
-  f.tarif = await ensureField(E, { name: FM.tariff, type: 'single_select', select_options: opts([TARIFF_FREE, 'Payant']) });
-  f.price = await ensureField(E, { name: FM.price, type: 'number', number_decimal_places: 2 });
-  f.moderation = await ensureField(E, { name: FM.moderation, type: 'single_select', select_options: opts([MODERATION_OK, 'Refusé', 'En attente'], 'light-red') });
-  // Champs "formulaire" présents dans BaserowRecord mais non utilisés par le mapping (doivent être ignorés)
-  await ensureField(E, { name: 'Respect de la charte', type: 'boolean' });
-  await ensureField(E, { name: 'Avez-vous quelque chose à ajouter ?', type: 'long_text' });
-  await ensureField(E, { name: "Téléphone de l'animateur", type: 'text' });
+  // --- Schéma de la carte (partagé avec scripts/baserow-init ; options de test du seed)
+  const { workspace, T, f, refFields } = await ensureSchema(api, appConfig, {
+    workspaceName: 'LGSV',
+    databaseName: DB_NAME,
+    optionSets: {
+      referencePictos: {
+        formats: FORMATS.map((r) => r[1]),
+        publics: PUBLICS.map((r) => r[1]),
+        themes: THEMES.map((r) => r[1]),
+      },
+      referenceColors: COLOR_OPTIONS,
+      // Options de test en plus de celles de la config (valeur visible, modalités, tarif gratuit)
+      moderation: ['Refusé', 'En attente'],
+      tariff: ['Payant'],
+      access: ACCESS,
+      // Champs "formulaire" présents dans BaserowRecord mais non utilisés par le mapping (doivent être ignorés)
+      extraEventFields: [
+        { name: 'Respect de la charte', type: 'boolean' },
+        { name: 'Avez-vous quelque chose à ajouter ?', type: 'long_text' },
+        { name: "Téléphone de l'animateur", type: 'text' },
+      ],
+    },
+  });
 
   const optId = (field, value) => {
     const o = field.select_options.find((x) => x.value === value);
