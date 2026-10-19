@@ -8,6 +8,8 @@ Outil de développement : une instance Baserow **jetable en Docker** et un scrip
 |---|---|
 | Baserow local (Docker, version 2.4.1, port 8088) | `deploy/baserow-local/docker-compose.yml` |
 | Seed idempotent (Node, zéro dépendance) | `scripts/seed-baserow/seed.mjs` |
+| Schéma Baserow (module **partagé** : schéma, auth, attente de santé) | `scripts/seed-baserow/schema.mjs` |
+| Init du Baserow **de production** d'une carte (schéma seul, tables vides) | `scripts/baserow-init/init.mjs` |
 | Tests de robustesse au schéma | `scripts/seed-baserow/robustness.mjs` |
 | Schéma créé (généré, ignoré par git) | `scripts/seed-baserow/out/schema.json` |
 | `.env` du backend (IDs de tables et de champ, jeton ; généré, ignoré par git) | `apps/backend/.env` |
@@ -35,6 +37,7 @@ docker compose -f deploy/baserow-local/docker-compose.yml down -v
 - Interface Baserow : `http://localhost:8088`, compte `admin@lgsv.local` / `Lgsv-Local-2026!` (local uniquement ; `BASEROW_LOCAL_EMAIL` et `BASEROW_LOCAL_PASSWORD` les remplacent). Base créée : « LGSV test ».
 - Le seed est **idempotent** : relancé, il détecte l'existant, vide puis recharge les lignes ; les identifiants de tables et de champ restent stables.
 - `robustness.mjs` refuse toute URL non locale ; `seed.mjs` ne le vérifie pas (`--url` ou `BASEROW_LOCAL_URL`) : ne jamais le pointer vers un Baserow réel. Un garde-fou équivalent dans `seed.mjs` est à ajouter (non fait).
+- **Production** : l'initialisation du Baserow de production d'une carte (`scripts/baserow-init/init.mjs`, lancé par le déploiement) réutilise `schema.mjs` en **création stricte** (schéma seul, tables vides, aucune donnée de test, aucune modification d'existant) : voir [deploy/README.md](../../deploy/README.md). Seuls les scripts de ce dossier et cet init ont le droit d'écrire dans un Baserow.
 - **Noms de colonnes et valeurs de listes de choix** : lus dans la config (`baserow.fieldMapping` et `baserow.mapping` de `app.config.json`, ou `--config`). Pour tester une autre carte : `node scripts/seed-baserow/seed.mjs --config=docs/audit/fixtures/app.config.second-map.json`, puis `APP_CONFIG_PATH=<chemin absolu de la même config>` côté backend.
 - Seconde config de référence : `docs/audit/fixtures/app.config.second-map.json` (générée par `docs/audit/fixtures/make-second-config.cjs` à partir de `app.config.json`). Elle sert aux tests « deux cartes » et à la vérification manuelle d'un changement d'identité.
 
