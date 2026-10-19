@@ -39,6 +39,7 @@ Validation : la config est contrôlée au démarrage du backend (`apps/backend/s
 | Élément | Remarque |
 |---|---|
 | Événements | Flux : formulaire public, table, modérateur passe la modération à la valeur `moderationVisibleValue`. Valeur absente ou vide : masqué. |
+| Couleurs | Table `Couleurs` (nom, code hexadécimal) administrée par les admins : ils choisissent une couleur **par son nom** dans chaque référentiel (colonne de lien) et n'écrivent jamais de code. Le backend ne lit pas cette table : il lit la colonne de recherche (`referenceFields.color`, ex. `Couleur (hexa)`) de chaque référentiel. Guide, migration et palette de 100 couleurs : [../baserow/couleurs.md](../baserow/couleurs.md). Aucune variable d'environnement. |
 | Référentiels | 4 tables lues par le backend. Libellé, couleur et picto d'un format, logo d'un partenaire. Le filtre d'un référentiel vide se masque ; un référentiel **en erreur** reste affiché avec un message (502 côté API, `/api/health` `degraded`). |
 | **Contrat du picto** | La valeur de la colonne `Picto` doit être un nom d'icône `lucide-react` exact (PascalCase, ex. `PenTool`) ; un nom inconnu donne l'icône de repli. L'acceptation de la forme kebab-case de lucide.dev (`pen-tool`) est planifiée ([PLAN-SESSIONS.md](PLAN-SESSIONS.md), Améliorations). Une couleur invalide donne le gris de repli. |
 | Ordre des options | Ordre des lignes de la table (plus de tri alphabétique). |

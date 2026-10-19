@@ -153,3 +153,14 @@ Décision du propriétaire : **la PR `develop` → `main` et les tags (`v0.1.0`,
 - Mutation : `getEditionBadge` remplacé temporairement par `return 'LGSV 2026';` → `deux-cartes.spec.tsx` : 2 tests rouges (« donne le badge… » et « ne laisse rien de la première carte… ») ; modification annulée (`git checkout`).
 - `AGENTS.md` : paragraphe « Écart connu » mis à jour (tests rétablis).
 - Constat annexe : `apps/backend/AGENTS.md` et `apps/frontend/AGENTS.md` portent encore des mentions périmées (lint `--fix`, « pas de config ESLint », `VITE_MAPTILER_KEY`) : à traiter à l'étape 5.
+
+## Couleurs choisies par leur nom : table `Couleurs` (2026-10-19)
+
+- Branche `feat/palette-couleurs-baserow`, partie de `origin/develop` (`2ea266d`). Problème : les colonnes `Couleur` de Formats, Publics et Thématiques étaient des listes de choix dont les options étaient des codes hexadécimaux saisis à la main.
+- Solution : table `Couleurs` (`Nom`, `Hexa`), colonne de lien `Couleur` (une valeur) et colonne de recherche `Couleur (hexa)` dans chaque référentiel ; `baserow.mapping.referenceFields.color` = `Couleur (hexa)` (`app.config.json` et fixture). Palette de 100 couleurs : `docs/baserow/palette-couleurs.csv` (`Import-Csv` : 100 lignes, 100 noms et 100 codes distincts, tous `#RRGGBB`).
+- Seed (`seed.mjs`) : crée `Couleurs` depuis le CSV, remplace l'ancienne colonne `Couleur` (liste de choix) par le lien, crée la recherche ; deuxième exécution sans changement de schéma (idempotent). Baserow local 2.4.1, `--total=40`.
+- Format réel d'un lookup, relevé sur `GET /api/database/rows/table/<formats>/?user_field_names=true` : `"Couleur (hexa)": [{ "id": 17, "value": "#E8793A" }]` (le lien `Couleur` renvoie `{ id, value: "Orange mandarine", order }`). C'est la forme que `mapReferenceRecord` lisait déjà : aucun changement de lecture.
+- Backend lancé sur ce Baserow : `GET /api/events/formats`, `/publics`, `/themes` renvoient les mêmes `colorHexa` qu'avant (ex. `Atelier de cuisine` `#E8793A`, `Tout public` `#3BAE5D`, `Agriculture` `#8E6B3E`), le format de test invalide renvoie `rouge` (repli gris côté front), le format sans couleur n'en renvoie pas ; journal : « Contrôle du schéma Baserow : toutes les colonnes de la config sont présentes ».
+- Code : `normalizeHexColor` (`baserow-mapping.util.ts`) tolère espaces et `#` oublié ; 6 tests ajoutés (`baserow-mapping.util.spec.ts`).
+- `pnpm build` OK ; `pnpm lint` OK (0 erreur) ; `pnpm run test -- --force` : `shared/types` 5, backend 15 suites / 242 tests, frontend 11 fichiers / 140 tests.
+- Non vérifié : migration d'une base Baserow réelle (jamais fournie) ; procédure écrite dans `docs/baserow/couleurs.md`, à rejouer par les admins. Le Baserow local contient 40 événements (seed `--total=40`), pas 1000.

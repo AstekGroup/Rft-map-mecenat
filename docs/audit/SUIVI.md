@@ -47,6 +47,7 @@ Vérifié le 2026-10-19 sur `origin/develop` (`2273bcb`) : `pnpm build`, `pnpm l
 
 - **Hors du plan actif (2026-10-19)** : session 8 (déploiement) et `develop` vers `main` avec tags. On reste sur `develop`.
 - **Tests « deux cartes » et modèle de PR (2026-10-19)** : remis (étape 1) ; leur retrait par #38 était une erreur. La vérification d'identité ou de config se fait avec `docs/audit/fixtures/app.config.second-map.json`.
+- **Couleurs des référentiels (2026-10-19)** : choisies par leur nom dans une table Baserow `Couleurs` (100 couleurs, [../baserow/couleurs.md](../baserow/couleurs.md)) au lieu de codes hexadécimaux saisis ; `referenceFields.color` pointe la colonne de recherche `Couleur (hexa)`. Aucune variable d'environnement, la table n'est pas lue par le backend. **Migration de la base réelle à faire par les admins avant de déployer la nouvelle config** (procédure dans le guide) ; non vérifiée sur la base de production (jamais fournie), vérifiée sur le Baserow local 2.4.1.
 - **Config Astek (2026-10-19)** : supprimée (essai local sans valeur).
 - **Périmètre (2026-10-16)** : seuls les titres et noms de l'événement sont pilotés par la config, le wording de l'interface reste en dur ; pas de flags de fonctionnalités ; pas de schéma cible Baserow ; carte et régions dans le code ; Airtable retiré, pas de migration de données.
 - Toutes les décisions détaillées : [PLAN-SESSIONS.md](PLAN-SESSIONS.md), section « Décisions prises ».
