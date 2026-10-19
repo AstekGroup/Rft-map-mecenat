@@ -157,3 +157,42 @@ describe('BaserowService : table de référence en erreur ≠ table vide', () =>
     expect(service.degradedReferences()).toEqual(['BASEROW_FORMATS_TABLE']);
   });
 });
+
+describe('BaserowService : pastilles de couleur des référentiels', () => {
+  const originalFetch = global.fetch;
+  let warnLog: jest.SpyInstance;
+
+  beforeEach(() => {
+    jest.spyOn(Logger.prototype, 'log').mockImplementation(() => undefined);
+    warnLog = jest
+      .spyOn(Logger.prototype, 'warn')
+      .mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+    jest.restoreAllMocks();
+  });
+
+  it('signale en un seul message les pastilles inconnues de la palette, sans bloquer la table', async () => {
+    const { service } = buildService();
+    const { name, color } = buildTestConfig().baserow.mapping.referenceFields;
+    global.fetch = jest.fn().mockResolvedValue(
+      okResponse([
+        { id: 1, [name]: 'A', [color]: { id: 1, value: 'X', color: 'neon' } },
+        { id: 2, [name]: 'B', [color]: { id: 2, value: 'Y', color: 'neon' } },
+        { id: 3, [name]: 'C', [color]: { id: 3, value: 'Z', color: 'blue' } },
+      ]),
+    ) as unknown as typeof fetch;
+
+    const rows = await service.fetchLinkedTableRow('BASEROW_FORMATS_TABLE');
+
+    expect(rows).toHaveLength(3);
+    const colorWarnings = warnLog.mock.calls.filter(([message]) =>
+      String(message).includes('pastille'),
+    );
+    expect(colorWarnings).toHaveLength(1);
+    expect(String(colorWarnings[0][0])).toContain('neon');
+    expect(String(colorWarnings[0][0])).not.toContain('blue');
+  });
+});

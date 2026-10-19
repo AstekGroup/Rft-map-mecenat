@@ -11,6 +11,10 @@
 - **Hors de ce plan** : la session 8 (déploiement : config dans les images, `scripts/deploy.sh`, `docker build`) et le passage `develop` vers `main` avec tags.
 - Périmètre : tout le reste du verdict (résidus en dur, cas dégradés, docs, améliorations du plan, ménage).
 
+## Compromis assumés
+
+- **Palette Baserow dans le backend** (`apps/backend/src/baserow/baserow-palette.ts`) : les couleurs des référentiels se choisissent avec la pastille native des listes de choix Baserow ; le backend traduit le nom de pastille (`dark-orange`) en code hexadécimal. Ces codes sont ceux de l'outil Baserow, identiques pour toutes les cartes, pas des couleurs de marque : ce fichier est la seule exception attendue de la recherche `rg "#[0-9a-f]{6}"` sur `apps/backend/src`. À revérifier à chaque montée de version de Baserow (voir [../baserow/couleurs.md](../baserow/couleurs.md)).
+
 ## Règles de travail (rappel)
 
 - Début de session : `git status` propre, `git switch develop`, `git pull`, lire `AGENTS.md`, `SUIVI.md` et ce plan ; une branche courte par sujet, créée depuis `develop`.

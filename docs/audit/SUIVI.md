@@ -47,8 +47,8 @@ Vérifié le 2026-10-19 sur `origin/develop` (`2273bcb`) : `pnpm build`, `pnpm l
 
 - **Hors du plan actif (2026-10-19)** : session 8 (déploiement) et `develop` vers `main` avec tags. On reste sur `develop`.
 - **Tests « deux cartes » et modèle de PR (2026-10-19)** : remis (étape 1) ; leur retrait par #38 était une erreur. La vérification d'identité ou de config se fait avec `docs/audit/fixtures/app.config.second-map.json`.
-- **Couleurs des référentiels (2026-10-19)** : choisies par leur nom dans une table Baserow `Couleurs` (100 couleurs, [../baserow/couleurs.md](../baserow/couleurs.md)) au lieu de codes hexadécimaux saisis ; `referenceFields.color` pointe la colonne de recherche `Couleur (hexa)`. Aucune variable d'environnement, la table n'est pas lue par le backend. **Migration de la base réelle à faire par les admins avant de déployer la nouvelle config** (procédure dans le guide) ; non vérifiée sur la base de production (jamais fournie), vérifiée sur le Baserow local 2.4.1.
 - **Config Astek (2026-10-19)** : supprimée (essai local sans valeur).
+- **Couleurs des référentiels (2026-10-19)** : choisies avec la **pastille native** d'une liste de choix Baserow (branche `feat/champ-couleur-baserow`, doc [../baserow/couleurs.md](../baserow/couleurs.md)) ; `referenceFields.color` revient à `Couleur`. Remplace la table « Couleurs » + recherche de la PR #50 (mergée puis retirée : trop lourde pour les admins). Écarté aussi et le plugin communautaire de champ couleur (image Baserow à reconstruire sur chaque VPS). Compromis : palette Baserow dans `baserow-palette.ts` ([PLAN-FIN-REFONTE.md](PLAN-FIN-REFONTE.md), « Compromis assumés »).
 - **Périmètre (2026-10-16)** : seuls les titres et noms de l'événement sont pilotés par la config, le wording de l'interface reste en dur ; pas de flags de fonctionnalités ; pas de schéma cible Baserow ; carte et régions dans le code ; Airtable retiré, pas de migration de données.
 - Toutes les décisions détaillées : [PLAN-SESSIONS.md](PLAN-SESSIONS.md), section « Décisions prises ».
 
@@ -61,5 +61,7 @@ Vérifié le 2026-10-19 sur `origin/develop` (`2273bcb`) : `pnpm build`, `pnpm l
 - `prettier` n'est pas idempotent sur un bloc de `baserow.service.degraded.spec.ts` : `pnpm lint:fix` peut demander deux passes.
 - Le lint ne détecte ni couleur ni marque en dur (règle d'`AGENTS.md` vérifiée à la revue seulement) ; garde-fou optionnel à l'étape 7.
 - Schéma de la vraie base Baserow de production : jamais fourni (non vérifié) ; la carte doit fonctionner avec le schéma indiqué par la config.
+- Base Baserow réelle : si les admins ont déjà appliqué la procédure de la PR #50 (colonne de lien `Couleur` vers la table `Couleurs`), garder `referenceFields.color` = `Couleur (hexa)` le temps de convertir `Couleur` en liste de choix (voir [../baserow/couleurs.md](../baserow/couleurs.md), migration). Non vérifié : schéma de production jamais fourni.
+- Palette Baserow (`apps/backend/src/baserow/baserow-palette.ts`) relevée sur la 2.4.1 : à revérifier à chaque montée de version de Baserow (pastille inconnue = message dans les journaux).
 - Branches obsolètes `add-dynamic-filters`, `modify-audiences-filters`, `modif_audience_filters` : accord de leur auteur requis avant suppression.
 - Réglage GitHub à faire par le propriétaire : protéger `main` et `develop` (non vérifié).

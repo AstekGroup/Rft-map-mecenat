@@ -1,43 +1,61 @@
-# Couleurs des référentiels : choisir par son nom
+# Couleurs des référentiels : choisir une pastille
 
-Les tables **Formats**, **Publics** et **Thématiques** ont une couleur (pastille de la liste, marqueur de la carte, badge). Les admins la **choisissent par son nom** (« Orange mandarine ») dans une liste, sans taper de code hexadécimal.
+Les tables **Formats**, **Publics** et **Thématiques** ont une couleur (pastille de la liste, marqueur de la carte, badge). Les admins la choisissent **en un clic**, avec la pastille de couleur native de Baserow : aucun code hexadécimal à taper, aucune table supplémentaire, aucun plugin.
 
-## Comment ça marche
+## Pour les admins : choisir la couleur d'une ligne
 
-```
-Table « Couleurs »            Formats / Publics / Thématiques
-  Nom (principal)  Hexa         Couleur (lien, 1 seule valeur)  → choix de l'admin
-  Orange mandarine #E8793A      Couleur (hexa) (recherche)      → lue par l'application
-```
+1. Cliquer dans la cellule `Couleur` de la ligne (par exemple le format « Atelier de cuisine »).
+2. Choisir une option dans la liste : chaque option affiche sa pastille de couleur.
+3. C'est tout. La carte prend la nouvelle couleur après l'expiration du cache de l'API (5 minutes) ou un redémarrage du backend.
 
-1. **Couleurs** : 100 couleurs nommées, administrées par les admins (ajouter une ligne = une nouvelle couleur proposée partout). Le code hexadécimal n'est saisi qu'ici, une fois par couleur.
-2. **Colonne de choix** (type *Lien vers une autre table*, vers `Couleurs`, une seule valeur) : c'est elle que l'admin remplit. Son nom est libre : l'application ne la lit pas.
-3. **Colonne de lecture** (type *Recherche* / lookup, via la colonne de choix, sur `Hexa`) : c'est elle que lit l'application. Son nom est celui de `baserow.mapping.referenceFields.color` dans `app.config.json` (par défaut `Couleur (hexa)`). Les admins peuvent la masquer dans leur vue.
+Laisser la cellule vide donne la couleur de repli (gris) sur la carte.
 
-Aucun code ni variable d'environnement n'est nécessaire pour ajouter une couleur : la table `Couleurs` n'est jamais lue directement, seule la recherche de chaque table l'est.
+## Ajouter une couleur ou changer une teinte
 
-Le backend tolère un code saisi avec des espaces ou sans `#` (`E8793A` devient `#E8793A`). Tout autre code invalide (ex. `rouge`) donne la couleur de repli (gris) côté carte, sans erreur.
+La colonne `Couleur` est une **liste de choix simple**. Pour proposer une nouvelle couleur :
 
-## Mise en place sur une vraie base Baserow (sans coupure)
+1. Menu de la colonne `Couleur`, *Modifier le champ*.
+2. *Ajouter une option*, lui donner un nom parlant (« Orange », « Vert sapin »...).
+3. Cliquer sur le rond de couleur à gauche du nom et choisir la teinte.
 
-À faire **avant** de changer `referenceFields.color` dans la config. Tant que la config pointe l'ancienne colonne `Couleur`, la carte continue de fonctionner.
+**Seule la pastille compte** : le nom de l'option est libre et l'application ne le lit pas (sauf cas particulier ci-dessous). Changer la pastille d'une option change la couleur de toutes les lignes qui l'utilisent.
 
-1. **Créer la table `Couleurs`** : *Créer une table*, *Importer un fichier CSV*, choisir [`palette-couleurs.csv`](palette-couleurs.csv) (UTF-8, séparateur virgule, première ligne = en-têtes). Le champ principal est `Nom`, l'autre colonne `Hexa` (texte). Vérifier qu'il y a 100 lignes.
-2. **Dans chacune des tables Formats, Publics, Thématiques** :
-   1. Ne pas toucher à l'ancienne colonne `Couleur` (liste de choix contenant les codes).
-   2. Ajouter une colonne **`Couleur (choix)`** : type *Lien vers une autre table*, table `Couleurs`, **décocher** « Créer un champ lié dans la table liée » et **décocher** « Autoriser plusieurs relations ».
-   3. Ajouter une colonne **`Couleur (hexa)`** : type *Recherche*, via `Couleur (choix)`, champ `Hexa`.
-   4. Pour chaque ligne, choisir la couleur dans `Couleur (choix)` (le code de l'ancienne colonne indique la couleur équivalente dans la palette).
-3. **Contrôler** : la colonne `Couleur (hexa)` doit contenir un code pour chaque ligne qui avait une couleur.
-4. **Mettre à jour la config** : `baserow.mapping.referenceFields.color` = `"Couleur (hexa)"` dans `app.config.json` de la carte, puis redéployer le backend. Au démarrage, le journal doit indiquer « toutes les colonnes de la config sont présentes ».
-5. **Nettoyer** : supprimer l'ancienne colonne `Couleur`, puis, si on le souhaite, renommer `Couleur (choix)` en `Couleur` (l'application ne lit que `Couleur (hexa)`).
+Conseil : pour des marqueurs lisibles sur la carte, choisir dans les **deux dernières lignes** du sélecteur (teintes « foncée » et « plus foncée ») ; les deux premières lignes sont très pâles.
 
-Si la config est déployée avant la création de `Couleur (hexa)` : aucune erreur 500, mais les couleurs passent au gris de repli et le journal nomme la colonne absente.
+### Cas particulier : couleur exacte de la marque
 
-## Ajouter ou corriger une couleur
+La palette Baserow est limitée (40 teintes dans le sélecteur, assez pastel). Si une couleur exacte est indispensable, nommer l'option par son code hexadécimal (`#E8793A`) : ce code est alors utilisé à la place de la pastille. C'est aussi ce qui garantit que les anciennes bases (options nommées par un code) continuent de fonctionner.
 
-Dans la table `Couleurs` : ajouter une ligne (`Nom` parlant, `Hexa` au format `#RRGGBB`). Elle est proposée tout de suite dans les trois tables. Corriger le `Hexa` d'une ligne change la couleur partout où elle est utilisée (après l'expiration du cache de 5 minutes de l'API).
+## Comment l'application lit la couleur
+
+Pour chaque ligne, le backend prend l'option choisie dans la colonne nommée par `baserow.mapping.referenceFields.color` (`app.config.json`, `"Couleur"` par défaut) :
+
+1. si le nom de l'option est un code hexadécimal valide (`#E8793A`, `E8793A`, `#abc`), ce code ;
+2. sinon, la pastille de l'option (`dark-orange`, `muted-blue`...), traduite en code par la palette de Baserow (`apps/backend/src/baserow/baserow-palette.ts`) ;
+3. sinon (cellule vide, pastille inconnue), aucune couleur : la carte affiche le gris de repli. Une pastille inconnue est signalée **une fois** dans les journaux du backend, avec le nom de la table.
+
+La palette est celle de Baserow 2.4.1, identique pour toutes les cartes. **À chaque montée de version de Baserow**, vérifier qu'aucune pastille inconnue n'apparaît dans les journaux ; sinon, compléter `baserow-palette.ts` avec les codes de la nouvelle version.
+
+## Migration d'une base existante (sans coupure)
+
+Ancien schéma : colonne `Couleur` en liste de choix (souvent multiple) dont les options sont nommées par des codes (`#E8793A`). Il continue de fonctionner tel quel ; la migration est progressive.
+
+1. *(Facultatif mais recommandé)* Convertir la colonne `Couleur` en **liste de choix simple** (*Modifier le champ*, type *Choix unique*). Baserow conserve les options ; vérifier ensuite qu'aucune ligne n'a perdu sa couleur. Le backend lit les deux types (première option d'une liste multiple).
+2. Ajouter des options nommées (« Orange », « Bleu »...) avec leur pastille.
+3. Remplacer progressivement, ligne par ligne, les anciennes options en code par les nouvelles.
+4. Supprimer les anciennes options en code quand plus aucune ligne ne les utilise.
+
+Aucun changement de config ni de déploiement n'est nécessaire : le nom de la colonne reste celui de `referenceFields.color`.
+
+### Base passée par la table `Couleurs` (ancienne procédure)
+
+Si la base a reçu la table `Couleurs`, une colonne de lien `Couleur` et une colonne de recherche `Couleur (hexa)` :
+
+1. Garder `referenceFields.color` = `"Couleur (hexa)"` dans la config de la carte tant que la migration n'est pas finie (la recherche renvoie des codes, toujours lus).
+2. Dans chaque référentiel, convertir la colonne `Couleur` en **liste de choix simple** (Baserow crée une option par couleur liée, nommée comme la ligne de `Couleurs`), puis donner à chaque option la pastille voulue.
+3. Passer `referenceFields.color` à `"Couleur"` et redéployer le backend ; vérifier les couleurs sur la carte.
+4. Supprimer les colonnes `Couleur (hexa)` puis la table `Couleurs`.
 
 ## Données de test
 
-`node scripts/seed-baserow/seed.mjs` crée la table `Couleurs` depuis ce même fichier CSV et lie chaque référentiel de test à une couleur par son nom. La ligne `[TEST] Couleur invalide` (`rouge`) sert au cas limite « couleur invalide » (voir [../audit/BASEROW-LOCAL.md](../audit/BASEROW-LOCAL.md)). Relancé sur un ancien schéma local, le seed remplace l'ancienne colonne `Couleur` (liste de choix) par le lien.
+`node scripts/seed-baserow/seed.mjs` crée la colonne `Couleur` en liste de choix simple avec une quinzaine d'options nommées (pastilles des lignes « foncée » et « plus foncée » du sélecteur), plus une option nommée `#E74C8C` (ancien schéma, utilisée par le format « Festival ») et un format sans couleur (`[TEST] Format sans picto ni couleur`). Relancé sur un ancien schéma local (liste de choix multiple), le seed recrée la colonne au bon type ; sur une colonne déjà au bon type, il ajoute les options manquantes et aligne leurs pastilles.

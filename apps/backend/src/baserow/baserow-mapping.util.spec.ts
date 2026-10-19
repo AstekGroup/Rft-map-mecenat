@@ -13,6 +13,7 @@ import {
   buildAccessibilityInfo,
 } from './baserow-mapping.util';
 import { BaserowAttachment, type BaserowRecord } from './baserow.types';
+import { BASEROW_SELECT_PALETTE } from './baserow-palette';
 import type {
   BaserowReferenceFields,
   EventModality,
@@ -96,8 +97,7 @@ describe('mapReferenceRecord', () => {
     });
   });
 
-  it('lit le code couleur renvoyé par une recherche (lookup) sur la table Couleurs', () => {
-    // Forme renvoyée par Baserow 2.4 pour un lookup : `[{ id: <ligne liée>, value: <code> }]`.
+  it('accepte une liste de valeurs sans pastille, nommées par un code (liste multiple ou recherche)', () => {
     const row = mapReferenceRecord(
       { id: 8, Libellé: 'Atelier', Teinte: [{ id: 17, value: '#E8793A' }] },
       FIELDS,
@@ -105,14 +105,66 @@ describe('mapReferenceRecord', () => {
     expect(row.colorHexa).toBe('#E8793A');
   });
 
+  it('traduit la pastille Baserow d’une liste de choix simple', () => {
+    const row = mapReferenceRecord(
+      {
+        id: 8,
+        Libellé: 'Atelier',
+        Teinte: { id: 3, value: 'Orange', color: 'darker-orange' },
+      },
+      FIELDS,
+    );
+    expect(row.colorHexa).toBe(BASEROW_SELECT_PALETTE['darker-orange']);
+  });
+
+  it('préfère le nom de l’option quand c’est un code hexadécimal (ancien schéma)', () => {
+    const row = mapReferenceRecord(
+      {
+        id: 8,
+        Libellé: 'Atelier',
+        Teinte: [{ id: 2, value: 'E8793A', color: 'light-blue' }],
+      },
+      FIELDS,
+    );
+    expect(row.colorHexa).toBe('#E8793A');
+  });
+
+  it('signale une pastille inconnue de la palette et laisse la couleur vide', () => {
+    const onUnknownColor = jest.fn();
+    const row = mapReferenceRecord(
+      {
+        id: 8,
+        Libellé: 'Atelier',
+        Teinte: { id: 3, value: 'Fuchsia', color: 'neon-pink' },
+      },
+      FIELDS,
+      onUnknownColor,
+    );
+    expect(row.colorHexa).toBeUndefined();
+    expect(onUnknownColor).toHaveBeenCalledWith('neon-pink');
+  });
+
   it("laisse la couleur vide quand aucune couleur n'est choisie", () => {
-    expect(
-      mapReferenceRecord({ id: 9, Libellé: 'Autres', Teinte: [] }, FIELDS)
-        .colorHexa,
-    ).toBeUndefined();
+    const onUnknownColor = jest.fn();
+    for (const teinte of [
+      [],
+      null,
+      undefined,
+      '',
+      { id: 3, value: 'Sans pastille' },
+    ]) {
+      expect(
+        mapReferenceRecord(
+          { id: 9, Libellé: 'Autres', Teinte: teinte },
+          FIELDS,
+          onUnknownColor,
+        ).colorHexa,
+      ).toBeUndefined();
+    }
     expect(
       mapReferenceRecord({ id: 9, Libellé: 'Autres' }, FIELDS).colorHexa,
     ).toBeUndefined();
+    expect(onUnknownColor).not.toHaveBeenCalled();
   });
 
   it("ignore les colonnes aux noms par défaut quand la config en désigne d'autres", () => {

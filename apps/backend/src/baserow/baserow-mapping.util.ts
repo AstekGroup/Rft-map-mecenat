@@ -9,6 +9,7 @@ import type {
   BaserowSelect,
   BaserowRecord,
 } from './baserow.types';
+import { BASEROW_SELECT_PALETTE } from './baserow-palette';
 
 // ============================================================
 // Mapping des tables de référence
@@ -22,6 +23,7 @@ import type {
 export function mapReferenceRecord(
   record: BaserowLinkedTableRecord,
   fields: BaserowReferenceFields,
+  onUnknownColor?: (color: string) => void,
 ): LinkedTableRow {
   const name = record[fields.name];
   const logo = record[fields.logo];
@@ -34,15 +36,38 @@ export function mapReferenceRecord(
       Array.isArray(logo) ? (logo as BaserowAttachment[]) : undefined,
     ),
     pictoName: firstSelectValue(picto),
-    colorHexa: normalizeHexColor(firstSelectValue(color)),
+    colorHexa: readColorValue(color, onUnknownColor),
   };
 }
 
+const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+
 /**
- * Le code couleur est saisi une seule fois par un admin dans la table « Couleurs » de Baserow,
- * puis lu par une recherche (lookup) : on tolère les espaces autour et le `#` oublié
- * (`E8793A` devient `#E8793A`). Toute autre valeur est transmise telle quelle ; c'est le
- * frontend qui refuse un code invalide et affiche la couleur de repli.
+ * Couleur d'un référentiel, lue dans une liste de choix (simple ou multiple, première option) :
+ * - option nommée par un code hexadécimal (`#E8793A`, ancien schéma) : ce code ;
+ * - sinon, la pastille choisie par l'admin dans Baserow (`option.color`), traduite par
+ *   `BASEROW_SELECT_PALETTE` ;
+ * - pastille inconnue de la palette : `undefined` (couleur de repli côté front) et `onUnknownColor`
+ *   est appelée pour que l'appelant la signale.
+ */
+export function readColorValue(
+  value: unknown,
+  onUnknownColor?: (color: string) => void,
+): string | undefined {
+  const option = firstSelectOption(value);
+  if (!option) return undefined;
+  const fromName = normalizeHexColor(option.value);
+  if (fromName && HEX_COLOR.test(fromName)) return fromName;
+  if (!option.color) return undefined;
+  const fromPalette = BASEROW_SELECT_PALETTE[option.color];
+  if (!fromPalette) onUnknownColor?.(option.color);
+  return fromPalette;
+}
+
+/**
+ * Tolère les espaces autour et le `#` oublié (`E8793A` devient `#E8793A`). Toute autre valeur est
+ * transmise telle quelle ; c'est le frontend qui refuse un code invalide et affiche la couleur de
+ * repli.
  */
 export function normalizeHexColor(
   value: string | undefined,
@@ -57,6 +82,14 @@ function firstSelectValue(value: unknown): string | undefined {
   if (!Array.isArray(value) || value.length === 0) return undefined;
   const first = value[0] as Partial<BaserowSelect> | undefined;
   return first?.value;
+}
+
+/** Liste de choix simple (objet ou `null`) ou multiple / recherche (tableau) : première option. */
+function firstSelectOption(value: unknown): Partial<BaserowSelect> | undefined {
+  const first: unknown = Array.isArray(value) ? value[0] : value;
+  return first && typeof first === 'object'
+    ? (first as Partial<BaserowSelect>)
+    : undefined;
 }
 
 // ============================================================

@@ -347,6 +347,7 @@ export class BaserowService implements OnApplicationBootstrap {
 
     try {
       const linkedTableMap = new Map<string, LinkedTableRow>();
+      const unknownColors = new Set<string>();
       let page = 1;
       let hasNext = true;
 
@@ -386,7 +387,9 @@ export class BaserowService implements OnApplicationBootstrap {
         for (const record of data.results) {
           linkedTableMap.set(
             String(record.id),
-            mapReferenceRecord(record, referenceFields),
+            mapReferenceRecord(record, referenceFields, (color) =>
+              unknownColors.add(color),
+            ),
           );
         }
 
@@ -395,6 +398,14 @@ export class BaserowService implements OnApplicationBootstrap {
         } else {
           hasNext = false;
         }
+      }
+
+      if (unknownColors.size > 0) {
+        const colors = [...unknownColors].sort().join(', ');
+        this.warnOnce(
+          `unknown-color:${tableName}:${colors}`,
+          `Table ${tableName} : pastille(s) de couleur Baserow inconnue(s) (${colors}) dans la colonne « ${this.appConfig.safe.baserow.mapping.referenceFields.color} » ; la couleur de repli est affichée. Compléter BASEROW_SELECT_PALETTE (baserow-palette.ts) après une montée de version de Baserow.`,
+        );
       }
 
       this.logger.log(
