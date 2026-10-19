@@ -11,6 +11,9 @@ build/
 .env.local
 .env.*.local
 
+# État d'une instance déployée (secrets générés, jamais versionnés)
+deploy/instance/
+
 # IDE
 .idea/
 .vscode/

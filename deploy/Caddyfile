@@ -1,13 +1,15 @@
 # Configuration Caddy - Reverse Proxy
 #
-# Pour utiliser avec un domaine (HTTPS automatique) :
-#   Remplacer ":80" par le domaine (ex: map.semaine-ia.fr)
-#   Caddy obtiendra automatiquement un certificat Let's Encrypt.
+# Deux domaines par carte (définis dans .env.prod, voir deploy/README.md) :
+#   - DOMAIN        : la carte (frontend) et son API (/api/* -> backend) ;
+#   - BASEROW_DOMAIN : l'interface Baserow de l'instance (équipe ; sert aussi
+#                      les visuels et logos des événements).
+# Caddy obtient automatiquement les certificats Let's Encrypt.
 #
-# Pour utiliser avec une IP (HTTP seulement) :
-#   Garder ":80" comme ci-dessous.
+# Pour un test local (sans domaine) : DOMAIN=localhost, BASEROW_DOMAIN=baserow.localhost,
+# BASEROW_PUBLIC_URL=http://baserow.localhost (HTTP seulement, pas de certificat).
 
-{$DOMAIN:localhost} {
+{$DOMAIN} {
     # API backend
     handle /api/* {
         reverse_proxy backend:8080
@@ -19,6 +21,16 @@
     }
 
     # Logs
+    log {
+        output stdout
+        format console
+    }
+}
+
+{$BASEROW_DOMAIN} {
+    # Interface Baserow de l'instance (équipe) et fichiers servis par Baserow
+    reverse_proxy baserow:80
+
     log {
         output stdout
         format console
