@@ -34,8 +34,23 @@ export function mapReferenceRecord(
       Array.isArray(logo) ? (logo as BaserowAttachment[]) : undefined,
     ),
     pictoName: firstSelectValue(picto),
-    colorHexa: firstSelectValue(color),
+    colorHexa: normalizeHexColor(firstSelectValue(color)),
   };
+}
+
+/**
+ * Le code couleur est saisi une seule fois par un admin dans la table « Couleurs » de Baserow,
+ * puis lu par une recherche (lookup) : on tolère les espaces autour et le `#` oublié
+ * (`E8793A` devient `#E8793A`). Toute autre valeur est transmise telle quelle ; c'est le
+ * frontend qui refuse un code invalide et affiche la couleur de repli.
+ */
+export function normalizeHexColor(
+  value: string | undefined,
+): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  return /^[0-9a-f]{3}$|^[0-9a-f]{6}$/i.test(trimmed) ? `#${trimmed}` : trimmed;
 }
 
 function firstSelectValue(value: unknown): string | undefined {
