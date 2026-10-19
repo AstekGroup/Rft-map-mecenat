@@ -355,7 +355,7 @@ export function FilterContent({ id, variant, controls }: FilterContentProps) {
           rows={controls.availableThemes}
           selected={filters.themes}
           onToggle={controls.onToggleTheme}
-          lead="none"
+          lead="picto"
           variant={variant}
           unavailable={controls.unavailableReferences.includes('themes')}
         />
