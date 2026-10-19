@@ -11,7 +11,12 @@
  *     donnée de test, aucune modification ni suppression d'une colonne existante (une
  *     colonne existante au mauvais type est une erreur, voir schema.mjs) ;
  *  3. crée un jeton de base de données en LECTURE SEULE pour le backend de la carte ;
- *  4. écrit backend.env (URL publique, jeton, IDs de tables et du champ de modération).
+ *  4. écrit backend.env (URL d'appel, jeton, IDs de tables et du champ de modération).
+ *
+ * L'URL d'appel (--url, ex. http://baserow en interne au réseau Docker) est celle écrite
+ * dans backend.env : Baserow construit de toute façon les URLs des visuels et logos
+ * depuis BASEROW_PUBLIC_URL (constaté sur Baserow 2.4.1), le backend n'a pas besoin
+ * de l'URL publique.
  *
  * Les référentiels (formats, publics, thématiques, partenaires : libellés, pictos, couleurs,
  * logos) et les événements sont saisis DANS Baserow par l'équipe, ainsi que les autres
@@ -26,12 +31,11 @@
  * voir le garde-fou du script de déploiement).
  *
  * Usage (voir deploy/README.md) :
- *   node scripts/baserow-init/init.mjs --url=<URL d'accès> --public-url=<URL publique> \
+ *   node scripts/baserow-init/init.mjs --url=<URL d'appel> \
  *     --config=app.config-<CARTE>.json --out=<chemin>/backend.env
  *
- * --url        : URL Baserow joignable depuis ce script (souvent interne, ex. http://baserow) ;
- * --public-url : URL écrite dans backend.env, joignable depuis le navigateur (visuels et
- *                logos servis par Baserow) ; par défaut = --url ;
+ * --url        : URL Baserow joignable depuis ce script ET depuis le backend de la carte
+ *                (en déploiement : http://baserow, interne au réseau Docker) ;
  * --config     : config de la carte (app.config-<CARTE>.json) ;
  * --out        : chemin du backend.env à écrire (requis).
  * Compte admin : BASEROW_ADMIN_EMAIL et BASEROW_ADMIN_PASSWORD (environnement).
@@ -51,7 +55,8 @@ const args = Object.fromEntries(
 const log = (...a) => console.log('[init]', ...a);
 
 const BASE = String(args.url || process.env.BASEROW_INIT_URL || '').replace(/\/$/, '');
-const PUBLIC_URL = String(args['public-url'] || BASE).replace(/\/$/, '');
+// URL de l'interface Baserow pour le message final (BASEROW_PUBLIC_URL côté déploiement).
+const PUBLIC_URL_LABEL = String(process.env.BASEROW_PUBLIC_URL || BASE).replace(/\/$/, '');
 const CONFIG_PATH = resolve(ROOT, String(args.config || 'app.config.json'));
 const OUT_PATH = args.out ? resolve(String(args.out)) : null;
 
@@ -136,7 +141,9 @@ async function main() {
   const env = [
     '# Généré par scripts/baserow-init/init.mjs (premier déploiement de la carte, ne pas versionner)',
     `# Carte : ${appConfig.app.name}`,
-    `BASEROW_API_URL=${PUBLIC_URL}`,
+    '# URL d\'appel interne au réseau Docker ; les URLs des visuels et logos sont',
+    '# construites par Baserow depuis BASEROW_PUBLIC_URL (déjà publiques).',
+    `BASEROW_API_URL=${BASE}`,
     `BASEROW_API_TOKEN=${token.key}`,
     `BASEROW_EVENT_TABLE_ID=${T.events.table.id}`,
     `BASEROW_MODERATION_FIELD_ID=${f.moderation.id}`,
@@ -149,7 +156,7 @@ async function main() {
   mkdirSync(dirname(OUT_PATH), { recursive: true });
   writeFileSync(OUT_PATH, env);
   log(`Écrit ${OUT_PATH}`);
-  log(`Terminé. Interface Baserow : ${PUBLIC_URL} (admin : ${ADMIN.email})`);
+  log(`Terminé. Interface Baserow : ${PUBLIC_URL_LABEL} (admin : ${ADMIN.email})`);
   log("Renseigner ensuite les référentiels et les événements dans Baserow (aucune ligne n'est créée).");
 }
 

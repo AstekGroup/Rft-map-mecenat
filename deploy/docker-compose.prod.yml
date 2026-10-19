@@ -1,6 +1,19 @@
+# ============================================================
+# Déploiement d'UNE carte : frontend + backend + Baserow dédié + Caddy.
+# Une image = une carte (APP_CONFIG_FILE obligatoire) ; un VPS = une carte.
+#
+# État de l'instance (deploy/instance/, hors rsync et hors git, jamais régénéré) :
+#   - baserow.env  : SECRET_KEY stable + identifiants admin (premier déploiement) ;
+#   - backend.env  : URL d'appel interne (http://baserow), jeton LECTURE SEULE,
+#                    IDs de tables et du champ de modération (écrit par baserow-init,
+#                    voir scripts/baserow-init).
+# Premier déploiement : up baserow -> run baserow-init -> up (tout).
+# ============================================================
 services:
   # ============================================================
   # Caddy - Reverse proxy HTTPS automatique (Let's Encrypt)
+  #   {$DOMAIN}         : frontend + /api/*
+  #   {$BASEROW_DOMAIN}  : interface Baserow (équipe ; visuels et logos servis par Baserow)
   # ============================================================
   caddy:
     image: caddy:2-alpine
@@ -13,7 +26,8 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     environment:
-      - DOMAIN=${DOMAIN:-localhost}
+      - DOMAIN=${DOMAIN:?DOMAIN manquant (domaine public de la carte)}
+      - BASEROW_DOMAIN=${BASEROW_DOMAIN:?BASEROW_DOMAIN manquant (domaine Baserow de l'instance)}
     depends_on:
       backend:
         condition: service_healthy
@@ -30,10 +44,54 @@ services:
       args:
         VITE_API_URL: ""
         # Une image = une carte : le fichier de config est obligatoire (app.config-<CARTE>.json)
-        APP_CONFIG_FILE: "${APP_CONFIG_FILE:?APP_CONFIG_FILE manquant (fichier app.config-<CARTE>.json)}"
+        APP_CONFIG_FILE: "${APP_CONFIG_FILE:?APP_CONFIG_FILE manquant (app.config-<CARTE>.json)}"
     restart: unless-stopped
     expose:
       - "3080"
+
+  # ============================================================
+  # Baserow - données de la carte (événements et référentiels), auto-hébergé
+  # ============================================================
+  baserow:
+    image: baserow/baserow:2.4.1
+    restart: unless-stopped
+    expose:
+      - "80"
+    env_file:
+      # SECRET_KEY stable + identifiants admin (générés au premier déploiement,
+      # jamais versionnés, jamais régénérés) ; Baserow n'utilise que SECRET_KEY.
+      - ./instance/baserow.env
+    environment:
+      - BASEROW_PUBLIC_URL=${BASEROW_PUBLIC_URL:?BASEROW_PUBLIC_URL manquant (URL publique Baserow)}
+      # Nom interne du service : appels API du conteneur baserow-init (Host: baserow),
+      # sinon Baserow les refuse (hôte non autorisé).
+      - BASEROW_EXTRA_ALLOWED_HOSTS=baserow
+    volumes:
+      - baserow_data:/baserow/data
+
+  # ============================================================
+  # Initialisation du Baserow (premier déploiement, puis idempotent) :
+  #   docker compose --profile init run --rm baserow-init
+  # Schéma seul (tables vides), compte admin, inscriptions fermées,
+  # jeton lecture seule, écrit ./instance/backend.env. Voir scripts/baserow-init/init.mjs.
+  # ============================================================
+  baserow-init:
+    image: node:20-alpine
+    profiles: ["init"]
+    working_dir: /repo
+    env_file:
+      - ./instance/baserow.env
+    environment:
+      # URL publique de l'interface Baserow (message final de l'init uniquement)
+      - BASEROW_PUBLIC_URL=${BASEROW_PUBLIC_URL:?BASEROW_PUBLIC_URL manquant}
+    volumes:
+      - ../:/repo:ro
+      - ./instance:/instance
+    command: >
+      node scripts/baserow-init/init.mjs
+      --url=http://baserow
+      --config=${APP_CONFIG_FILE:?APP_CONFIG_FILE manquant}
+      --out=/instance/backend.env
 
   # ============================================================
   # Backend - NestJS API (proxy Baserow + Geocoding)
@@ -44,22 +102,26 @@ services:
       dockerfile: apps/backend/Dockerfile
       args:
         # Une image = une carte : le fichier de config est obligatoire (app.config-<CARTE>.json)
-        APP_CONFIG_FILE: "${APP_CONFIG_FILE:?APP_CONFIG_FILE manquant (fichier app.config-<CARTE>.json)}"
+        APP_CONFIG_FILE: "${APP_CONFIG_FILE:?APP_CONFIG_FILE manquant (app.config-<CARTE>.json)}"
     restart: unless-stopped
     expose:
       - "8080"
+    env_file:
+      # Écrit par baserow-init : URL d'appel interne (http://baserow), jeton
+      # lecture seule, IDs de tables et du champ de modération. Jamais dans le
+      # dépôt ni dans .env.prod.
+      # Optionnel pour compose : au premier déploiement, le fichier n'existe pas
+      # avant l'initialisation (le backend refuse de publier quoi que ce soit
+      # sans jeton : modération fail-closed, voir apps/backend).
+      - path: ./instance/backend.env
+        required: false
     environment:
-      - BASEROW_API_URL=${BASEROW_API_URL}
-      - BASEROW_API_TOKEN=${BASEROW_API_TOKEN}
-      - BASEROW_EVENT_TABLE_ID=${BASEROW_EVENT_TABLE_ID}
-      - BASEROW_MODERATION_FIELD_ID=${BASEROW_MODERATION_FIELD_ID}
-      - BASEROW_PARTNERS_TABLE_ID=${BASEROW_PARTNERS_TABLE_ID}
-      - BASEROW_THEMATIQUES_TABLE_ID=${BASEROW_THEMATIQUES_TABLE_ID}
-      - BASEROW_FORMATS_TABLE_ID=${BASEROW_FORMATS_TABLE_ID}
-      - BASEROW_PUBLICS_TABLE_ID=${BASEROW_PUBLICS_TABLE_ID}
       - PORT=8080
       - NODE_ENV=production
       - CORS_ORIGIN=${CORS_ORIGIN:-*}
+    depends_on:
+      baserow:
+        condition: service_started
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080/api/health"]
       interval: 30s
@@ -70,3 +132,4 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+  baserow_data:
