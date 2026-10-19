@@ -2,6 +2,8 @@ import { useState, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Event } from '@/types/event';
 import { useEvents } from '@/hooks';
+import { useConfig } from '@/hooks/useConfig';
+import { ConfigErrorState } from '@/components/Layout/ConfigErrorState';
 import { MapView, MapBounds } from '@/components/Map';
 import { Sidebar } from '@/components/Sidebar';
 import { SearchOverlay } from '@/components/Map/SearchOverlay';
@@ -23,6 +25,8 @@ export function MapPage() {
     stats,
   } = useEvents();
   const { filters, onUpdateFilters: updateFilters } = controls;
+  // Les hooks passent avant tout `return` anticipé (règle des hooks de React).
+  const { config, loading: configLoading, error: configError } = useConfig();
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [hoveredEvent, setHoveredEvent] = useState<Event | null>(null);
@@ -55,7 +59,7 @@ export function MapPage() {
   }, [updateFilters]);
 
   // État de chargement
-  if (loading) {
+  if (loading || configLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-surface-offwhite font-inter">
         <div className="text-center">
@@ -66,6 +70,11 @@ export function MapPage() {
         </div>
       </div>
     );
+  }
+
+  // Sans config, titres, dates et thème sont inconnus : état d'erreur explicite (comme l'accueil).
+  if (configError || !config) {
+    return <ConfigErrorState />;
   }
 
   // État d'erreur

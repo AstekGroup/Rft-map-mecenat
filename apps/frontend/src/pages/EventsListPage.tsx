@@ -1,6 +1,8 @@
 import { useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useEvents, type EventFilters } from '@/hooks';
+import { useConfig } from '@/hooks/useConfig';
+import { ConfigErrorState } from '@/components/Layout/ConfigErrorState';
 import { EventListView, EventFiltersBar } from '@/components/Events';
 import { Loader2, Home, Map } from 'lucide-react';
 
@@ -16,6 +18,8 @@ export function EventsListPage() {
     stats,
   } = useEvents();
   const { filters, onUpdateFilters: updateFilters, onResetFilters: resetFilters } = controls;
+  // Les hooks passent avant tout `return` anticipé (règle des hooks de React).
+  const { config, loading: configLoading, error: configError } = useConfig();
 
   const searchParamsKey = searchParams.toString();
 
@@ -64,7 +68,7 @@ export function EventsListPage() {
   const isOnlineMode = filters.modality === 'distanciel';
   const pageTitle = isOnlineMode ? 'Les événements en ligne' : 'Assister aux événements';
 
-  if (loading) {
+  if (loading || configLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-surface-offwhite font-inter">
         <div className="text-center">
@@ -75,6 +79,11 @@ export function EventsListPage() {
         </div>
       </div>
     );
+  }
+
+  // Sans config, titres, dates et thème sont inconnus : état d'erreur explicite (comme l'accueil).
+  if (configError || !config) {
+    return <ConfigErrorState />;
   }
 
   if (error) {
