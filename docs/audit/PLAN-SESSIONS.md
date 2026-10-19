@@ -1,6 +1,6 @@
 ---
 name: Plan refonte en 9 sessions
-overview: Plan d'origine de la refonte (1 code, N cartes, config + Baserow), validé par le propriétaire le 2026-10-16, avec un workflow Git propre. Sessions 0 à 7 faites (PR #9 à #39) ; session 8 (déploiement) non faite et hors du plan actif. La suite est dans PLAN-FIN-REFONTE.md.
+overview: Plan d'origine de la refonte (1 code, N cartes, config + Baserow), validé par le propriétaire le 2026-10-16, avec un workflow Git propre. Sessions 0 à 8 faites (PR #9 à #39 ; session 8 sur feat/deploiement-n-cartes). La suite est dans PLAN-FIN-REFONTE.md.
 todos:
   - id: s0
     content: "Session 0 : GitHub CLI (gh)"
@@ -27,14 +27,14 @@ todos:
     content: "Session 7 : qualité (lint, tests shared/types, tests deux cartes puis retrait, modèle de PR puis retrait)"
     status: completed
   - id: s8
-    content: "Session 8 : déploiement (config dans les images, docker build réel) : non faite, hors du plan actif"
-    status: pending
+    content: "Session 8 : déploiement (une carte par VPS, config dans les images, Baserow dédié initialisé, docker build réel)"
+    status: completed
 isProject: false
 ---
 
 # Plan de refonte : workflow Git et 9 sessions
 
-> **État au 2026-10-19** : sessions 0 à 7 faites (PR #9 à #39, toutes mergées dans `develop`), session 8 non faite. Le détail de l'état est dans [SUIVI.md](SUIVI.md), la vérification dans [../verdict.md](../verdict.md), **la suite dans [PLAN-FIN-REFONTE.md](PLAN-FIN-REFONTE.md)**. Ce fichier garde le workflow Git (toujours en vigueur), les décisions et l'historique des sessions.
+> **État au 2026-10-19** : sessions 0 à 7 faites (PR #9 à #39, toutes mergées dans `develop`), session 8 faite (branche `feat/deploiement-n-cartes`). Le détail de l'état est dans [SUIVI.md](SUIVI.md), la vérification dans [../verdict.md](../verdict.md), **la suite dans [PLAN-FIN-REFONTE.md](PLAN-FIN-REFONTE.md)**. Ce fichier garde le workflow Git (toujours en vigueur), les décisions et l'historique des sessions.
 
 ## Le projet
 
@@ -73,7 +73,7 @@ isProject: false
 - **`index.html`** : métadonnées écrites à la compilation (une compilation par carte), script idempotent.
 - **Tests « deux cartes » et modèle de PR** (décision du 2026-10-19) : ils avaient été retirés par la PR #38 (décision du 2026-10-18), le propriétaire a constaté que c'était une erreur : **ils sont remis** (étape 1 de [PLAN-FIN-REFONTE.md](PLAN-FIN-REFONTE.md)).
 - **Config Astek** (2026-10-19) : essai local sans valeur, supprimée.
-- **Hors plan actif** : session 8 (déploiement) et `develop` vers `main` avec tags.
+- **Hors plan actif** : `develop` vers `main` avec tags.
 
 ## Workflow Git
 
@@ -134,9 +134,9 @@ Une seule définition des filtres (`FILTER_DEFINITIONS`) pour le panneau de la c
 
 ESLint frontend (0 erreur, 3 avertissements connus), lint backend sans `--fix`, `pnpm test` couvre `shared/types`, `VITE_MAPTILER_KEY` retirée (#33). Tests « deux cartes » (#34) et modèle de PR (#35) ajoutés, puis **retirés par la PR #38, retrait annulé le 2026-10-19** (voir Décisions). La description de la PR #38 annonçait aussi le retrait du filtre Modalité de la carte : **non fait** (voir Améliorations).
 
-### Session 8 : déploiement — non faite, hors du plan actif
+### Session 8 : déploiement — faite (PR [#53](https://github.com/AstekGroup/Rft-map-mecenat/pull/53), branche `feat/deploiement-n-cartes`)
 
-Fournir `app.config.json` aux images Docker, corriger ou supprimer `scripts/deploy.sh` (il vise `apps/map-interactive/dist`, dossier inexistant), lancer un vrai `docker build` puis `compose up`, vérifier les variables `BASEROW_*`. Aucun travail sur WordPress. Fait quand : l'application démarre depuis les images et sert une carte.
+**Une carte = un VPS = un Baserow dédié** (décisions du propriétaire : Baserow auto-hébergé déployé avec la carte, initialisé en **schéma seul** ; secrets générés sur le VPS ; DEV1-M minimum). Réalisée en 4 commits : (1) `app.config-<CARTE>.json` embarqué dans les images (`ARG APP_CONFIG_FILE`, build refusé sans lui), `scripts/deploy.sh` mort supprimé ; (2) `scripts/baserow-init/init.mjs` (schéma seul en création stricte, compte admin, inscriptions fermées, jeton **lecture seule**, `backend.env`), schéma extrait de `seed.mjs` en module partagé `schema.mjs` ; (3) compose avec `baserow`, `baserow-init` (profile init) et bloc `BASEROW_DOMAIN` dans Caddy, `scripts/deploy-v2.sh <CARTE>` (envmap `prod-<carte>`, garde-fou une carte par VPS, secrets du premier déploiement dans `deploy/instance/`, hors rsync et hors git) ; (4) documentation. Vérifié en local : builds réels des deux images, premier et second déploiement compose, init idempotent, carte servie à travers Caddy, `/api/events` et `/api/health` OK. **Non vérifié** : déploiement réel sur un VPS Scaleway. Fait quand : l'application démarre depuis les images et sert une carte.
 
 ## Hors plan (faits)
 

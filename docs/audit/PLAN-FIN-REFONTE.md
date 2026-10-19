@@ -8,7 +8,7 @@
 
 - Les **tests automatisés « deux cartes »** (même code, deux configs) sont **remis** : leur retrait par la PR #38 était une erreur, c'est le filet principal de « 1 code, N cartes ». Le **modèle de PR** est remis avec eux.
 - La **config Astek** (`app.config.astek.json`, `app.config.json` modifié localement, `app.config1.json`) était un essai local sans valeur : **supprimée**. La seconde config de référence est `docs/audit/fixtures/app.config.second-map.json`.
-- **Hors de ce plan** : la session 8 (déploiement : config dans les images, `scripts/deploy.sh`, `docker build`) et le passage `develop` vers `main` avec tags.
+- **Hors de ce plan** : le passage `develop` vers `main` avec tags. La session 8 (déploiement) a été faite à part (branche `feat/deploiement-n-cartes`, une carte par VPS avec Baserow dédié) : voir [PLAN-SESSIONS.md](PLAN-SESSIONS.md) et [SUIVI.md](SUIVI.md).
 - Périmètre : tout le reste du verdict (résidus en dur, cas dégradés, docs, améliorations du plan, ménage).
 
 ## Compromis assumés
@@ -105,7 +105,7 @@ Branche `chore/menage`.
 
 ### 8. Verdict final
 
-- [ ] Branche `docs/verdict-final` : rejouer `pnpm build`, `pnpm lint`, `pnpm run test -- --force` et les recherches du verdict sur `develop`, mettre à jour [../verdict.md](../verdict.md) et `SUIVI.md`. La session 8 et `develop` vers `main` restent « hors plan, non faits ».
+- [ ] Branche `docs/verdict-final` : rejouer `pnpm build`, `pnpm lint`, `pnpm run test -- --force` et les recherches du verdict sur `develop`, mettre à jour [../verdict.md](../verdict.md) et `SUIVI.md`. La session 8 est faite (branche dédiée) ; `develop` vers `main` reste « hors plan, non fait ».
 
 ## Vérification finale
 
