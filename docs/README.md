@@ -10,7 +10,7 @@ Tout ce dossier décrit l'état **courant** du projet. Une photo datée qui n'es
 | [audit/PLAN-SESSIONS.md](audit/PLAN-SESSIONS.md) | Workflow Git, décisions, historique des sessions 0 à 8 | Pour le workflow Git et le contexte |
 | [audit/PERIMETRE-CONFIG-BASEROW.md](audit/PERIMETRE-CONFIG-BASEROW.md) | Qui porte quoi : config, Baserow, code, environnement ; règles des filtres | Avant d'ajouter une clé de config ou un champ |
 | [audit/BASEROW-LOCAL.md](audit/BASEROW-LOCAL.md) | Baserow local jetable, seed, cas limites, tests de robustesse | Pour lancer le projet en local |
-| [baserow/couleurs.md](baserow/couleurs.md) | Couleurs des référentiels choisies par leur nom (table `Couleurs`, palette CSV de 100 couleurs, migration d'une base existante) | Pour administrer ou migrer les couleurs dans Baserow |
+| [baserow/couleurs.md](baserow/couleurs.md) | Couleurs des référentiels : pastille Baserow, ajout d'une teinte, migration | Pour les admins Baserow, ou à une montée de version de Baserow |
 | [audit/JOURNAL.md](audit/JOURNAL.md) | Journal daté des commandes et preuves, session par session (ajout seulement) | Pour retrouver une preuve |
 | [audit/fixtures/](audit/fixtures/) | Seconde config de référence (`app.config.second-map.json`) et son générateur | Tests « deux cartes », vérification manuelle |
 

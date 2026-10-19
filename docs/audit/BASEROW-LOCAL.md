@@ -38,12 +38,11 @@ docker compose -f deploy/baserow-local/docker-compose.yml down -v
 - **Noms de colonnes et valeurs de listes de choix** : lus dans la config (`baserow.fieldMapping` et `baserow.mapping` de `app.config.json`, ou `--config`). Pour tester une autre carte : `node scripts/seed-baserow/seed.mjs --config=docs/audit/fixtures/app.config.second-map.json`, puis `APP_CONFIG_PATH=<chemin absolu de la même config>` côté backend.
 - Seconde config de référence : `docs/audit/fixtures/app.config.second-map.json` (générée par `docs/audit/fixtures/make-second-config.cjs` à partir de `app.config.json`). Elle sert aux tests « deux cartes » et à la vérification manuelle d'un changement d'identité.
 
-## Schéma créé (6 tables)
+## Schéma créé (5 tables)
 
 | Table | Contenu |
 |---|---|
-| Couleurs | palette de 100 couleurs nommées : `Nom` (primaire) et `Hexa`, chargée depuis [../baserow/palette-couleurs.csv](../baserow/palette-couleurs.csv) + une ligne de test `[TEST] Couleur invalide` (`rouge`) |
-| Formats, Publics, Thématiques | colonnes de référence : nom (primaire), picto (liste à choix multiple), `Couleur` (lien vers `Couleurs`, choix de l'admin) et `Couleur (hexa)` (recherche du code, c'est la colonne lue par la config). Voir [../baserow/couleurs.md](../baserow/couleurs.md) |
+| Formats, Publics, Thématiques | colonnes de référence : nom (primaire), picto (liste à choix multiple lue par sa première valeur), couleur (liste à choix simple dont la pastille donne la couleur, voir [../baserow/couleurs.md](../baserow/couleurs.md)) |
 | Partenaires | nom (primaire), logo (fichier) |
 | Événements | un champ par rôle de `baserow.fieldMapping` : titre, description, dates, modalité, liens vers formats, publics, thématiques et partenaires, visuel, adresse, code postal, ville, lieu, organisateur et contacts, lien d'inscription, capacité, tarif, modération |
 | Champs de formulaire en plus | quelques colonnes non mappées (charte, remarque libre, téléphone) : vérifient que les colonnes inconnues sont ignorées |
@@ -60,11 +59,11 @@ Les types sont **déduits du code**, pas relevés sur la vraie base (jamais four
 | Géographie | DOM-TOM ×5 (`E07` à `E11`), Corse (`E12`), adresse invalide (`E13`), adresse vide avec ville et code postal (`E14`) |
 | Données manquantes | sans format (`E15`), sans titre (`E17`), sans image ni description (`E20`), e-mail animateur seul (`E23`), capacité 0 (`E25`) |
 | Contenu | titre et description très longs avec `<script>` et HTML (`E21`), doublons de titre (`E30`, `E31`) |
-| Relations | plusieurs thèmes, publics et partenaires (`E22`), partenaire sans logo, format avec picto inexistant et couleur invalide (`E28`, lié à la couleur de test `rouge`), format sans picto ni couleur (`E29`) |
+| Relations | plusieurs thèmes, publics et partenaires (`E22`), partenaire sans logo, format avec picto inexistant (`E28`), format sans picto ni couleur (`E29`), format dont l'option de couleur est nommée par un code hexadécimal (« Festival », ancien schéma) |
 | Tarif | payant 15 € (`E18`), gratuit implicite (`E19`) |
 | Volume | 964 événements générés par défaut : environ 80 % acceptés, 12 % en attente, 8 % refusés ; 30 villes (dont DOM-TOM) |
 
-Comportement attendu côté application (couvert par les tests et vérifié en sessions 5 et 6) : refusés, en attente et modération vide jamais publiés ; `E16` masqué et journalisé ; `E26` sans date de fin ; `E27` affiché le 22/09 à 00:30 ; `E13` non géocodé ; `E28` et `E29` avec icône et couleur de repli.
+Comportement attendu côté application (couvert par les tests et vérifié en sessions 5 et 6) : refusés, en attente et modération vide jamais publiés ; `E16` masqué et journalisé ; `E26` sans date de fin ; `E27` affiché le 22/09 à 00:30 ; `E13` non géocodé ; `E28` avec l'icône de repli ; `E29` avec icône et couleur de repli.
 
 ## Robustesse au schéma
 
