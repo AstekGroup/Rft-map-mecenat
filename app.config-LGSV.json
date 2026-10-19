@@ -1,0 +1,107 @@
+{
+  "profile": "lgsv",
+
+  "app": {
+    "name": "La Grande Semaine Végétale",
+    "shortName": "LGSV",
+    "description": "Carte interactive des événements de {{app.name}}",
+    "eventDates": {
+      "weekStart": "2026-09-21",
+      "weekEnd": "2026-09-27"
+    },
+    "url": "https://lagrandesemainevegetale.fr",
+    "locale": "fr"
+  },
+
+  "theme": {
+    "colors": {
+      "primary": "#AE3B5D",
+      "primary-dark": "#7A1F3B",
+      "primary-light": "#D7A7B5"
+    },
+    "fonts": {
+      "heading": "Oswald",
+      "body": "Open Sans",
+      "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap"
+    }
+  },
+
+  "texts": {
+    "meta": {
+      "title": "La super Carte Interactive - {{app.name}}",
+      "description": "Découvrez les ateliers cuisine, dégustations et événements végétaux près de chez vous",
+      "ogTitle": "Carte Interactive - {{app.name}}",
+      "ogDescription": "Découvrez les ateliers cuisine, dégustations et événements végétaux près de chez vous",
+      "iconRef": "https://lagrandesemainevegetale.fr/favicon.ico"
+    },
+    "home": {
+      "mainTitle": "{{app.name}}",
+      "mainDescription": "Découvrez des ateliers cuisine, des dégustations et des rencontres partout en France pour promouvoir une alimentation végétale accessible et gourmande.",
+      "ctaText": "Voir la carte des événements",
+      "ctaTextShort": "Découvrir les événements",
+      "editionLabel": "Édition",
+      "nearbySubtitle": "Près de chez vous",
+      "seeAll": "Tout voir",
+      "infoTitle": "C'est quoi {{app.name}} ?",
+      "infoDescription": "Une initiative nationale pour démocratiser l'alimentation végétale. Pendant une semaine, des fermes, des restaurants, des associations et des cuisiniers se mobilisent pour vous faire découvrir de nouvelles saveurs, apprendre à cuisiner les légumineuses et comprendre les enjeux de notre alimentation.",
+      "sectionPresentiel": "Événements en présentiel"
+    }
+  },
+
+  "filters": {
+    "dateFilterModes": [
+      { "mode": "all", "label": "Toutes les dates" },
+      { "mode": "during-week", "label": "Pendant {{app.name}}" },
+      { "mode": "custom", "label": "Dates personnalisées" }
+    ]
+  },
+
+  "baserow": {
+    "moderationVisibleValue": "Accepté",
+    "fieldMapping": {
+      "title": "Nom de l'événement",
+      "description": "Description",
+      "startDate": "Date de début de l'événement",
+      "endDate": "Date de fin de l'événement",
+      "format": "Format",
+      "modality": "Type de l'événement",
+      "audience": "Public",
+      "theme": "Thématique",
+      "image": "Visuel de l'évènement",
+      "address": "Adresse du lieu",
+      "postalCode": "Code postal du lieu",
+      "city": "Ville du lieu",
+      "organizer": "Nom de la structure organisatrice",
+      "organizerFirstName": "Prénom de l'animateur",
+      "organizerLastName": "Nom de l'animateur",
+      "registrationUrl": "Lien d'inscription à l'événement",
+      "venueName": "Lieu",
+      "accessModalities": "Modalités spécifiques d'accès au lieu",
+      "videoConferenceUrl": "Lien de la visio",
+      "contactEmail": "Email contact événement",
+      "contactEmailFallback": "E-mail de l'animateur",
+      "contactPhone": "Téléphone inscription",
+      "organizerWebsite": "Site web de la structure",
+      "capacity": "Capacité d'accueil de l'événement",
+      "price": "Montant",
+      "tariff": "Tarif",
+      "partnerField": "Partenaires",
+      "moderation": "Modération de l'événement"
+    },
+    "mapping": {
+      "referenceFields": {
+        "name": "Nom",
+        "logo": "Logo",
+        "picto": "Picto",
+        "color": "Couleur"
+      },
+      "modality": {
+        "Présentiel": "presentiel",
+        "Distanciel": "distanciel",
+        "En ligne": "distanciel",
+        "Hybride": "presentiel"
+      },
+      "tariffFreeValue": "Gratuit"
+    }
+  }
+}

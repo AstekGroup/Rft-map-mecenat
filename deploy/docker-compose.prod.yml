@@ -29,6 +29,8 @@ services:
       dockerfile: apps/frontend/Dockerfile
       args:
         VITE_API_URL: ""
+        # Une image = une carte : le fichier de config est obligatoire (app.config-<CARTE>.json)
+        APP_CONFIG_FILE: "${APP_CONFIG_FILE:?APP_CONFIG_FILE manquant (fichier app.config-<CARTE>.json)}"
     restart: unless-stopped
     expose:
       - "3080"
@@ -40,6 +42,9 @@ services:
     build:
       context: ../
       dockerfile: apps/backend/Dockerfile
+      args:
+        # Une image = une carte : le fichier de config est obligatoire (app.config-<CARTE>.json)
+        APP_CONFIG_FILE: "${APP_CONFIG_FILE:?APP_CONFIG_FILE manquant (fichier app.config-<CARTE>.json)}"
     restart: unless-stopped
     expose:
       - "8080"

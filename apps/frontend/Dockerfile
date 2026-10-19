@@ -17,6 +17,12 @@ COPY apps/frontend/ apps/frontend/
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 RUN pnpm install --frozen-lockfile --filter @make-map/frontend...
 
+# Config de la carte (app.config-<CARTE>.json), embarquée : une image = une carte.
+# Le script d'index.html la lit via APP_CONFIG_PATH ; pas de valeur par défaut, l'argument est obligatoire.
+ARG APP_CONFIG_FILE
+COPY ${APP_CONFIG_FILE} /app/app.config.json
+ENV APP_CONFIG_PATH=/app/app.config.json
+
 # Variables de build (injectées dans le bundle JS par Vite)
 # VITE_API_URL vide = appels relatifs (/api/events), proxiés par Caddy
 ARG VITE_API_URL=""
