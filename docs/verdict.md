@@ -1,129 +1,111 @@
-# Verdict — État de la refonte « 1 code, N cartes »
+# Verdict final : état de la refonte « 1 code, N cartes »
 
-> Vérification du 2026-10-19 sur `origin/develop` au commit `2273bcb` (merge de la PR #39), dans un worktree propre (les fichiers locaux non commités `app.config.json` « Astek » et `app.config1.json` n'ont **pas** été pris en compte).
-> Périmètre : PR [#21](https://github.com/AstekGroup/Rft-map-mecenat/pull/21) à [#39](https://github.com/AstekGroup/Rft-map-mecenat/pull/39), toutes mergées dans `develop`. Référentiel : la philosophie de `AGENTS.md` (8 principes) et `docs/audit/PLAN-SESSIONS.md`.
+> Vérification du 2026-10-19 sur la **pointe de la chaîne de PR** (branche `docs/verdict-final`, qui contient les PR [#42](https://github.com/AstekGroup/Rft-map-mecenat/pull/42) à [#48](https://github.com/AstekGroup/Rft-map-mecenat/pull/48) au-dessus de `develop` à `9cfcb45`, donc PR #21 à #41 comprises). Ces PR sont chaînées : chacune cible la précédente, à merger dans l'ordre.
 > Convention : chaque constat porte une preuve (`fichier:ligne` ou commande). « Non vérifié » quand je n'ai pas pu le confirmer.
 >
-> **Ce document est une photo datée du 2026-10-19.** Les suites données (décisions du propriétaire, plan, docs nettoyées) sont en §7 ; l'état courant est dans [audit/SUIVI.md](audit/SUIVI.md) et le plan dans [audit/PLAN-FIN-REFONTE.md](audit/PLAN-FIN-REFONTE.md). Il sera mis à jour à la dernière étape du plan.
+> **Ce document remplace la photo du 2026-10-19 prise sur `2273bcb`** (écarts et suite recommandée d'alors : historique git de `docs/verdict.md`). L'état courant est dans [audit/SUIVI.md](audit/SUIVI.md), le plan dans [audit/PLAN-FIN-REFONTE.md](audit/PLAN-FIN-REFONTE.md).
 
 ## TL;DR
 
-**Oui, le code respecte la philosophie, à quelques résidus près.** Le cœur de la refonte est fait : plus aucune marque ni nom de champ Baserow dans le code applicatif, config validée au démarrage, modération fail-closed, filtres unifiés, cas dégradés traités. `pnpm build`, `pnpm lint` et `pnpm test` sont verts (365 tests).
+**Le code respecte la philosophie. Il n'y a plus de résidu connu dans le code applicatif.** Marques, couleurs et noms de champs Baserow sont hors du code (recherches du §2), le filet « deux cartes » est rétabli, deux gardes-fous automatiques tournent à chaque `pnpm test`.
 
-**Où on en est : environ 85 % de la refonte.** Les sessions 0 à 7 sont faites. Il reste :
-
-1. **Le déploiement (session 8)** : aucune image Docker ne sait encore recevoir une config de carte. Tant que ce n'est pas fait, « N cartes » est vrai dans le code mais **pas livrable en production**.
-2. **`main` n'a rien reçu** : `main` (branche par défaut, `114aeb3`, 2026-09-29) a 124 commits de retard sur `develop`. Toute la refonte n'existe que sur `develop`.
-3. **Quelques résidus en dur** (couleurs de marque dans le popup de la carte, palette LGSV par défaut en CSS, README LGSV) et **trois écarts documentaires** (PR #38 mal décrite, `AGENTS.md` qui contredit le code sur les paramètres de carte, `SUIVI.md` pas à jour).
-4. **Filet de sécurité affaibli** : les tests automatisés « deux cartes » ont été retirés (décision du propriétaire, PR #38). La règle « vérifié avec une seconde config » ne repose plus que sur une vérification manuelle.
+**Reste hors du plan actif** (décision du propriétaire) : le **déploiement** (session 8, aucune image Docker ne reçoit encore une config de carte) et `develop` vers `main` (124 commits de retard au 2026-10-19). « N cartes » est vrai en local, pas livrable en production.
 
 ## 1. Contrôles exécutés
 
-| Commande (worktree `develop`) | Résultat |
+Sur la branche `docs/verdict-final`, avec la configuration du dépôt :
+
+| Commande | Résultat |
 |---|---|
 | `pnpm install --frozen-lockfile` | OK |
 | `pnpm build` | OK, `Tasks: 3 successful, 3 total` |
-| `pnpm lint` | OK, 0 erreur, 3 avertissements connus (`MapView.tsx:79`, `:165`, `MapStyleSelector.tsx:12`) |
-| `pnpm run test -- --force` | OK : `shared/types` 5 tests, backend 14 suites / 227 tests, frontend 10 fichiers / 133 tests |
-| `gh pr list --state all` | PR #21 à #39 : toutes `MERGED` |
-| `git rev-list --count origin/main..origin/develop` | `124` |
+| `pnpm lint -- --force` | OK, 0 erreur, **2** avertissements connus (`MapView.tsx`, hooks, documentés dans le code) ; ils étaient 3 |
+| `pnpm run test -- --force` | OK : `shared/types` 5 tests, backend 15 suites / 236 tests, frontend 16 fichiers / 176 tests (**417 au total**, contre 365 avant la chaîne) |
 
-Non vérifié dans cette session : lancement réel avec le Baserow local et contrôle dans le navigateur (les sessions précédentes l'ont fait, preuves dans `docs/audit/JOURNAL.md`).
+Vérification dans le navigateur (Baserow local, seed de 1000 événements, backend et frontend de ce worktree) :
+
+| Contrôle | Résultat |
+|---|---|
+| `/carte`, panneau Filtres | Période, Partenaires, Type d'événement, Thématiques, Public cible, Code postal, Région ; **pas de Modalité** ; bouton « Événements en ligne » présent |
+| `/evenements` | Modalité présente (sélecteur Tous / Présentiel / En ligne) |
+| `/evenement/1695` (sans format) | pas de section « Format », pas de pastille de format vide |
+| Frontend sans backend joignable (`VITE_API_URL` faux, constaté par hasard) | `/carte` affiche « La carte est momentanément indisponible » avec bouton « Réessayer », en palette neutre |
+| Seconde config (`APP_CONFIG_PATH` vers `docs/audit/fixtures/app.config.second-map.json`, sans toucher au code) | accueil « Les Journées du Test », « Session 2026 », thème bleu et police Poppins, textes de la seconde carte |
+
+Non vérifié : le titre de l'onglet suit la config **à la compilation** (une compilation par carte, `index.html` généré) ; en `pnpm front:dev` il vient donc de `app.config.json` du dépôt, quelle que soit la config servie par le backend. Les suites de la chaîne n'ont pas été rejouées une à une sur chaque branche intermédiaire (seulement par chaque agent sur sa branche, puis sur la pointe).
 
 ## 2. Checklist de la philosophie (`AGENTS.md`)
 
 | # | Principe | Verdict | Preuve |
 |---|---|---|---|
-| 1 | **Un code, N cartes** (pas de branche, copie ni `if (carte === …)`) | ✅ Respecté dans le code | `rg -i "lgsv\|semaine\|végétal\|réparation\|jnr" apps shared` : rien dans le code actif (seulement `apps/backend/README.md:1`, `apps/frontend/README.md`, et `apps/frontend/index.html`, fichier généré et ignoré par git). Résidus de couleurs : voir §4. |
-| 2 | **La config porte identité, titres, dates, design, mapping** | ✅ Respecté | `app.config.json` : nom écrit une fois (`app.name`), titres par gabarit `{{app.name}}` ; badge d'édition et période depuis la config (PR #22, #23). ⚠️ `AGENTS.md:10` dit que la config porte « centre, zoom, styles, clustering » alors que `AppConfigMap` a été retiré (PR #25) : la carte est dans le code (`shared/types/src/app-config.ts` ne contient aucune clé de carte). |
-| 3 | **Wording générique en dur, en français** | ✅ Respecté | Ex. `FilterContent.tsx:21-22` (« Présentiel », « En ligne ») : libellés d'interface, pas de marque. |
-| 4 | **Pas de flags de fonctionnalités** | ✅ Respecté | `rg "features"` : seules occurrences = GeoJSON (`features: GeoJSONEvent[]`) et les `AGENTS.md`. |
-| 5 | **Aucun nom de champ Baserow hors mapping** | ✅ Respecté | `rg "fm\.\w+\s*\|\|\s*'" apps/backend/src` : 0 résultat (29 replis supprimés, PR #26). Colonnes de référence et valeurs de listes dans `baserow.mapping` ; identifiants de tables dans l'environnement. |
-| 6 | **Référentiels depuis Baserow** | ✅ Respecté | `rg -i "atelier\|conférence\|tout public\|cuisine…" apps/*/src` : aucun libellé métier. Ordre des options = ordre Baserow (PR #30). |
-| 7 | **Dégradation propre** | 🟡 Largement respecté | Config invalide : le backend refuse de démarrer avec la liste des erreurs (`config-validation.util.ts`, PR #27) ; colonne absente nommée au démarrage ; référentiel en erreur ≠ vide (502 + `/api/health` dégradé, PR #30) ; sans date masqué, fin avant début ignorée, plus d'`Invalid Date` (PR #32). Restes : voir §4. |
-| 8 | **Codé en dur = refus en revue** | 🟡 Partiel | Aucun outil ne le détecte (le lint ne voit ni couleur ni marque) ; plus de modèle de PR ni de test « deux cartes » (PR #38). Repose entièrement sur la revue manuelle. |
+| 1 | **Un code, N cartes** | ✅ Respecté | `rg -i "lgsv\|semaine\|végétal\|réparation\|jnr" apps shared -g '!*.md' -g '!index.html' -g '!node_modules'` : seulement deux tests qui **cherchent** ces mots (`pas-de-code-en-dur.spec.ts:20`, `deux-cartes.spec.tsx:164`). Seconde config vérifiée dans le navigateur (§1). |
+| 2 | **La config porte identité, titres, dates, design, mapping** | ✅ Respecté | `app.config.json` : nom écrit une fois (`app.name`), gabarits `{{app.name}}` ; carte et régions dans le code (`AGENTS.md:10` corrigé à l'étape 0). |
+| 3 | **Wording générique en dur, en français** | ✅ Respecté | Ex. `FilterContent.tsx` (« Présentiel », « En ligne »), `ConfigErrorState.tsx`. |
+| 4 | **Pas de flags de fonctionnalités** | ✅ Respecté | `rg "features" apps shared -g '!*.md'` : seulement des `features` GeoJSON (`event.ts:60`, `useClusters.ts`). |
+| 5 | **Aucun nom de champ Baserow hors mapping** | ✅ Respecté | `rg "fm\.\w+\s*\|\|\s*'" apps/backend/src` : 0 résultat. |
+| 6 | **Référentiels depuis Baserow** | ✅ Respecté | Pas de libellé métier dans `apps/*/src` ; ordre des options = ordre Baserow. |
+| 7 | **Dégradation propre** | ✅ Respecté pour les cas connus | Config invalide : le backend refuse de démarrer ; colonne absente nommée ; référentiel en erreur ≠ vide ; sans date masqué ; **config absente** : état d'erreur sur l'accueil, la carte et la liste (`ConfigErrorState.tsx`, `configIndisponible.spec.tsx`) ; **format absent** : section et pastille masquées (`formatAbsent.spec.tsx`). |
+| 8 | **Codé en dur = refus en revue** | ✅ Outillé | `apps/frontend/tests/pas-de-code-en-dur.spec.ts` (marque et couleurs hexadécimales sur `apps/*/src` et `shared/types/src`, 0 faux positif) + tests « deux cartes » + modèle de PR. Seule couleur autorisée : `DEFAULT_FORMAT_COLOR` (`iconResolver.ts:6`, `rg -i "#[0-9a-f]{6}\b"` ne renvoie que cette ligne). |
 
 Règles globales :
 
 | Règle | Verdict | Preuve |
 |---|---|---|
-| Baserow en lecture seule, jeton côté backend | ✅ | Seed limité à l'instance Docker locale (`scripts/seed-baserow/`). |
-| Modération fail-closed, `devMode` fermé en prod | ✅ | `baserow.service.ts:471-483` (ID ou valeur visible absents : rien n'est publié) ; `events.controller.ts:25-38` (`ALLOW_DEV_MODE=true` **et** hors production). |
-| Airtable retiré | ✅ | `rg -i airtable` hors `docs/`, `resources/`, lockfile : 0 résultat. |
-| Workflow Git | 🟡 | PR + merge commits vers `develop` : respecté. Mais `main` jamais mis à jour (124 commits de retard), ~25 branches de travail mergées **non supprimées** (locales et distantes, dont `wip/audit-snapshot`), et la PR #21 regroupe 5 sujets (contraire à « une PR par sujet », choix assumé dans `JOURNAL.md:135`). |
+| Baserow en lecture seule, jeton côté backend | ✅ | Scripts d'écriture limités à `localhost` : `seed.mjs` et `robustness.mjs` refusent tout autre hôte (testé : `https://baserow.example.com`, `http://localhost.evil.com`, URL invalide). |
+| Modération fail-closed, `devMode` fermé en prod | ✅ | `baserow.service.ts` (ID ou valeur visible absents : rien n'est publié) ; `events.controller.ts` (`ALLOW_DEV_MODE=true` **et** hors production). |
+| Airtable retiré | ✅ | `rg -i -l airtable . -g '!docs' -g '!resources' -g '!pnpm-lock.yaml'` : aucun fichier. |
+| Config Astek supprimée | ✅ | `git ls-files \| rg -i astek` : rien. |
+| Workflow Git | 🟡 | PR + merge commits vers `develop` ; chaîne de PR de ce plan à merger dans l'ordre. `main` jamais mis à jour ; ~26 branches mergées non supprimées (liste donnée au propriétaire, aucune suppression sans accord). |
 
-## 3. Checklist du plan (sessions 0 à 8)
+## 3. Plan de fin de refonte
 
-| Session | Verdict | PR | Commentaire |
-|---|---|---|---|
-| 0 GitHub CLI | ✅ Faite | — | `gh` installé (`C:\Program Files\GitHub CLI\gh.exe`) et authentifié (il n'est pas dans le `PATH` du terminal courant). |
-| 1 Base Git | ✅ Faite | #9 à #14 | Reste `develop` → `main` + tag `v0.1.0` (reporté par le propriétaire). |
-| 2 Nettoyage et intégration | ✅ Faite | #21 | `CLAUDE.md` supprimé, Airtable retiré, code mort supprimé, branches `Refonte-*` intégrées. Reste : `App.tsx` mort (constaté en sessions 5 et 6, toujours présent), `scripts/deploy.sh:11` pointe vers `apps/map-interactive/dist` (prévu en session 8). |
-| 3 Titres et identité | ✅ Faite | #22, #23, #24 | Le badge, les titres et les métas viennent de la config ; `index.html` généré depuis `index.template.html`. |
-| 4 Mapping Baserow, validation | ✅ Faite | #25, #26, #27 | `AppConfig` aligné, replis supprimés, config et schéma contrôlés au démarrage. |
-| 5 Filtres | ✅ Faite | #29, #30 | Une seule définition (`filterDefinitions.ts`), recherche multi-champs, recoupement, passés auto, format unique, ordre Baserow. |
-| 6 Cas dégradés | ✅ Faite (restes mineurs) | #32 | Voir §4. |
-| 7 Qualité | ✅ Faite | #33, #35, #36, puis #38 | ESLint front, lint back sans `--fix`, `shared/types` testé. Tests « deux cartes » (#34) et modèle de PR (#35) **ajoutés puis retirés** par #38 (décision du propriétaire, `PLAN-SESSIONS.md:230`). |
-| Hors plan | ✅ | #37, #39 | Seed à 1000 événements (seed non relancée : non vérifié, dit la PR) ; test des métas indépendant du wording de la carte (#39, bon exemple de la philosophie). |
-| **8 Déploiement** | ❌ **Pas faite** | — | Les `Dockerfile` (`apps/backend/Dockerfile`, `apps/frontend/Dockerfile`) ne mentionnent pas `app.config.json` (`rg app.config` : 0 résultat) ; `deploy/AGENTS.md:19` le reconnaît ; aucun `docker build` jamais lancé. |
-| Amélioration « picto kebab-case » | ❌ Pas faite | — | Planifiée (`PLAN-SESSIONS.md`, section Améliorations). |
-| Amélioration « retirer Modalité de la carte » | ❌ **Pas faite**, alors que la PR #38 l'annonce | — | Voir §4, point 1. |
+| Étape | Verdict | PR |
+|---|---|---|
+| 0 Plan et nettoyage de `docs/` | ✅ | [#41](https://github.com/AstekGroup/Rft-map-mecenat/pull/41) (mergée) |
+| 1 Tests « deux cartes » et modèle de PR rétablis | ✅ | [#42](https://github.com/AstekGroup/Rft-map-mecenat/pull/42) |
+| 3 Résidus en dur (`Badge.tsx`, palette neutre, gris de repli unique) | ✅ | [#43](https://github.com/AstekGroup/Rft-map-mecenat/pull/43) |
+| 4 Cas dégradés (config absente carte et liste, format absent) | ✅ | [#44](https://github.com/AstekGroup/Rft-map-mecenat/pull/44) |
+| 5 README, `PROJECT_VIBE_CONF.md`, `AGENTS.md` neutres et exacts | ✅ | [#45](https://github.com/AstekGroup/Rft-map-mecenat/pull/45) |
+| 6 Filtre Modalité retiré de la carte | ✅ | [#46](https://github.com/AstekGroup/Rft-map-mecenat/pull/46) |
+| 6 Picto kebab-case | ✅ | [#47](https://github.com/AstekGroup/Rft-map-mecenat/pull/47) |
+| 7 Ménage (code mort, gardes de seed, avertissement lint, garde-fou) | ✅ sauf suppression des branches (accord requis) | [#48](https://github.com/AstekGroup/Rft-map-mecenat/pull/48) |
+| 8 Verdict final | ✅ | cette PR |
+| Session 8 Déploiement, `develop` vers `main` | ❌ hors plan, non faits | — |
 
-## 4. Écarts constatés (à corriger)
+## 4. Écarts restants
 
-Classés du plus important au moins important.
+Classés du plus important au moins important. Aucun ne touche la philosophie dans le code applicatif.
 
-1. **La PR #38 ne fait pas ce que dit sa description.** Titre : « retirer le filtre Modalité de la carte et le modèle de PR » ; description : « le test deux cartes est conservé » et « le filtre Modalité disparaît du panneau de la carte ». Contenu réel (3 commits, 7 fichiers) : suppression des tests « deux cartes », du modèle de PR, et mise à jour des docs. Aucun fichier de filtre n'est touché : `rg surfaces apps/frontend/src` ne renvoie rien, le filtre Modalité est toujours sur la carte. Le code est conforme au plan (`PLAN-SESSIONS.md:230` décide le retrait des tests ; l'amélioration Modalité reste à faire), mais l'historique GitHub est trompeur. C'est exactement le type de perte de visibilité que la refonte veut éviter.
-2. **Session 8 non faite** : pas de config dans les images, `scripts/deploy.sh` cassé (`apps/map-interactive/dist` n'existe plus), aucun `docker build` réel. Bloquant pour livrer une seconde carte.
-3. **`main` à l'arrêt** depuis le 2026-09-29 : si la production se déploie depuis `main`, elle tourne avec le code d'avant la refonte (non vérifié : je n'ai pas accès à la production).
-4. **Couleurs de marque en dur dans le popup de la carte** : `apps/frontend/src/components/UI/Badge.tsx:24-25` (`#F2EDE4`, `#1F7A3E`, vert et beige LGSV), utilisé par `EventPopup.tsx:30` (`variant="highlight"`). Une seconde carte afficherait le badge de format en vert LGSV. À remplacer par les variables de thème (`--color-surface-beige-rgb`, `--color-text-green-rgb` ou équivalent).
-5. **Palette LGSV comme valeurs par défaut du thème** : `apps/frontend/src/styles/globals.css:11` (`--color-primary-rgb: 59 174 93`) et les replis de `apps/frontend/tailwind.config.ts:12-29`. La config les écrase (`ConfigProvider.tsx:61`), mais avant le chargement de `/api/config` ou si une couleur manque, la carte s'affiche en vert LGSV. Préférer une palette neutre.
-6. **Cas dégradés restants** (relevés en session 6, confirmés par lecture) : `MapPage` et `EventsListPage` n'ont pas d'état d'erreur pour une config absente (leurs états `error` ne concernent que les événements, `MapPage.tsx:72`, `EventsListPage.tsx:80`) ; la page d'erreur de l'accueil s'affiche sans thème ; un événement sans format (E15) garde une section « Format » vide (`EventDetailPage.tsx:289-296`, pas de condition sur `event.type`). Comportement non rejoué dans le navigateur.
-7. **Docs qui contredisent le code** : `AGENTS.md:10` (paramètres de carte dans la config, faux depuis la PR #25) ; `docs/audit/SUIVI.md:58` (« Prochaine action : merger la PR `chore/retrait-deux-cartes-pr-template` », déjà mergée) ; `README.md:1-5`, `PROJECT_VIBE_CONF.md`, `apps/frontend/README.md`, `apps/backend/README.md:1` présentent le projet comme « La Grande Semaine Végétale ».
-8. **Hygiène du dépôt** : `apps/frontend/src/App.tsx` mort ; test e2e `apps/backend/test/app.e2e-spec.ts` périmé (constaté en session 7) ; ~25 branches mergées non supprimées ; 3 avertissements de lint sur les hooks.
-9. **Filet « deux cartes » réduit à la main** : il reste des tests qui lisent la fixture (`config-validation.util.spec.ts`, `config-template.spec.ts`, contrat `shared/types`), mais plus rien ne vérifie automatiquement que titres, dates et thème changent avec la config. C'est une décision assumée ; le risque est qu'une régression de type « titre en dur » repasse sans être vue.
+1. **Session 8 non faite** : pas de config dans les images Docker, `scripts/deploy.sh` vise `apps/map-interactive/dist` (inexistant), aucun `docker build` réel (`rg app.config apps/*/Dockerfile` : 0 résultat). Bloquant pour livrer une seconde carte.
+2. **`main` à l'arrêt** depuis le 2026-09-29 : si la production se déploie depuis `main`, elle tourne avec le code d'avant la refonte (non vérifié : pas d'accès à la production).
+3. **Branches** : liste des branches mergées (locales et distantes) donnée au propriétaire, **non supprimées** ; branches `add-dynamic-filters`, `modify-audiences-filters`, `modif_audience_filters` à supprimer seulement avec l'accord de leur auteur ; `wip/audit-snapshot` et `chore/retrait-deux-cartes-pr-template` (commit `425e487` jamais mergé) à trancher.
+4. **Petits restes de cas dégradés** (constatés par l'agent de l'étape 4, non corrigés car hors plan) : pastille de format vide possible dans `HomePage`, `EventListView`, `EventCard` si `type.name` est vide ; `event.targetAudience.map(...)` sans garde dans `EventDetailPage`.
+5. **2 avertissements ESLint** dans `MapView.tsx` (`onMoveEnd`, `viewport`) : volontairement gardés, les corriger change le comportement des hooks (commentaires dans le code).
+6. **`supertest` et `@types/supertest`** restent dans `apps/backend/package.json` sans usage depuis la suppression du test e2e.
+7. **Garde-fou « codé en dur »** : il couvre la marque et les couleurs hexadécimales, pas les noms de champs Baserow (déjà couverts par les tests backend) ni les polices.
+8. **Schéma de la vraie base Baserow de production** : jamais fourni (non vérifié) ; les types du seed sont déduits du code.
 
 ## 5. Verdict
 
-**La philosophie est respectée dans le code applicatif.** Les principes 1 à 6 sont tenus et vérifiables par commande ; le principe 7 (dégradation propre) l'est pour tous les cas qui comptaient (modération, config invalide, schéma renommé, référentiel en panne, dates). Les écarts restants sont petits et localisés (un composant, des valeurs par défaut CSS, des README).
+**La philosophie est respectée dans le code applicatif, et elle est maintenant gardée par des tests.** Les principes 1 à 8 sont tenus et vérifiables par commande ; le changement d'identité d'une carte à l'autre est vérifié dans le navigateur avec une seconde config, sans toucher au code.
 
-**La refonte n'est pas terminée tant que la session 8 n'est pas faite et que `develop` n'est pas sur `main`.** Aujourd'hui, on sait faire tourner N cartes en local avec un seul code ; on ne sait pas encore en déployer une.
+**La refonte n'est pas terminée tant que la session 8 n'est pas faite et que `develop` n'est pas sur `main`** : on sait faire tourner N cartes en local avec un seul code, on ne sait pas encore en déployer une.
 
 Estimation d'avancement (jugement, pas une mesure) :
 
 | Volet | Avancement |
 |---|---|
-| Code conforme à la philosophie | ~95 % (résidus §4 points 4 à 6) |
-| Robustesse et cas dégradés | ~90 % |
-| Qualité et outillage (build, lint, tests) | ~90 % (filet « deux cartes » manuel) |
-| Documentation alignée sur le code | ~75 % (§4 point 7) |
+| Code conforme à la philosophie | ~100 % (écarts §4 points 4 et 5 mineurs) |
+| Robustesse et cas dégradés | ~95 % |
+| Qualité et outillage (build, lint, tests) | ~95 % (417 tests, deux gardes-fous) |
+| Documentation alignée sur le code | ~95 % |
 | Déploiement et mise en production | ~10 % |
-| **Global** | **~85 %** |
+| **Global (hors déploiement et passage sur `main`)** | **~95 %** |
 
-## 6. Suite recommandée (par priorité, telle qu'écrite le 2026-10-19)
+## 6. Suite possible (hors plan actif)
 
-> Remplacée par le plan actif [audit/PLAN-FIN-REFONTE.md](audit/PLAN-FIN-REFONTE.md) : voir §7 pour ce qui a été décidé (points 1 et 2 exclus du plan, point 7 devenu « tests deux cartes remis »).
-
-1. **Session 8 — déploiement** : fournir `app.config.json` aux images (volume ou `APP_CONFIG_PATH` côté backend, config passée au build front), corriger ou supprimer `scripts/deploy.sh`, lancer un vrai `docker build` puis `compose up` avec le Baserow local, vérifier les variables `BASEROW_*`. Faire l'essai avec deux configs (`app.config.json` et `docs/audit/fixtures/app.config.second-map.json`).
-2. **`develop` → `main`** avec un tag (`v0.3.0`), une fois la session 8 validée.
-3. **Petite PR « résidus en dur »** : `Badge.tsx` sur les variables de thème, palette neutre par défaut dans `globals.css` et `tailwind.config.ts`, section « Format » masquée sans format, état d'erreur config sur `MapPage` et `EventsListPage`.
-4. **Petite PR « docs »** : corriger `AGENTS.md:10`, la « Prochaine action » de `SUIVI.md`, neutraliser les README et `PROJECT_VIBE_CONF.md` ; ajouter dans `SUIVI.md` une note sur l'écart de description de la PR #38 (ou modifier sa description sur GitHub).
-5. **Améliorations du plan** : retrait de Modalité sur la carte, picto kebab-case.
-6. **Ménage** : supprimer `App.tsx` et le test e2e périmé, supprimer les branches mergées (dont `wip/audit-snapshot`), demander l'accord pour les 3 branches obsolètes.
-7. **À reconsidérer** : un garde-fou automatique minimal contre le codé en dur (ex. un test qui lance le `rg` de la checklist sur `apps/*/src`), puisque les tests « deux cartes » ont été retirés.
-
-## 7. Suites données au verdict (2026-10-19)
-
-Décisions du propriétaire après lecture du verdict :
-
-| Sujet | Décision | Où |
-|---|---|---|
-| Tests « deux cartes » (écart §4 point 9) | **Remis.** Leur retrait par la PR #38 était une erreur : c'est le filet de « 1 code, N cartes ». Le modèle de PR est remis avec eux. | [audit/PLAN-FIN-REFONTE.md](audit/PLAN-FIN-REFONTE.md) étape 1 |
-| Config Astek | **Supprimée** : essai local sans valeur (fichier `app.config.astek.json` retiré, modifications locales de `app.config.json` et `app.config1.json` abandonnées). | fait (étape 0) |
-| Session 8 (déploiement) et `develop` vers `main` | **Exclus du plan actif.** Le verdict les garde comme « non faits ». | [audit/SUIVI.md](audit/SUIVI.md) |
-| Écarts §4 points 4 à 6 (résidus en dur, cas dégradés) | Planifiés | étapes 3 et 4 |
-| Écart §4 point 7 (docs qui contredisent le code) | **Fait pour `docs/` et `AGENTS.md`** : documents d'audit obsolètes supprimés, `SUIVI.md`, `PLAN-SESSIONS.md`, `BASEROW-LOCAL.md`, `PERIMETRE-CONFIG-BASEROW.md` réécrits ou mis à jour, `docs/README.md` ajouté. Restent les README et `PROJECT_VIBE_CONF.md`. | étape 0 ; étape 5 |
-| Écart §4 point 1 (PR #38 mal décrite) | Noté dans `SUIVI.md` (points ouverts) ; le filtre Modalité reste à retirer de la carte | étape 6 |
-| Écart §4 point 8 (hygiène) | Planifié | étape 7 |
-
-Documents supprimés lors du nettoyage (photos du 2026-10-16, d'avant les correctifs, toujours récupérables dans l'historique git) : inventaire, lancement, validation, cartographie du codé en dur, branches, réécriture des `AGENTS.md`, ancien plan de suite, synthèse, captures d'écran. Ce verdict les remplace pour l'état du code.
+1. Merger la chaîne #42 à #49 dans l'ordre (merge commit).
+2. **Session 8** : config dans les images (volume ou `APP_CONFIG_PATH`, config passée au build du front), corriger ou supprimer `scripts/deploy.sh`, `docker build` et `compose up` réels avec deux configs ; voir `PLAN-SESSIONS.md`.
+3. `develop` vers `main` avec un tag, une fois la session 8 validée.
+4. Ménage des branches, avec l'accord du propriétaire (et de leurs auteurs pour les 3 branches obsolètes).
+5. Restes de cas dégradés du §4 point 4.
