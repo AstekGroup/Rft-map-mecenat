@@ -1,7 +1,7 @@
 # SUIVI — Refonte « 1 code, N cartes »
 
 > **À lire en début de session. À mettre à jour en fin de session.**
-> État au **2026-10-19**, sur `develop` après la PR #40. Preuves : [JOURNAL.md](JOURNAL.md). Vérification complète : [../verdict.md](../verdict.md). Plan actif : [PLAN-FIN-REFONTE.md](PLAN-FIN-REFONTE.md). Plan historique et workflow Git : [PLAN-SESSIONS.md](PLAN-SESSIONS.md).
+> État au **2026-10-19**, à la pointe de la chaîne de PR #42 à #49 (au-dessus de `develop` après la PR #41). Preuves : [JOURNAL.md](JOURNAL.md). Vérification complète : [../verdict.md](../verdict.md). Plan actif : [PLAN-FIN-REFONTE.md](PLAN-FIN-REFONTE.md). Plan historique et workflow Git : [PLAN-SESSIONS.md](PLAN-SESSIONS.md).
 
 ## Philosophie (rappel)
 
@@ -13,7 +13,7 @@ Chaque constat porte une preuve : `fichier:ligne` ou commande exécutée. Sans p
 
 ## Où on en est
 
-Vérifié le 2026-10-19 sur `origin/develop` (`2273bcb`) : `pnpm build`, `pnpm lint` (0 erreur, 3 avertissements connus) et `pnpm run test -- --force` verts (`shared/types` 5 tests, backend 227, frontend 133). Avancement estimé : environ 85 % (code ~95 %, robustesse ~90 %, qualité ~90 %, docs ~75 % avant ce nettoyage, déploiement ~10 %).
+Vérifié le 2026-10-19 sur la pointe de la chaîne (`docs/verdict-final`) : `pnpm build`, `pnpm lint` (0 erreur, 2 avertissements connus) et `pnpm run test -- --force` verts (`shared/types` 5 tests, backend 236, frontend 176), plus contrôle dans le navigateur avec le Baserow local et la seconde config. Avancement estimé : environ 95 % hors déploiement et passage sur `main` (déploiement ~10 %). Détail : [../verdict.md](../verdict.md).
 
 | Session | État | PR |
 |---|---|---|
@@ -32,16 +32,16 @@ Vérifié le 2026-10-19 sur `origin/develop` (`2273bcb`) : `pnpm build`, `pnpm l
 
 | Étape | Sujet | État |
 |---|---|---|
-| 0 | Plan dans le dépôt, nettoyage de `docs/`, config Astek supprimée | **fait** (PR `docs/plan-fin-refonte`) |
-| 1 | Remettre les tests « deux cartes » et le modèle de PR | **fait** (branche `test/retablir-deux-cartes`) |
-| 3 | Résidus en dur (`Badge.tsx`, palette par défaut, gris de repli) | à faire |
-| 4 | Cas dégradés restants (config absente sur carte et liste, section Format vide) | à faire |
-| 5 | README et `PROJECT_VIBE_CONF.md` neutres | à faire |
-| 6 | Filtre Modalité retiré de la carte ; picto kebab-case | à faire |
-| 7 | Ménage (`App.tsx`, e2e périmé, branches mergées, lint) | à faire |
-| 8 | Verdict final | à faire |
+| 0 | Plan dans le dépôt, nettoyage de `docs/`, config Astek supprimée | **fait** ([#41](https://github.com/AstekGroup/Rft-map-mecenat/pull/41), mergée) |
+| 1 | Remettre les tests « deux cartes » et le modèle de PR | **fait** ([#42](https://github.com/AstekGroup/Rft-map-mecenat/pull/42)) |
+| 3 | Résidus en dur (`Badge.tsx`, palette par défaut, gris de repli) | **fait** ([#43](https://github.com/AstekGroup/Rft-map-mecenat/pull/43)) |
+| 4 | Cas dégradés restants (config absente sur carte et liste, section Format vide) | **fait** ([#44](https://github.com/AstekGroup/Rft-map-mecenat/pull/44)) |
+| 5 | README et `PROJECT_VIBE_CONF.md` neutres | **fait** ([#45](https://github.com/AstekGroup/Rft-map-mecenat/pull/45)) |
+| 6 | Filtre Modalité retiré de la carte ; picto kebab-case | **fait** ([#46](https://github.com/AstekGroup/Rft-map-mecenat/pull/46), [#47](https://github.com/AstekGroup/Rft-map-mecenat/pull/47)) |
+| 7 | Ménage (`App.tsx`, e2e périmé, gardes de seed, lint, garde-fou) | **fait**, sauf suppression des branches (accord du propriétaire) ([#48](https://github.com/AstekGroup/Rft-map-mecenat/pull/48)) |
+| 8 | Verdict final | **fait** (#49) |
 
-**Prochaine action** : merger les PR chaînées dans l'ordre (option « Create a merge commit »), en commençant par l'étape 1 (`test/retablir-deux-cartes`).
+**Prochaine action** : merger la chaîne #42 à #49 dans l'ordre (option « Create a merge commit », chaque PR cible la précédente ; après chaque merge, GitHub retarge la suivante vers `develop` si la branche mergée est supprimée, sinon changer la base à la main). Puis décider de la session 8 (déploiement) et du passage `develop` vers `main`, et valider la liste de branches à supprimer (voir JOURNAL).
 
 ## Décisions en vigueur
 
@@ -53,12 +53,14 @@ Vérifié le 2026-10-19 sur `origin/develop` (`2273bcb`) : `pnpm build`, `pnpm l
 
 ## Points ouverts
 
-- **PR #38** : sa description annonce le retrait du filtre Modalité de la carte et la conservation des tests « deux cartes ». Contenu réel : suppression des tests et du modèle de PR, rien sur les filtres. Le filtre Modalité est toujours sur la carte (étape 6).
+- **PR #38** : sa description annonçait le retrait du filtre Modalité de la carte, que son contenu ne faisait pas ; fait à l'étape 6 ([#46](https://github.com/AstekGroup/Rft-map-mecenat/pull/46)). Historique GitHub de #38 inchangé.
 - `main` a 124 commits de retard sur `develop` (au 2026-10-19) : tout est sur `develop` ; le passage sur `main` est reporté.
-- Le test e2e `apps/backend/test/app.e2e-spec.ts` est périmé (`pnpm test:e2e` échoue) et n'est pas lancé par `pnpm test` ; `apps/frontend/src/App.tsx` est du code mort (étape 7).
+- `supertest` et `@types/supertest` restent dans `apps/backend/package.json` sans usage (le test e2e a été supprimé à l'étape 7) : à retirer par `pnpm remove` si souhaité.
+- Restes de cas dégradés non traités : pastille de format vide possible (`HomePage`, `EventListView`, `EventCard`) si `type.name` est vide ; `event.targetAudience.map` sans garde dans `EventDetailPage`.
+- 2 avertissements ESLint gardés dans `MapView.tsx` (commentaires dans le code).
 - Un test frontend sensible aux délais (`eventDateRange.spec.ts`) a expiré une fois en exécution parallèle lourde : à surveiller.
 - `prettier` n'est pas idempotent sur un bloc de `baserow.service.degraded.spec.ts` : `pnpm lint:fix` peut demander deux passes.
-- Le lint ne détecte ni couleur ni marque en dur (règle d'`AGENTS.md` vérifiée à la revue seulement) ; garde-fou optionnel à l'étape 7.
+- Le lint ne détecte ni couleur ni marque en dur : c'est `apps/frontend/tests/pas-de-code-en-dur.spec.ts` qui le fait (lancé par `pnpm test`).
 - Schéma de la vraie base Baserow de production : jamais fourni (non vérifié) ; la carte doit fonctionner avec le schéma indiqué par la config.
 - Branches obsolètes `add-dynamic-filters`, `modify-audiences-filters`, `modif_audience_filters` : accord de leur auteur requis avant suppression.
 - Réglage GitHub à faire par le propriétaire : protéger `main` et `develop` (non vérifié).

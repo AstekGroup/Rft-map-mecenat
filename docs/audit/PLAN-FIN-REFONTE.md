@@ -1,7 +1,9 @@
 # Plan pour finir la refonte (hors déploiement)
 
+> **État au 2026-10-19 : toutes les étapes sont faites** (PR #41 à #49, chaîne #42 à #49 à merger dans l'ordre), sauf la suppression des branches de l'étape 7 (accord du propriétaire requis). Voir [../verdict.md](../verdict.md).
+>
 > **Plan actif.** À lire en début de session avec [SUIVI.md](SUIVI.md) ; à mettre à jour en fin de session (cocher, noter la PR).
-> Origine : [../verdict.md](../verdict.md) (vérification du 2026-10-19 sur `develop`, PR #21 à #39).
+> Origine : le verdict du 2026-10-19 sur `develop` (PR #21 à #39, `2273bcb`), aujourd'hui remplacé par [../verdict.md](../verdict.md) (verdict final ; la version d'origine est dans l'historique git).
 > Le plan historique des sessions 0 à 8 est dans [PLAN-SESSIONS.md](PLAN-SESSIONS.md) (workflow Git, décisions, détail des sessions faites).
 
 ## Décisions du propriétaire (2026-10-19)
@@ -60,48 +62,49 @@ Branche `test/retablir-deux-cartes`.
 
 Branche `fix/residus-en-dur`.
 
-- [ ] `apps/frontend/src/components/UI/Badge.tsx` (lignes 24-25, `#F2EDE4` et `#1F7A3E`) : passer par les variables de thème injectées par `ConfigProvider.tsx`.
-- [ ] `apps/frontend/src/styles/globals.css` (ligne 11 et replis lignes 53-71) et `apps/frontend/tailwind.config.ts` (replis lignes 12-29) : palette neutre par défaut à la place de la palette LGSV.
-- [ ] Le gris de repli `#D4DDE2`, dupliqué dans `HomePage.tsx`, `EventListView.tsx`, `EventCard.tsx`, `EventMarker.tsx` : utiliser `DEFAULT_FORMAT_COLOR` d'`utils/iconResolver.ts`.
-- [ ] Étendre les tests « deux cartes » : le badge de format suit la couleur de thème de la seconde config.
+- [x] `apps/frontend/src/components/UI/Badge.tsx` (lignes 24-25, `#F2EDE4` et `#1F7A3E`) : passer par les variables de thème injectées par `ConfigProvider.tsx`.
+- [x] `apps/frontend/src/styles/globals.css` (ligne 11 et replis lignes 53-71) et `apps/frontend/tailwind.config.ts` (replis lignes 12-29) : palette neutre par défaut à la place de la palette LGSV.
+- [x] Le gris de repli `#D4DDE2`, dupliqué dans `HomePage.tsx`, `EventListView.tsx`, `EventCard.tsx`, `EventMarker.tsx` : utiliser `DEFAULT_FORMAT_COLOR` d'`utils/iconResolver.ts`.
+- [x] Étendre les tests « deux cartes » : le badge de format suit la couleur de thème de la seconde config.
 - Fait quand : `rg -i "#[0-9a-f]{6}" apps/frontend/src --glob '!*.spec.*'` ne renvoie que la constante de repli neutre ; vérifié dans le navigateur avec la seconde config.
 
 ### 4. Cas dégradés restants (verdict, écart 6)
 
 Branche `fix/cas-degrades-restants`.
 
-- [ ] `MapPage.tsx` et `EventsListPage.tsx` : état d'erreur propre si `/api/config` échoue (comme l'accueil), sans badge vide ni clé brute.
-- [ ] `EventDetailPage.tsx` (lignes 289-296) : masquer la section « Format » quand l'événement n'a pas de format (E15).
-- [ ] Rendu de la page d'erreur de l'accueil sans thème (en partie réglé par la palette neutre de l'étape 3).
-- [ ] Un test par cas.
+- [x] `MapPage.tsx` et `EventsListPage.tsx` : état d'erreur propre si `/api/config` échoue (comme l'accueil), sans badge vide ni clé brute.
+- [x] `EventDetailPage.tsx` (lignes 289-296) : masquer la section « Format » quand l'événement n'a pas de format (E15).
+- [x] Rendu de la page d'erreur de l'accueil sans thème (en partie réglé par la palette neutre de l'étape 3).
+- [x] Un test par cas.
 - Fait quand : E15 et « config absente » s'affichent sans erreur ni texte vide, vérifié avec le seed.
 
 ### 5. Docs hors du dossier `docs/`
 
 Branche `docs/alignement`. La partie `docs/` et les références cassées d'`AGENTS.md` sont faites à l'étape 0 ; reste :
 
-- [ ] Neutraliser la marque dans `README.md`, `PROJECT_VIBE_CONF.md`, `apps/frontend/README.md`, `apps/backend/README.md` (« La Grande Semaine Végétale », « Design System LGSV », lien `resources/lgsv-design.yml`).
-- [ ] `AGENTS.md` ligne 18 : retirer le paragraphe « Écart connu » une fois les étapes 3 et 4 mergées.
+- [x] Neutraliser la marque dans `README.md`, `PROJECT_VIBE_CONF.md`, `apps/frontend/README.md`, `apps/backend/README.md` (« La Grande Semaine Végétale », « Design System LGSV », lien `resources/lgsv-design.yml`).
+- [x] `AGENTS.md` ligne 18 : retirer le paragraphe « Écart connu » une fois les étapes 3 et 4 mergées.
 - Fait quand : `rg -i "lgsv|végétal|semaine" *.md apps/*/README.md` ne remonte que des exemples assumés.
 
 ### 6. Améliorations déjà planifiées
 
-- [ ] Branche `refactor/filtre-modalite-carte` : retirer « Modalité » du panneau de la carte (`FilterDefinition.surfaces`, détail dans [PLAN-SESSIONS.md](PLAN-SESSIONS.md), section Améliorations). Annoncée par la description de la PR #38 mais **jamais faite**.
-- [ ] Branche `feat/picto-kebab-case` : `getIcon` accepte `pen-tool` comme `PenTool`, nouveau `iconResolver.spec.ts`, mise à jour du « contrat du picto » dans `PERIMETRE-CONFIG-BASEROW.md`.
+- [x] Branche `refactor/filtre-modalite-carte` : retirer « Modalité » du panneau de la carte (`FilterDefinition.surfaces`, détail dans [PLAN-SESSIONS.md](PLAN-SESSIONS.md), section Améliorations). Annoncée par la description de la PR #38 mais **jamais faite**.
+- [x] Branche `feat/picto-kebab-case` : `getIcon` accepte `pen-tool` comme `PenTool`, nouveau `iconResolver.spec.ts`, mise à jour du « contrat du picto » dans `PERIMETRE-CONFIG-BASEROW.md`.
 
 ### 7. Ménage
 
 Branche `chore/menage`.
 
-- [ ] Supprimer `apps/frontend/src/App.tsx` (aucun import) et le test e2e périmé `apps/backend/test/app.e2e-spec.ts`.
-- [ ] Les 3 avertissements du lint frontend (`MapView.tsx:79` et `:165`, `MapStyleSelector.tsx:12`) : corriger seulement si le comportement des hooks ne change pas, sinon les garder documentés.
-- [ ] Supprimer les branches de travail mergées (locales et distantes, dont `wip/audit-snapshot`) : **liste donnée au propriétaire avant, aucune suppression sans son accord**. Les 3 branches obsolètes (`add-dynamic-filters`, `modify-audiences-filters`, `modif_audience_filters`) : accord de leur auteur d'abord.
-- [ ] `scripts/seed-baserow/seed.mjs` : refuser toute URL non locale, comme le fait déjà `robustness.mjs` (garde-fou annoncé par la règle « Baserow en lecture seule »).
-- [ ] Garde-fou optionnel contre le codé en dur : un test qui lance les recherches de la checklist d'`AGENTS.md` sur `apps/*/src` (à écarter s'il produit des faux positifs).
+- [x] Supprimer `apps/frontend/src/App.tsx` (aucun import) et le test e2e périmé `apps/backend/test/app.e2e-spec.ts`.
+- [x] Les 3 avertissements du lint frontend : `MapStyleSelector.tsx:12` corrigé (styles déplacés dans `mapStyles.ts`) ; `MapView.tsx` (`onMoveEnd`, `viewport`) gardés et documentés par un commentaire, car les corriger change le comportement des hooks.
+- [ ] Supprimer les branches de travail mergées (**non fait**, liste dans `JOURNAL.md`, en attente de l'accord du propriétaire) (locales et distantes, dont `wip/audit-snapshot`) : **liste donnée au propriétaire avant, aucune suppression sans son accord**. Les 3 branches obsolètes (`add-dynamic-filters`, `modify-audiences-filters`, `modif_audience_filters`) : accord de leur auteur d'abord.
+- [x] `scripts/seed-baserow/seed.mjs` : refuser toute URL non locale, comme le fait déjà `robustness.mjs` (garde-fou annoncé par la règle « Baserow en lecture seule »).
+- [x] Garde-fou contre le codé en dur : `apps/frontend/tests/pas-de-code-en-dur.spec.ts` (0 faux positif, mutation vérifiée).
+- [x] `robustness.mjs` : contrôle d'hôte durci (il acceptait `localhost.evil.com`), ajouté en plus du plan.
 
 ### 8. Verdict final
 
-- [ ] Branche `docs/verdict-final` : rejouer `pnpm build`, `pnpm lint`, `pnpm run test -- --force` et les recherches du verdict sur `develop`, mettre à jour [../verdict.md](../verdict.md) et `SUIVI.md`. La session 8 et `develop` vers `main` restent « hors plan, non faits ».
+- [x] Branche `docs/verdict-final` : rejouer `pnpm build`, `pnpm lint`, `pnpm run test -- --force` et les recherches du verdict sur `develop`, mettre à jour [../verdict.md](../verdict.md) et `SUIVI.md`. La session 8 et `develop` vers `main` restent « hors plan, non faits ».
 
 ## Vérification finale
 

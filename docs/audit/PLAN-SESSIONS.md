@@ -132,7 +132,7 @@ Une seule définition des filtres (`FILTER_DEFINITIONS`) pour le panneau de la c
 
 ### Session 7 : qualité — faite (PR #33 à #36, puis #38)
 
-ESLint frontend (0 erreur, 3 avertissements connus), lint backend sans `--fix`, `pnpm test` couvre `shared/types`, `VITE_MAPTILER_KEY` retirée (#33). Tests « deux cartes » (#34) et modèle de PR (#35) ajoutés, puis **retirés par la PR #38, retrait annulé le 2026-10-19** (voir Décisions). La description de la PR #38 annonçait aussi le retrait du filtre Modalité de la carte : **non fait** (voir Améliorations).
+ESLint frontend (0 erreur, 3 avertissements connus), lint backend sans `--fix`, `pnpm test` couvre `shared/types`, `VITE_MAPTILER_KEY` retirée (#33). Tests « deux cartes » (#34) et modèle de PR (#35) ajoutés, puis **retirés par la PR #38, retrait annulé le 2026-10-19** (voir Décisions). La description de la PR #38 annonçait aussi le retrait du filtre Modalité de la carte : non fait dans #38, **fait ensuite par la PR #46** (voir Améliorations).
 
 ### Session 8 : déploiement — non faite, hors du plan actif
 
@@ -144,7 +144,7 @@ Fournir `app.config.json` aux images Docker, corriger ou supprimer `scripts/depl
 - PR #39 : le test des métas ne dépend plus du wording de la carte.
 - PR #40 : verdict.
 
-## Améliorations (non faites, reprises dans PLAN-FIN-REFONTE.md, étape 6)
+## Améliorations (faites à l'étape 6 de PLAN-FIN-REFONTE.md, PR #46 et #47 ; spécification conservée ici)
 
 Deux changements du frontend, indépendants : une branche courte et une PR chacun.
 

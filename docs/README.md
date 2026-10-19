@@ -4,7 +4,7 @@ Tout ce dossier décrit l'état **courant** du projet. Une photo datée qui n'es
 
 | Document | Rôle | Quand le lire |
 |---|---|---|
-| [verdict.md](verdict.md) | Vérification du 2026-10-19 : la philosophie est-elle respectée, où en est-on | Pour l'état global |
+| [verdict.md](verdict.md) | Verdict final du 2026-10-19 : la philosophie est-elle respectée, où en est-on | Pour l'état global |
 | [audit/SUIVI.md](audit/SUIVI.md) | État d'avancement, décisions en vigueur, points ouverts, prochaine action | **Début et fin de chaque session** |
 | [audit/PLAN-FIN-REFONTE.md](audit/PLAN-FIN-REFONTE.md) | Plan actif pour finir la refonte (hors déploiement), avec cases à cocher | Début de session |
 | [audit/PLAN-SESSIONS.md](audit/PLAN-SESSIONS.md) | Workflow Git, décisions, historique des sessions 0 à 8 | Pour le workflow Git et le contexte |
