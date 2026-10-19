@@ -33,6 +33,8 @@ export interface BaserowThumbnail {
 export interface BaserowSelect {
   id: number;
   value: string;
+  /** Nom de la pastille de l'option (`dark-orange`), voir `BASEROW_SELECT_PALETTE`. */
+  color?: string;
 }
 
 /** Ligne de la table des événements (réponse avec `user_field_names=true`). */
