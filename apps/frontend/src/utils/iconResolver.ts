@@ -32,6 +32,6 @@ export function checkIconColor(color: string | null | undefined, defaultColor: s
     } else if (isValidHexadecimalColor(defaultColor)) {
         return defaultColor;
     } else {
-        return "#C9C3C1";
+        return DEFAULT_FORMAT_COLOR;
     }
 }

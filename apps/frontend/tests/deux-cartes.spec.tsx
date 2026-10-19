@@ -10,13 +10,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import type { AppConfig } from '@make-map/types';
 import { ConfigProvider } from '@/components/Layout/ConfigProvider';
 import { buildHelpers } from '@/hooks/useConfig';
 import { fetchConfig } from '@/services/api';
 import { HomePage } from '@/pages/HomePage';
+import { Badge } from '@/components/UI/Badge';
+import tailwindConfig from '../tailwind.config';
 import { resolveConfigTemplates } from '../../backend/src/config/config-template.util';
 
 vi.mock('@/services/api', () => ({ fetchConfig: vi.fn() }));
@@ -98,6 +100,57 @@ describe('deux cartes, un seul code (frontend)', () => {
       expect(helpers.getEditionBadge()).toBe(`${config.app.shortName} ${year}`);
       const duringWeek = helpers.getDateFilterModes().find((m) => m.mode === 'during-week');
       expect(duringWeek?.label).toContain(config.app.name);
+    });
+  });
+
+  describe('badge de format (variante « highlight »)', () => {
+    const format = { id: '1', name: 'Atelier', colorHexa: '#123456' };
+
+    /** Nom de la variable CSS que lit la classe Tailwind `primary-dark` (config Tailwind réelle). */
+    function primaryDarkVariable(): string {
+      const value = tailwindConfig.theme.extend.colors.primary.dark;
+      const match = /var\((--[a-z-]+)/.exec(value);
+      if (!match) throw new Error(`Variable CSS introuvable dans « ${value} »`);
+      return match[1];
+    }
+
+    async function renderBadge(file: string) {
+      const config = served(file);
+      vi.mocked(fetchConfig).mockResolvedValue(config);
+      render(
+        <ConfigProvider>
+          <Badge type={format} variant="highlight" />
+        </ConfigProvider>,
+      );
+      const badge = await screen.findByText(format.name);
+      // Attend l'injection du thème (faite après la résolution de `fetchConfig`).
+      await waitFor(() =>
+        expect(document.documentElement.style.getPropertyValue('--color-primary-dark-rgb')).not.toBe(''),
+      );
+      return { config, badge };
+    }
+
+    it.each(MAPS)('suit la couleur de thème de $label, sans couleur en dur', async ({ file }) => {
+      const { config, badge } = await renderBadge(file);
+
+      // Aucune couleur en ligne : tout passe par les classes Tailwind alimentées par le thème.
+      expect(badge.getAttribute('style') ?? '').toBe('');
+      expect(badge.className).toContain('text-primary-dark');
+      expect(badge.className).toContain('bg-surface-beige');
+      // La classe `text-primary-dark` lit la variable que le ConfigProvider a posée avec la config.
+      expect(document.documentElement.style.getPropertyValue(primaryDarkVariable())).toBe(
+        rgb(config.theme.colors['primary-dark']),
+      );
+    });
+
+    it('ne reprend pas la couleur de thème de la première carte dans la seconde', async () => {
+      const first = served(MAPS[0].file);
+      const { config: second } = await renderBadge(MAPS[1].file);
+
+      expect(first.theme.colors['primary-dark']).not.toBe(second.theme.colors['primary-dark']);
+      expect(document.documentElement.style.getPropertyValue(primaryDarkVariable())).not.toBe(
+        rgb(first.theme.colors['primary-dark']),
+      );
     });
   });
 

@@ -5,13 +5,13 @@ import { useEvents } from '@/hooks';
 import { useConfig } from '@/hooks/useConfig';
 import { Event } from '@/types/event';
 import { Loader2 } from 'lucide-react';
-import {checkIconColor, getIcon} from "@/utils/iconResolver.ts";
+import {DEFAULT_FORMAT_COLOR, checkIconColor, getIcon} from "@/utils/iconResolver.ts";
 import { formatEventDate } from '@/utils/formatEventDate';
 
 function MiniEventCard({ event }: { event: Event }) {
   const { helpers } = useConfig();
   const Icon = getIcon(event.type?.pictoName, Globe);
-  const typeColor = checkIconColor(event.type?.colorHexa, "#D4DDE2");
+  const typeColor = checkIconColor(event.type?.colorHexa, DEFAULT_FORMAT_COLOR);
   const weekBadgeText = helpers.getEditionBadge();
   const formattedDate = formatEventDate(event.date, {
     day: 'numeric',

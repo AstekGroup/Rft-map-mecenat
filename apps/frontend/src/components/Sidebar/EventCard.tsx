@@ -3,7 +3,7 @@ import { Event } from '@/types/event';
 import { Calendar, Clock, MapPin, BookOpen, Handshake, Globe } from 'lucide-react';
 import { Badge } from '@/components/UI';
 import {useConfig} from "@/hooks";
-import {checkIconColor, getIcon} from "@/utils/iconResolver.ts";
+import {DEFAULT_FORMAT_COLOR, checkIconColor, getIcon} from "@/utils/iconResolver.ts";
 import { formatEventDate } from '@/utils/formatEventDate';
 
 interface EventCardProps {
@@ -31,7 +31,7 @@ function EventCardComponent({
   });
 
   const Icon = getIcon(event?.type?.pictoName, Globe);
-  const color = checkIconColor(event.type?.colorHexa, "#D4DDE2");
+  const color = checkIconColor(event.type?.colorHexa, DEFAULT_FORMAT_COLOR);
 
   return (
     <div
