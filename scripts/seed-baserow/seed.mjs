@@ -358,13 +358,13 @@ function rng(seed) {
 // Dates en UTC (Z). Semaine configurée : weekStart..weekEnd dans app.config.json.
 const D = (iso) => iso; // lisibilité
 const hand = () => [
-  { k: 'E01', t: 'Atelier cuisine de légumineuses (cas nominal, tous champs)', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public', 'Familles / enfants'], th: ['Cuisine végétale', 'Santé & nutrition'], part: ['Association Légumineuses & Co', 'Ville de Nantes'], city: 'Nantes', num: 3, start: D('2026-09-22T16:00:00Z'), end: D('2026-09-22T18:30:00Z'), modality: 'Présentiel', img: [120, 200, 120], reg: true, cap: 25, tarif: 'Gratuit', access: ['Accessible PMR', 'Parking à proximité'], venue: 'Maison de quartier' },
+  { k: 'E01', t: 'Atelier cuisine de légumineuses (cas nominal, tous champs)', mod: MODERATION_OK, hl: true, fmt: ['Atelier de cuisine'], pub: ['Tout public', 'Familles / enfants'], th: ['Cuisine végétale', 'Santé & nutrition'], part: ['Association Légumineuses & Co', 'Ville de Nantes'], city: 'Nantes', num: 3, start: D('2026-09-22T16:00:00Z'), end: D('2026-09-22T18:30:00Z'), modality: 'Présentiel', img: [120, 200, 120], reg: true, cap: 25, tarif: 'Gratuit', access: ['Accessible PMR', 'Parking à proximité'], venue: 'Maison de quartier' },
   { k: 'E02', t: 'Webinaire : manger végétal au quotidien (en ligne)', mod: MODERATION_OK, fmt: ['Conférence/webinaire/table-ronde'], pub: ['Tout public'], th: ['Santé & nutrition'], modality: 'Distanciel', visio: 'https://visio.example.org/lgsv-webinaire', start: D('2026-09-23T17:00:00Z'), end: D('2026-09-23T18:00:00Z'), tarif: 'Gratuit' },
   { k: 'E03', t: 'Dégustation hybride (présentiel + visio)', mod: MODERATION_OK, fmt: ['Dégustation ou menu végétal'], pub: ['Professionnels'], th: ['Cuisine végétale'], modality: 'Hybride', city: 'Lyon', num: 12, visio: 'https://visio.example.org/hybride', start: D('2026-09-24T10:00:00Z'), end: D('2026-09-24T12:00:00Z') },
-  { k: 'E04', t: 'Festival multi-jours (22 au 26 septembre)', mod: MODERATION_OK, fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité', 'Agriculture'], part: ['Ferme du Vert Bocage'], modality: 'Présentiel', city: 'Rennes', num: 7, start: D('2026-09-22T08:00:00Z'), end: D('2026-09-26T20:00:00Z'), img: [230, 130, 170] },
+  { k: 'E04', t: 'Festival multi-jours (22 au 26 septembre)', mod: MODERATION_OK, hl: true, fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité', 'Agriculture'], part: ['Ferme du Vert Bocage'], modality: 'Présentiel', city: 'Rennes', num: 7, start: D('2026-09-22T08:00:00Z'), end: D('2026-09-26T20:00:00Z'), img: [230, 130, 170] },
   { k: 'E05', t: 'Atelier hors semaine (juin 2026)', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Scolaires'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Toulouse', num: 5, start: D('2026-06-10T09:00:00Z'), end: D('2026-06-10T11:00:00Z') },
   { k: 'E06', t: 'Conférence après la semaine (novembre 2026)', mod: MODERATION_OK, fmt: ['Conférence/webinaire/table-ronde'], pub: ['Professionnels'], th: ['Climat & environnement'], modality: 'Présentiel', city: 'Lille', num: 2, start: D('2026-11-05T18:00:00Z'), end: D('2026-11-05T20:00:00Z') },
-  { k: 'E07', t: 'Atelier créole végétal (La Réunion)', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Saint-Denis', num: 4, start: D('2026-09-23T04:00:00Z'), end: D('2026-09-23T07:00:00Z') },
+  { k: 'E07', t: 'Atelier créole végétal (La Réunion)', mod: MODERATION_OK, hl: true, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Saint-Denis', num: 4, start: D('2026-09-23T04:00:00Z'), end: D('2026-09-23T07:00:00Z') },
   { k: 'E08', t: 'Visite de potager (Martinique)', mod: MODERATION_OK, fmt: ['Visite de jardin / potager ou cueillette'], pub: ['Familles / enfants'], th: ['Agriculture'], modality: 'Présentiel', city: 'Fort-de-France', num: 9, start: D('2026-09-25T13:00:00Z'), end: D('2026-09-25T15:00:00Z') },
   { k: 'E09', t: 'Dégustation (Guyane)', mod: MODERATION_OK, fmt: ['Dégustation ou menu végétal'], pub: ['Tout public'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Cayenne', num: 1, start: D('2026-09-26T14:00:00Z'), end: D('2026-09-26T16:00:00Z') },
   { k: 'E10', t: 'Atelier (Guadeloupe)', mod: MODERATION_OK, fmt: ['Atelier pédagogique ou formation'], pub: ['Scolaires'], th: ['Santé & nutrition'], modality: 'Présentiel', city: 'Pointe-à-Pitre', num: 6, start: D('2026-09-22T13:00:00Z'), end: D('2026-09-22T15:00:00Z') },
@@ -430,6 +430,7 @@ function bulk(n) {
       end: `2026-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour + 2).padStart(2, '0')}:00:00Z`,
       tarif: rand() < 0.8 ? 'Gratuit' : 'Payant',
       montant: undefined,
+      hl: i % 25 === 0, // sans consommer le générateur : les données générées restent identiques
     });
   }
   return out;
@@ -493,6 +494,8 @@ async function main() {
   f.tarif = await ensureField(E, { name: FM.tariff, type: 'single_select', select_options: opts([TARIFF_FREE, 'Payant']) });
   f.price = await ensureField(E, { name: FM.price, type: 'number', number_decimal_places: 2 });
   f.moderation = await ensureField(E, { name: FM.moderation, type: 'single_select', select_options: opts([MODERATION_OK, 'Refusé', 'En attente'], 'light-red') });
+  // Rôle OPTIONNEL « coup de cœur » : colonne créée seulement si la config le déclare.
+  if (FM.highlight) f.highlight = await ensureField(E, { name: FM.highlight, type: 'boolean' });
   // Champs "formulaire" présents dans BaserowRecord mais non utilisés par le mapping (doivent être ignorés)
   await ensureField(E, { name: 'Respect de la charte', type: 'boolean' });
   await ensureField(E, { name: 'Avez-vous quelque chose à ajouter ?', type: 'long_text' });
@@ -593,6 +596,7 @@ async function main() {
       [FM.price]: e.montant != null ? String(e.montant) : null,
       [FM.moderation]: e.mod ? optId(f.moderation, e.mod) : null,
     };
+    if (FM.highlight) row[FM.highlight] = Boolean(e.hl);
     rows.push(row);
   }
   await insert(T.events, rows);
