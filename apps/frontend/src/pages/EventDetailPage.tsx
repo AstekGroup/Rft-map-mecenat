@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useEvents } from '@/hooks';
 import { useConfig } from '@/hooks/useConfig';
+import { HighlightBadge } from '@/components/UI';
 import { Loader2 } from 'lucide-react';
 import {getIcon} from "@/utils/iconResolver.ts";
 import { formatEventDate } from '@/utils/formatEventDate';
@@ -129,6 +130,7 @@ export function EventDetailPage() {
           <div className="p-6 md:p-8 border-b border-primary/10">
             {/* Badges */}
             <div className="flex flex-wrap items-center gap-2 mb-4">
+              {event.isHighlighted && <HighlightBadge size="md" withLabel />}
               <span
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-surface-beige text-primary-dark"
               >

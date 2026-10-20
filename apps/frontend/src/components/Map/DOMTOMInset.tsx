@@ -161,6 +161,7 @@ function TerritoryMap({ territory, geojson, mapStyleUrl, onEventClick, onTerrito
               <EventMarker
                 type={event.type}
                 isSelected={false}
+                isHighlighted={event.isHighlighted}
                 onClick={() => {
                   onEventClick?.(event.id);
                 }}

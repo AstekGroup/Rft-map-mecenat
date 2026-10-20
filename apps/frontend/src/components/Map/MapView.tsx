@@ -224,6 +224,7 @@ export function MapView({
               <EventMarker
                 type={event.type}
                 isSelected={isSelected || isHovered}
+                isHighlighted={event.isHighlighted}
                 onClick={() => handleEventClick(feature)}
                 onMouseEnter={() => onHoverEvent(event)}
                 onMouseLeave={() => onHoverEvent(null)}

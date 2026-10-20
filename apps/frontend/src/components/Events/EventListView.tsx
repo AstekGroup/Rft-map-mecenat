@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Event } from '@/types/event';
+import { HighlightBadge } from '@/components/UI';
 import { Pagination } from '@/components/UI/Pagination';
 import { useConfig } from '@/hooks/useConfig';
 import {Calendar, Clock, Users, Accessibility, MapPin, Video, BookOpen, HelpCircle} from 'lucide-react';
@@ -75,7 +76,9 @@ export function EventListView({ events }: EventListViewProps) {
               <Link
                 key={event.id}
                 to={`/evenement/${event.id}`}
-                className="bg-white rounded-xl shadow-card hover:shadow-popup transition-all group flex flex-col"
+                className={`bg-white rounded-xl shadow-card hover:shadow-popup transition-all group flex flex-col ${
+                  event.isHighlighted ? 'ring-2 ring-accent-yellow shadow-popup' : ''
+                }`}
               >
                 {/* Image */}
                 {event.imageUrl ? (
@@ -99,6 +102,11 @@ export function EventListView({ events }: EventListViewProps) {
                         {event.type?.name}
                       </span>
                     </div>
+                    {event.isHighlighted && (
+                      <div className="absolute top-1.5 right-1.5">
+                        <HighlightBadge size="xs" />
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div 
@@ -113,6 +121,11 @@ export function EventListView({ events }: EventListViewProps) {
                         </span>
                       )}
                     </div>
+                    {event.isHighlighted && (
+                      <div className="absolute top-1.5 right-1.5">
+                        <HighlightBadge size="xs" />
+                      </div>
+                    )}
                   </div>
                 )}
                 
