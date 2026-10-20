@@ -10,7 +10,6 @@
     "lint": "turbo run lint",
     "front:dev": "turbo run dev --filter=@make-map/frontend",
     "back:dev": "turbo run dev --filter=@make-map/backend",
-    "deploy:scw": "./scripts/deploy.sh",
     "deploy:v2": "./scripts/deploy-v2.sh",
     "test": "turbo run test --filter=@make-map/types --filter=@make-map/backend --filter=@make-map/frontend",
     "prepare": "husky"

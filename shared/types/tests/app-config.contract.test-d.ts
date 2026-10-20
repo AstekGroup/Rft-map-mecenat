@@ -13,7 +13,11 @@
 import { expectTypeOf, test } from 'vitest';
 import type { AppConfig } from '../src';
 import mainConfig from '../../../app.config.json';
+import lgsvConfig from '../../../app.config-LGSV.json';
 import secondConfig from '../../../docs/audit/fixtures/app.config.second-map.json';
+
+// Toute nouvelle config de carte à la racine (app.config-<CARTE>.json) doit être
+// importée ici : le contrat refuse une carte dont la forme dérive du type AppConfig.
 
 type RequiredKeys<T> = {
   [K in keyof T]-?: object extends Pick<T, K> ? never : K;
@@ -60,6 +64,10 @@ type ShapeErrors<
 
 test('app.config.json suit le type AppConfig', () => {
   expectTypeOf<ShapeErrors<typeof mainConfig>>().toBeNever();
+});
+
+test('la carte LGSV (app.config-LGSV.json) suit le type AppConfig', () => {
+  expectTypeOf<ShapeErrors<typeof lgsvConfig>>().toBeNever();
 });
 
 test('la fixture « seconde carte » suit le type AppConfig', () => {

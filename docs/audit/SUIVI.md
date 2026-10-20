@@ -1,7 +1,7 @@
 # SUIVI — Refonte « 1 code, N cartes »
 
 > **À lire en début de session. À mettre à jour en fin de session.**
-> État au **2026-10-19**, sur `develop` après la PR #40. Preuves : [JOURNAL.md](JOURNAL.md). Vérification complète : [../verdict.md](../verdict.md). Plan actif : [PLAN-FIN-REFONTE.md](PLAN-FIN-REFONTE.md). Plan historique et workflow Git : [PLAN-SESSIONS.md](PLAN-SESSIONS.md).
+> État au **2026-10-19** : sessions 0 à 7 faites sur `develop` (PR #40), session 8 (déploiement) faite sur la branche `feat/deploiement-n-cartes`. Preuves : [JOURNAL.md](JOURNAL.md). Vérification complète : [../verdict.md](../verdict.md). Plan actif : [PLAN-FIN-REFONTE.md](PLAN-FIN-REFONTE.md). Plan historique et workflow Git : [PLAN-SESSIONS.md](PLAN-SESSIONS.md).
 
 ## Philosophie (rappel)
 
@@ -26,7 +26,7 @@ Vérifié le 2026-10-19 sur `origin/develop` (`2273bcb`) : `pnpm build`, `pnpm l
 | 6 Cas dégradés | faite | #32 |
 | 7 Qualité | faite ; tests « deux cartes » et modèle de PR retirés par #38, **retrait annulé** (rétablis à l'étape 1) | #33 à #36, #38 |
 | Hors plan | seed à 1000 événements, test des métas, verdict | #37, #39, #40 |
-| 8 Déploiement | **non faite, hors du plan actif** | — |
+| 8 Déploiement | **faite** (branche `feat/deploiement-n-cartes` : une carte par VPS, Baserow dédié initialisé) | [#53](https://github.com/AstekGroup/Rft-map-mecenat/pull/53) |
 
 ## Plan actif : PLAN-FIN-REFONTE.md
 
@@ -41,11 +41,12 @@ Vérifié le 2026-10-19 sur `origin/develop` (`2273bcb`) : `pnpm build`, `pnpm l
 | 7 | Ménage (`App.tsx`, e2e périmé, branches mergées, lint) | à faire |
 | 8 | Verdict final | à faire |
 
-**Prochaine action** : merger les PR chaînées dans l'ordre (option « Create a merge commit »), en commençant par l'étape 1 (`test/retablir-deux-cartes`).
+**Prochaine action** : merger la PR [#53](https://github.com/AstekGroup/Rft-map-mecenat/pull/53) de la session 8 (`feat/deploiement-n-cartes`), puis reprendre les étapes 3 à 8 de [PLAN-FIN-REFONTE.md](PLAN-FIN-REFONTE.md) (résidus en dur, cas dégradés, docs neutres, filtre Modalité, ménage, verdict).
 
 ## Décisions en vigueur
 
-- **Hors du plan actif (2026-10-19)** : session 8 (déploiement) et `develop` vers `main` avec tags. On reste sur `develop`.
+- **Session 8 (2026-10-19, décision du propriétaire)** : une carte = un **VPS Scaleway DEV1-M minimum** avec son **Baserow auto-hébergé** (trop lourd pour DEV1-S), initialisé au premier déploiement en **schéma seul** (tables vides, l'équipe saisit les référentiels). Secrets : `prod-<carte>` par carte dans envmap ; `SECRET_KEY`, mot de passe admin et jeton **générés sur le VPS** (`deploy/instance/`, jamais régénérés). Les images embarquent `app.config-<CARTE>.json` (build refusé sans `APP_CONFIG_FILE`). Exception d'écriture Baserow documentée : `scripts/baserow-init/init.mjs` (création seule sur le Baserow **vide** de son instance).
+- **Hors du plan actif (2026-10-19)** : `develop` vers `main` avec tags. On reste sur `develop`.
 - **Tests « deux cartes » et modèle de PR (2026-10-19)** : remis (étape 1) ; leur retrait par #38 était une erreur. La vérification d'identité ou de config se fait avec `docs/audit/fixtures/app.config.second-map.json`.
 - **Config Astek (2026-10-19)** : supprimée (essai local sans valeur).
 - **Couleurs des référentiels (2026-10-19)** : choisies avec la **pastille native** d'une liste de choix Baserow (branche `feat/champ-couleur-baserow`, doc [../baserow/couleurs.md](../baserow/couleurs.md)) ; `referenceFields.color` revient à `Couleur`. Remplace la table « Couleurs » + recherche de la PR #50 (mergée puis retirée : trop lourde pour les admins). Écarté aussi et le plugin communautaire de champ couleur (image Baserow à reconstruire sur chaque VPS). Compromis : palette Baserow dans `baserow-palette.ts` ([PLAN-FIN-REFONTE.md](PLAN-FIN-REFONTE.md), « Compromis assumés »). Suivi : le filtre Thématiques affiche lui aussi la pastille couleur et le picto (branche `fix/filtre-thematiques-couleur`) ; le filtre Public cible reste sans pastille, en attente de décision du propriétaire.
@@ -64,4 +65,5 @@ Vérifié le 2026-10-19 sur `origin/develop` (`2273bcb`) : `pnpm build`, `pnpm l
 - Base Baserow réelle : si les admins ont déjà appliqué la procédure de la PR #50 (colonne de lien `Couleur` vers la table `Couleurs`), garder `referenceFields.color` = `Couleur (hexa)` le temps de convertir `Couleur` en liste de choix (voir [../baserow/couleurs.md](../baserow/couleurs.md), migration). Non vérifié : schéma de production jamais fourni.
 - Palette Baserow (`apps/backend/src/baserow/baserow-palette.ts`) relevée sur la 2.4.1 : à revérifier à chaque montée de version de Baserow (pastille inconnue = message dans les journaux).
 - Branches obsolètes `add-dynamic-filters`, `modify-audiences-filters`, `modif_audience_filters` : accord de leur auteur requis avant suppression.
+- Déploiement : testé en local (compose complet, builds réels, init idempotent, Caddy), **jamais sur un vrai VPS Scaleway** (non vérifié) ; snapshots Scaleway à activer par le propriétaire ; montée de version de Baserow (image figée en 2.4.1 dans le compose) à retester avec la palette (`baserow-palette.ts`).
 - Réglage GitHub à faire par le propriétaire : protéger `main` et `develop` (non vérifié).
