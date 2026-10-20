@@ -38,6 +38,7 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
     themes: [{ id: 'autre', name: 'Autres' }],
     organizer: 'Org Test',
     isDuringWeek: true,
+    isHighlighted: false,
     modality: 'presentiel',
     targetAudience: [{ id: 'tout-public', name:'tout-public'}],
     isFree: true,

@@ -19,6 +19,7 @@ const mockEvent: Event = {
   themes: [{ id: 'autre', name: 'Autres' }],
   organizer: 'Association Test',
   isDuringWeek: true,
+  isHighlighted: false,
   modality: 'presentiel',
   targetAudience: [{ id: 'tout-public', name: 'tout-public' }],
   isFree: true,

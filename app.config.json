@@ -59,6 +59,7 @@
   "baserow": {
     "moderationVisibleValue": "Accepté",
     "fieldMapping": {
+      "highlight": "Coup de cœur",
       "title": "Nom de l'événement",
       "description": "Description",
       "startDate": "Date de début de l'événement",

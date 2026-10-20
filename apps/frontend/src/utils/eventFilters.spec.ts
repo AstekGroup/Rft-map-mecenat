@@ -38,6 +38,7 @@ function makeEvent(overrides: Partial<Event> = {}): Event {
     themes: [{ id: 'cuisine', name: 'Cuisine' }],
     organizer: 'Association Verte',
     isDuringWeek: false,
+    isHighlighted: false,
     modality: 'presentiel',
     targetAudience: [],
     isFree: true,

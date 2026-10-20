@@ -25,6 +25,7 @@ export function buildTestConfig(): AppConfig {
     baserow: {
       moderationVisibleValue: 'Validé',
       fieldMapping: {
+        highlight: 'Favori',
         title: 'Intitulé',
         description: 'Présentation',
         startDate: 'Début',
