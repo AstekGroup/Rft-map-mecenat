@@ -43,6 +43,20 @@ Vérifié le 2026-10-19 sur `origin/develop` (`2273bcb`) : `pnpm build`, `pnpm l
 
 **Prochaine action** : merger les PR chaînées dans l'ordre (option « Create a merge commit »), en commençant par l'étape 1 (`test/retablir-deux-cartes`).
 
+## Améliorations UX de la carte (2026-10-20)
+
+Cinq branches courtes, chacune partie de `develop`, **non poussées, non mergées** (pas de PR créée). Chacune passe `pnpm lint` et `pnpm test` ; le rendu visuel dans un navigateur n'est **pas vérifié**.
+
+| Branche | Sujet |
+|---|---|
+| `feat/carte-sans-modalite` | Filtre Modalité retiré du panneau de la carte (propriété `views` dans `FILTER_DEFINITIONS`, il reste sur la liste ; le bouton « Événements en ligne » reste l'accès) |
+| `feat/carte-nav-haut-droite` | Accueil / Voir la liste / Événements en ligne en haut à droite, sur une ligne (icônes seules sous `2xl`) |
+| `feat/domtom-repliable` | Encart DOM/TOM repliable, replié par défaut (`aria-expanded`, mini-cartes montées à l'ouverture) |
+| `feat/sidebar-onglet-visible` | Onglet vertical « Filtres & liste » collé au bord gauche pour rouvrir le panneau, pastille du nombre de filtres actifs |
+| `feat/coup-de-coeur` | Coup de cœur piloté par le rôle **optionnel** `fieldMapping.highlight` (case à cocher Baserow) : voir [PERIMETRE-CONFIG-BASEROW.md](PERIMETRE-CONFIG-BASEROW.md) §5 |
+
+Points à traiter au merge : `feat/carte-sans-modalite` et `feat/coup-de-coeur` modifient toutes deux `getVisibleFilters` / `getVisibleFiltersFor` (paramètres `view` d'un côté, `hasHighlightedEvents` de l'autre) et `FilterPanel` : résoudre le conflit en gardant les deux paramètres. Le coup de cœur s'ajoute à la définition des filtres : sur la carte, la case est en tête du panneau ; sur la liste, c'est un bouton avant les menus. `scripts/seed-baserow/schema.mjs` et `scripts/baserow-init/init.mjs` n'existent que sur `feat/deploiement-n-cartes` (pas sur `develop`) : si cette branche est mergée, ils doivent aussi créer la colonne `highlight` quand le rôle est déclaré (non fait ici). **Base de production** : créer la colonne case à cocher à la main avant de déclarer le rôle dans `app.config.json` (sinon le contrôle du schéma signale l'écart et les événements ne sont pas marqués).
+
 ## Décisions en vigueur
 
 - **Hors du plan actif (2026-10-19)** : session 8 (déploiement) et `develop` vers `main` avec tags. On reste sur `develop`.
