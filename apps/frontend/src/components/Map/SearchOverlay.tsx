@@ -170,7 +170,7 @@ export function SearchOverlay({ onFlyTo, onSearchFilter }: SearchOverlayProps) {
   }, [onSearchFilter]);
 
   return (
-    <div ref={containerRef} className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-[90%] max-w-lg font-inter">
+    <div ref={containerRef} className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-[90%] sm:max-w-sm lg:max-w-lg font-inter">
       {/* Barre de recherche */}
       <div className="relative flex items-center">
         <div className="relative flex-1">
