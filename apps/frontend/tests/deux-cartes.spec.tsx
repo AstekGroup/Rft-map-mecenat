@@ -17,6 +17,10 @@ import { ConfigProvider } from '@/components/Layout/ConfigProvider';
 import { buildHelpers } from '@/hooks/useConfig';
 import { fetchConfig } from '@/services/api';
 import { HomePage } from '@/pages/HomePage';
+import type { EventFilters } from '@/hooks/useEvents';
+import type { Event } from '@/types/event';
+import { matchesFilters } from '@/utils/eventFilters';
+import { countDefinedFilters, getVisibleFilters } from '@/utils/filterDefinitions';
 import { resolveConfigTemplates } from '../../backend/src/config/config-template.util';
 
 vi.mock('@/services/api', () => ({ fetchConfig: vi.fn() }));
@@ -98,6 +102,82 @@ describe('deux cartes, un seul code (frontend)', () => {
       expect(helpers.getEditionBadge()).toBe(`${config.app.shortName} ${year}`);
       const duringWeek = helpers.getDateFilterModes().find((m) => m.mode === 'during-week');
       expect(duringWeek?.label).toContain(config.app.name);
+    });
+  });
+
+  describe('coup de cœur (rôle optionnel fieldMapping.highlight)', () => {
+    const noFilters: EventFilters = {
+      search: '',
+      dateFilter: 'all',
+      dateFrom: '',
+      dateTo: '',
+      regions: [],
+      types: [],
+      themes: [],
+      partners: [],
+      audiences: [],
+      postalCode: '',
+      modality: 'all',
+      showPastEvents: true,
+      highlightOnly: false,
+    };
+    const references = { partners: [], formats: [], themes: [], publics: [] };
+
+    /** Événements tels que les sert le backend : coup de cœur seulement si la config déclare le rôle. */
+    function eventsFor(config: AppConfig): Event[] {
+      const enabled = Boolean(config.baserow.fieldMapping.highlight);
+      const base = {
+        description: '',
+        time: '10:00',
+        address: '',
+        city: 'Nantes',
+        region: 'Pays de la Loire',
+        department: '',
+        postalCode: '44000',
+        latitude: 47.2,
+        longitude: -1.5,
+        themes: [],
+        organizer: 'Structure',
+        isDuringWeek: true,
+        modality: 'presentiel' as const,
+        targetAudience: [],
+        isFree: true,
+        date: config.app.eventDates.weekStart,
+      };
+      return [
+        { ...base, id: 'a', title: 'A', isHighlighted: enabled },
+        { ...base, id: 'b', title: 'B', isHighlighted: false },
+      ];
+    }
+
+    it('est actif sur la carte du dépôt : filtre proposé, seuls les coups de cœur restent', () => {
+      const config = served(MAPS[0].file);
+      const events = eventsFor(config);
+
+      expect(config.baserow.fieldMapping.highlight).toBeTruthy();
+      expect(events.some((e) => e.isHighlighted)).toBe(true);
+      expect(
+        getVisibleFilters(noFilters, references, [], true).map((d) => d.id),
+      ).toContain('highlight');
+      const today = new Date('2000-01-01T00:00:00');
+      expect(
+        events
+          .filter((e) => matchesFilters(e, { ...noFilters, highlightOnly: true }, today))
+          .map((e) => e.id),
+      ).toEqual(['a']);
+    });
+
+    it('est inactif sur la seconde carte (rôle absent) : aucun filtre, aucun badge, rien ne plante', () => {
+      const config = served(MAPS[1].file);
+      const events = eventsFor(config);
+
+      expect(config.baserow.fieldMapping.highlight).toBeUndefined();
+      expect(events.some((e) => e.isHighlighted)).toBe(false);
+      // Le filtre se masque de lui-même : l'interface déduit son affichage des événements.
+      expect(
+        getVisibleFilters(noFilters, references, [], events.some((e) => e.isHighlighted)).map((d) => d.id),
+      ).not.toContain('highlight');
+      expect(countDefinedFilters(noFilters)).toBe(0);
     });
   });
 

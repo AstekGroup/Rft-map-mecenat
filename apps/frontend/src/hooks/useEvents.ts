@@ -22,6 +22,8 @@ export interface EventFilters {
   postalCode: string;
   modality: 'all' | 'presentiel' | 'distanciel';
   showPastEvents: boolean;
+  /** N'afficher que les « coups de cœur » (`Event.isHighlighted`). */
+  highlightOnly: boolean;
 }
 
 /**
@@ -44,6 +46,8 @@ export interface EventFilterControls {
   availableThemes: LinkedTableRow[];
   availableFormats: LinkedTableRow[];
   availablePublics: LinkedTableRow[];
+  /** Au moins un événement chargé est un coup de cœur : sinon le filtre « Coup de cœur » est masqué. */
+  hasHighlightedEvents: boolean;
   /**
    * Référentiels que le backend n'a pas pu charger (erreur, à ne pas confondre avec un référentiel
    * vide qui masque simplement le filtre) : le filtre reste affiché avec un message.
@@ -79,6 +83,7 @@ const initialFilters: StoredFilters = {
   audiences: [],
   postalCode: '',
   modality: 'all',
+  highlightOnly: false,
 };
 
 export function useEvents() {
@@ -226,6 +231,8 @@ export function useEvents() {
     ) as Record<string, number>,
   }), [events, filteredEvents, availableFormats]);
 
+  const hasHighlightedEvents = useMemo(() => events.some((e) => e.isHighlighted), [events]);
+
   const controls: EventFilterControls = useMemo(() => ({
     filters,
     defaultShowPastEvents,
@@ -240,10 +247,12 @@ export function useEvents() {
     availableThemes,
     availableFormats,
     availablePublics,
+    hasHighlightedEvents,
     unavailableReferences,
   }), [
     filters, defaultShowPastEvents, updateFilters, toggleRegion, toggleType, toggleTheme, togglePartner, toggleAudience,
-    resetFilters, availablePartners, availableThemes, availableFormats, availablePublics, unavailableReferences,
+    resetFilters, availablePartners, availableThemes, availableFormats, availablePublics, hasHighlightedEvents,
+    unavailableReferences,
   ]);
 
   return {

@@ -16,6 +16,7 @@ const defaultFilters: EventFilters = {
   postalCode: '',
   modality: 'all',
   showPastEvents: false,
+  highlightOnly: false,
 };
 
 const today = new Date('2035-06-10T00:00:00');
@@ -64,7 +65,12 @@ describe('countActiveFilters', () => {
       dateFilter: 'during-week',
       modality: 'presentiel',
       showPastEvents: true,
-    })).toBe(11);
+      highlightOnly: true,
+    })).toBe(12);
+  });
+
+  it('compte le filtre « Coup de cœur » comme un filtre actif', () => {
+    expect(countActiveFilters({ ...defaultFilters, highlightOnly: true })).toBe(1);
   });
 
   it("ne compte « événements passés » que s'il s'écarte du défaut", () => {
@@ -135,6 +141,23 @@ describe('matchesFilters', () => {
     const sansFormat = makeEvent({ type: undefined as unknown as Event['type'] });
     expect(matchesFilters(sansFormat, { ...defaultFilters, types: ['atelier'] }, today)).toBe(false);
     expect(matchesFilters(sansFormat, defaultFilters, today)).toBe(true);
+  });
+
+  it('ne garde que les coups de cœur quand highlightOnly est actif', () => {
+    const coupDeCoeur = makeEvent({ isHighlighted: true });
+    const ordinaire = makeEvent({ isHighlighted: false });
+    const only = { ...defaultFilters, highlightOnly: true };
+
+    expect(matchesFilters(coupDeCoeur, only, today)).toBe(true);
+    expect(matchesFilters(ordinaire, only, today)).toBe(false);
+    // Inactif : aucun effet.
+    expect(matchesFilters(ordinaire, defaultFilters, today)).toBe(true);
+  });
+
+  it('combine « coup de cœur » avec les autres filtres', () => {
+    const only = { ...defaultFilters, highlightOnly: true, regions: ['Bretagne'] };
+    expect(matchesFilters(makeEvent({ isHighlighted: true }), only, today)).toBe(false);
+    expect(matchesFilters(makeEvent({ isHighlighted: true, region: 'Bretagne' }), only, today)).toBe(true);
   });
 
   it('refuse un événement sans partenaire quand un partenaire est demandé', () => {

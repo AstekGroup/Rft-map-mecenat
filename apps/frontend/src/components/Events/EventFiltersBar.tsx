@@ -6,6 +6,7 @@ import { FilterContent, FilterSearch } from '@/components/Filters/FilterContent'
 import { formatFrDateRangeLabel } from '@/utils/eventDateRange';
 import { countActiveFilters } from '@/utils/eventFilters';
 import { getVisibleFiltersFor } from '@/utils/filterDefinitions';
+import { HIGHLIGHT_LABEL } from '@/utils/highlight';
 import { ChevronDown, RotateCcw, X, History } from 'lucide-react';
 
 interface EventFiltersBarProps {
@@ -81,6 +82,14 @@ export function EventFiltersBar({ controls }: EventFiltersBarProps) {
 
   // Collecte des tags actifs
   const activeTags: { key: string; label: string; onRemove: () => void }[] = [];
+
+  if (filters.highlightOnly) {
+    activeTags.push({
+      key: 'highlightOnly',
+      label: HIGHLIGHT_LABEL,
+      onRemove: () => onUpdateFilters({ highlightOnly: false }),
+    });
+  }
 
   // Seul un écart avec le défaut est un filtre : après l'événement, afficher les passés est normal.
   if (filters.showPastEvents !== defaultShowPastEvents) {
@@ -189,7 +198,7 @@ export function EventFiltersBar({ controls }: EventFiltersBarProps) {
         {visibleFilters
           .filter((definition) => definition.id !== 'modality')
           .map((definition) =>
-            definition.id === 'postalCode' ? (
+            definition.id === 'postalCode' || definition.presentation === 'toggle' ? (
               <FilterContent key={definition.id} id={definition.id} variant="bar" controls={controls} />
             ) : (
               <FilterDropdown

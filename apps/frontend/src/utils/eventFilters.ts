@@ -45,6 +45,8 @@ export function matchesFilters(event: Event, filters: EventFilters, today: Date)
 
   if (filters.modality !== 'all' && event.modality !== filters.modality) return false;
 
+  if (filters.highlightOnly && !event.isHighlighted) return false;
+
   if (filters.dateFilter === 'during-week' && !event.isDuringWeek) return false;
   if (filters.dateFilter === 'custom' && filters.dateFrom) {
     const rangeStart = filters.dateFrom.slice(0, 10);

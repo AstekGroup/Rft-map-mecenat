@@ -259,6 +259,40 @@ describe('useEvents', () => {
       expect(result.current.events[0].modality).toBe('distanciel');
     });
 
+    it('filtre les coups de cœur, et réinitialise ce filtre avec les autres', async () => {
+      const events = [
+        makeEvent({ id: 'a', isHighlighted: true }),
+        makeEvent({ id: 'b', isHighlighted: false }),
+      ];
+      vi.mocked(api.fetchEvents).mockResolvedValueOnce(events);
+
+      const { result } = renderHook(() => useEvents());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      expect(result.current.controls.hasHighlightedEvents).toBe(true);
+
+      act(() => {
+        result.current.updateFilters({ highlightOnly: true });
+      });
+      expect(result.current.events.map((e) => e.id)).toEqual(['a']);
+      // Le filtre reste proposé : la disponibilité se calcule sur tous les événements, pas sur les filtrés.
+      expect(result.current.controls.hasHighlightedEvents).toBe(true);
+
+      act(() => {
+        result.current.resetFilters();
+      });
+      expect(result.current.filters.highlightOnly).toBe(false);
+      expect(result.current.events).toHaveLength(2);
+    });
+
+    it('ne propose pas de coup de cœur quand aucun événement n’en est un', async () => {
+      vi.mocked(api.fetchEvents).mockResolvedValueOnce([makeEvent({ id: 'a', isHighlighted: false })]);
+
+      const { result } = renderHook(() => useEvents());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      expect(result.current.controls.hasHighlightedEvents).toBe(false);
+    });
+
     it("filtre pendant la période de l'événement (during-week)", async () => {
       const events = [
         makeEvent({ id: 'a', isDuringWeek: true }),
