@@ -44,10 +44,12 @@ docker compose -f deploy/baserow-local/docker-compose.yml down -v
 |---|---|
 | Formats, Publics, Thématiques | colonnes de référence : nom (primaire), picto (liste à choix multiple lue par sa première valeur), couleur (liste à choix simple dont la pastille donne la couleur, voir [../baserow/couleurs.md](../baserow/couleurs.md)) |
 | Partenaires | nom (primaire), logo (fichier) |
-| Événements | un champ par rôle de `baserow.fieldMapping` : titre, description, dates, modalité, liens vers formats, publics, thématiques et partenaires, visuel, adresse, code postal, ville, lieu, organisateur et contacts, lien d'inscription, capacité, tarif, modération |
+| Événements | un champ par rôle de `baserow.fieldMapping` : titre, description, dates, modalité, liens vers formats, publics, thématiques et partenaires, visuel, adresse, code postal, ville, lieu, organisateur et contacts, lien d'inscription, capacité, tarif, modération ; coup de cœur (booléen) créé seulement si le rôle optionnel `highlight` est déclaré |
 | Champs de formulaire en plus | quelques colonnes non mappées (charte, remarque libre, téléphone) : vérifient que les colonnes inconnues sont ignorées |
 
 Les types sont **déduits du code**, pas relevés sur la vraie base (jamais fournie) : tout ce qui concerne la production est « non vérifié ». Le champ de modération est une liste de choix ; le backend filtre dessus par l'identifiant `BASEROW_MODERATION_FIELD_ID`.
+
+**Dates des événements de test** : dérivées de `app.eventDates` (`weekStart`..`weekEnd`) de la config seedée — le jeu de test reste cohérent avec les dates de la carte. Les cas « pendant la semaine » tombent dans la semaine configurée ; `E05` deux semaines avant ; `E06` deux semaines après ; `E27` commence à 23h30 UTC le jour du début de semaine (affiché à Paris après minuit, donc le jour suivant).
 
 ## Cas limites du jeu de test (36 événements manuels)
 
@@ -55,7 +57,7 @@ Les types sont **déduits du code**, pas relevés sur la vraie base (jamais four
 |---|---|
 | Modération | acceptés ×31, refusés (`R01`, `R02`), en attente (`P01`, `P02`), modération vide (`P03`) |
 | Modalité | présentiel, en ligne (`E02`), hybride (`E03`) |
-| Dates | pendant la semaine, hors semaine avant et après (`E05`, `E06`), multi-jours (`E04`), sans date (`E16`), fin avant début (`E26`), fuseau 22h30Z = 00h30 Paris (`E27`) |
+| Dates | pendant la semaine, hors semaine avant et après (`E05`, `E06`), multi-jours (`E04`), sans date (`E16`), fin avant début (`E26`), fuseau 23h30Z = après minuit à Paris (`E27`) |
 | Géographie | DOM-TOM ×5 (`E07` à `E11`), Corse (`E12`), adresse invalide (`E13`), adresse vide avec ville et code postal (`E14`) |
 | Données manquantes | sans format (`E15`), sans titre (`E17`), sans image ni description (`E20`), e-mail animateur seul (`E23`), capacité 0 (`E25`) |
 | Contenu | titre et description très longs avec `<script>` et HTML (`E21`), doublons de titre (`E30`, `E31`) |
@@ -63,7 +65,7 @@ Les types sont **déduits du code**, pas relevés sur la vraie base (jamais four
 | Tarif | payant 15 € (`E18`), gratuit implicite (`E19`) |
 | Volume | 964 événements générés par défaut : environ 80 % acceptés, 12 % en attente, 8 % refusés ; 30 villes (dont DOM-TOM) |
 
-Comportement attendu côté application (couvert par les tests et vérifié en sessions 5 et 6) : refusés, en attente et modération vide jamais publiés ; `E16` masqué et journalisé ; `E26` sans date de fin ; `E27` affiché le 22/09 à 00:30 ; `E13` non géocodé ; `E28` avec l'icône de repli ; `E29` avec icône et couleur de repli.
+Comportement attendu côté application (couvert par les tests et vérifié en sessions 5 et 6) : refusés, en attente et modération vide jamais publiés ; `E16` masqué et journalisé ; `E26` sans date de fin ; `E27` affiché à Paris après minuit, le jour qui suit le début de semaine ; `E13` non géocodé ; `E28` avec l'icône de repli ; `E29` avec icône et couleur de repli.
 
 ## Robustesse au schéma
 

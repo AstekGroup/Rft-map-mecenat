@@ -6,8 +6,8 @@
     "shortName": "LGSV",
     "description": "Carte interactive des événements de {{app.name}}",
     "eventDates": {
-      "weekStart": "2026-09-21",
-      "weekEnd": "2026-09-27"
+      "weekStart": "2026-10-26",
+      "weekEnd": "2026-11-01"
     },
     "url": "https://lagrandesemainevegetale.fr",
     "locale": "fr"
