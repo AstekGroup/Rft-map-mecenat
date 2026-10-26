@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Event } from '@/types/event';
 import { useConfig } from '@/hooks';
 import type { EventFilterControls } from '@/hooks';
@@ -39,6 +39,14 @@ export function Sidebar({
   const { helpers } = useConfig();
   const eventTitle = helpers.getText('home', 'mainTitle') || helpers.getEventName();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [hasCollapsedOnce, setHasCollapsedOnce] = useState(false);
+  const [showAttention, setShowAttention] = useState(false);
+
+  useEffect(() => {
+    if (!showAttention) return;
+    const timer = setTimeout(() => setShowAttention(false), 3000);
+    return () => clearTimeout(timer);
+  }, [showAttention]);
   const [activeTab, setActiveTab] = useState<'list' | 'filters'>('list');
 
   // Séparer les événements visibles sur la carte des autres
@@ -57,15 +65,42 @@ export function Sidebar({
 
   const activeFiltersCount = countActiveFilters(filters, controls.defaultShowPastEvents);
 
+  const collapse = () => {
+    setIsCollapsed(true);
+    // Attention brève au tout premier repli seulement (désactivée si `prefers-reduced-motion`, voir `motion-reduce`).
+    if (!hasCollapsedOnce) {
+      setHasCollapsedOnce(true);
+      setShowAttention(true);
+    }
+  };
+
   if (isCollapsed) {
     return (
-      <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center">
+      <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center pointer-events-none">
         <button
           onClick={() => setIsCollapsed(false)}
-          className="bg-primary text-white p-3 rounded-r-lg shadow-popup hover:bg-primary-dark transition-colors"
-          aria-label="Ouvrir le panneau latéral"
+          className={`pointer-events-auto relative flex flex-col items-center gap-2 bg-primary text-white pt-4 pb-3 px-3 rounded-r-xl shadow-popup hover:bg-primary-dark transition-colors ${
+            showAttention ? 'animate-pulse motion-reduce:animate-none' : ''
+          }`}
+          aria-label={
+            activeFiltersCount > 0
+              ? `Ouvrir le panneau Filtres et liste (${activeFiltersCount} filtre${activeFiltersCount > 1 ? 's' : ''} actif${activeFiltersCount > 1 ? 's' : ''})`
+              : 'Ouvrir le panneau Filtres et liste'
+          }
         >
-          <ChevronRight className="w-5 h-5" />
+          {activeFiltersCount > 0 && (
+            <span
+              data-testid="sidebar-tab-badge"
+              className="absolute -top-2 -right-2 inline-flex min-w-5 h-5 items-center justify-center rounded-full px-1 bg-accent-yellow text-[11px] font-bold text-text-primary leading-none shadow-popup"
+            >
+              {activeFiltersCount}
+            </span>
+          )}
+          <Filter className="w-5 h-5" aria-hidden="true" />
+          <span className="[writing-mode:vertical-rl] text-sm font-semibold font-poppins tracking-wide py-1">
+            Filtres &amp; liste
+          </span>
+          <ChevronRight className="w-5 h-5" aria-hidden="true" />
         </button>
       </div>
     );
@@ -76,7 +111,7 @@ export function Sidebar({
       {/* Overlay mobile */}
       <div 
         className="fixed inset-0 bg-black/30 z-10 sm:hidden"
-        onClick={() => setIsCollapsed(true)}
+        onClick={collapse}
       />
       
       <div className="absolute left-0 top-0 bottom-0 w-full sm:w-96 sm:max-w-[85vw] bg-surface-offwhite shadow-popup z-20 flex flex-col animate-slide-up font-inter border-r border-primary/10">
@@ -87,7 +122,7 @@ export function Sidebar({
             <h2 className="font-poppins font-semibold text-lg">Événements nationaux</h2>
           </div>
           <button
-            onClick={() => setIsCollapsed(true)}
+            onClick={collapse}
             className="p-2 hover:bg-white/10 rounded-lg transition-colors"
             aria-label="Fermer le panneau latéral"
           >
