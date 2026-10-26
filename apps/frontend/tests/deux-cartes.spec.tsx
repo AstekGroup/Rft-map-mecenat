@@ -157,7 +157,7 @@ describe('deux cartes, un seul code (frontend)', () => {
       expect(config.baserow.fieldMapping.highlight).toBeTruthy();
       expect(events.some((e) => e.isHighlighted)).toBe(true);
       expect(
-        getVisibleFilters(noFilters, references, [], true).map((d) => d.id),
+        getVisibleFilters(noFilters, references, [], undefined, true).map((d) => d.id),
       ).toContain('highlight');
       const today = new Date('2000-01-01T00:00:00');
       expect(
@@ -175,7 +175,7 @@ describe('deux cartes, un seul code (frontend)', () => {
       expect(events.some((e) => e.isHighlighted)).toBe(false);
       // Le filtre se masque de lui-même : l'interface déduit son affichage des événements.
       expect(
-        getVisibleFilters(noFilters, references, [], events.some((e) => e.isHighlighted)).map((d) => d.id),
+        getVisibleFilters(noFilters, references, [], undefined, events.some((e) => e.isHighlighted)).map((d) => d.id),
       ).not.toContain('highlight');
       expect(countDefinedFilters(noFilters)).toBe(0);
     });

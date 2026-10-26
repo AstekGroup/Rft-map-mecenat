@@ -161,7 +161,7 @@ describe('filtres unifiés (panneau de la carte et barre de la liste)', () => {
 
     expect(panel).not.toContain('highlight');
     expect(panel).toContain('themes');
-    expect(bar).toEqual(panel);
+    expect(withoutModality(bar)).toEqual(panel);
   });
 
   it('gardent le filtre « Coup de cœur » affiché tant qu’il est actif, même sans coup de cœur chargé', () => {
@@ -173,7 +173,7 @@ describe('filtres unifiés (panneau de la carte et barre de la liste)', () => {
     const bar = shownOn('bar', controls);
 
     expect(panel).toContain('highlight');
-    expect(bar).toEqual(panel);
+    expect(withoutModality(bar)).toEqual(panel);
   });
 
   it.each([
@@ -217,18 +217,18 @@ describe('getVisibleFilters', () => {
   };
 
   it('garde l\'ordre de FILTER_DEFINITIONS et tous les filtres si tout est rempli', () => {
-    expect(getVisibleFilters(defaultFilters, full, [], true).map((d) => d.id)).toEqual(ALL_IDS);
+    expect(getVisibleFilters(defaultFilters, full, [], undefined, true).map((d) => d.id)).toEqual(ALL_IDS);
   });
 
   it('retire un filtre dont le référentiel est vide', () => {
-    const ids = getVisibleFilters(defaultFilters, { ...full, publics: [] }, [], true).map((d) => d.id);
+    const ids = getVisibleFilters(defaultFilters, { ...full, publics: [] }, [], undefined, true).map((d) => d.id);
     expect(ids).not.toContain('audiences');
     expect(ids).toContain('themes');
   });
 
   it('masque « Coup de cœur » par défaut et le propose quand un événement en est un', () => {
     expect(getVisibleFilters(defaultFilters, full).map((d) => d.id)).not.toContain('highlight');
-    expect(getVisibleFilters(defaultFilters, full, [], true).map((d) => d.id)[0]).toBe('highlight');
+    expect(getVisibleFilters(defaultFilters, full, [], undefined, true).map((d) => d.id)[0]).toBe('highlight');
   });
 
   it('garde « Coup de cœur » visible quand il est actif, même sans coup de cœur', () => {
@@ -237,13 +237,13 @@ describe('getVisibleFilters', () => {
   });
 
   it('garde un filtre dont le référentiel est vide parce qu’il est en erreur', () => {
-    const ids = getVisibleFilters(defaultFilters, { ...full, publics: [] }, ['publics'], true).map((d) => d.id);
+    const ids = getVisibleFilters(defaultFilters, { ...full, publics: [] }, ['publics'], undefined, true).map((d) => d.id);
     expect(ids).toContain('audiences');
   });
 
   it('retire la modalité sur la carte, la garde sur la liste et sans écran précisé', () => {
     const idsFor = (view?: 'map' | 'list') =>
-      getVisibleFilters(defaultFilters, full, [], view).map((d) => d.id);
+      getVisibleFilters(defaultFilters, full, [], view, true).map((d) => d.id);
 
     expect(idsFor('map')).not.toContain('modality');
     expect(idsFor('map')).toEqual(ALL_IDS.filter((id) => id !== 'modality'));
