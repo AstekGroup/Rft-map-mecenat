@@ -355,45 +355,59 @@ function rng(seed) {
 }
 
 // ---------------------------------------------------------------- Événements de test
-// Dates en UTC (Z). Semaine configurée : weekStart..weekEnd dans app.config.json.
-const D = (iso) => iso; // lisibilité
+// Dates en UTC (Z), dérivées de la semaine configurée (app.eventDates.weekStart..weekEnd
+// dans app.config.json) : le jeu de test reste cohérent avec les dates de la carte seedée.
+const WEEK_START_MS = Date.parse(`${appConfig.app.eventDates.weekStart}T00:00:00Z`);
+const WEEK_END_MS = Date.parse(`${appConfig.app.eventDates.weekEnd}T00:00:00Z`);
+if (!Number.isFinite(WEEK_START_MS) || !Number.isFinite(WEEK_END_MS)) {
+  throw new Error('app.eventDates.weekStart/weekEnd doit être au format AAAA-MM-JJ (voir app.config.json)');
+}
+if (WEEK_END_MS < WEEK_START_MS) {
+  throw new Error('app.eventDates.weekEnd doit suivre weekStart (voir app.config.json)');
+}
+const WEEK_DAYS = Math.round((WEEK_END_MS - WEEK_START_MS) / 86400000) + 1;
+// Datetime UTC à dayOff (+n ou -n) jours de weekStart ; time au format HH:MM:SS.
+const D = (dayOff, time) => `${new Date(WEEK_START_MS + dayOff * 86400000).toISOString().slice(0, 10)}T${time}Z`;
+// Libellé de jour pour les titres des cas de test (« 26 octobre »).
+const dayFR = (dayOff) => new Date(WEEK_START_MS + dayOff * 86400000)
+  .toLocaleDateString('fr-FR', { timeZone: 'UTC', day: 'numeric', month: 'long' });
 const hand = () => [
-  { k: 'E01', t: 'Atelier cuisine de légumineuses (cas nominal, tous champs)', mod: MODERATION_OK, hl: true, fmt: ['Atelier de cuisine'], pub: ['Tout public', 'Familles / enfants'], th: ['Cuisine végétale', 'Santé & nutrition'], part: ['Association Légumineuses & Co', 'Ville de Nantes'], city: 'Nantes', num: 3, start: D('2026-09-22T16:00:00Z'), end: D('2026-09-22T18:30:00Z'), modality: 'Présentiel', img: [120, 200, 120], reg: true, cap: 25, tarif: 'Gratuit', access: ['Accessible PMR', 'Parking à proximité'], venue: 'Maison de quartier' },
-  { k: 'E02', t: 'Webinaire : manger végétal au quotidien (en ligne)', mod: MODERATION_OK, fmt: ['Conférence/webinaire/table-ronde'], pub: ['Tout public'], th: ['Santé & nutrition'], modality: 'Distanciel', visio: 'https://visio.example.org/lgsv-webinaire', start: D('2026-09-23T17:00:00Z'), end: D('2026-09-23T18:00:00Z'), tarif: 'Gratuit' },
-  { k: 'E03', t: 'Dégustation hybride (présentiel + visio)', mod: MODERATION_OK, fmt: ['Dégustation ou menu végétal'], pub: ['Professionnels'], th: ['Cuisine végétale'], modality: 'Hybride', city: 'Lyon', num: 12, visio: 'https://visio.example.org/hybride', start: D('2026-09-24T10:00:00Z'), end: D('2026-09-24T12:00:00Z') },
-  { k: 'E04', t: 'Festival multi-jours (22 au 26 septembre)', mod: MODERATION_OK, hl: true, fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité', 'Agriculture'], part: ['Ferme du Vert Bocage'], modality: 'Présentiel', city: 'Rennes', num: 7, start: D('2026-09-22T08:00:00Z'), end: D('2026-09-26T20:00:00Z'), img: [230, 130, 170] },
-  { k: 'E05', t: 'Atelier hors semaine (juin 2026)', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Scolaires'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Toulouse', num: 5, start: D('2026-06-10T09:00:00Z'), end: D('2026-06-10T11:00:00Z') },
-  { k: 'E06', t: 'Conférence après la semaine (novembre 2026)', mod: MODERATION_OK, fmt: ['Conférence/webinaire/table-ronde'], pub: ['Professionnels'], th: ['Climat & environnement'], modality: 'Présentiel', city: 'Lille', num: 2, start: D('2026-11-05T18:00:00Z'), end: D('2026-11-05T20:00:00Z') },
-  { k: 'E07', t: 'Atelier créole végétal (La Réunion)', mod: MODERATION_OK, hl: true, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Saint-Denis', num: 4, start: D('2026-09-23T04:00:00Z'), end: D('2026-09-23T07:00:00Z') },
-  { k: 'E08', t: 'Visite de potager (Martinique)', mod: MODERATION_OK, fmt: ['Visite de jardin / potager ou cueillette'], pub: ['Familles / enfants'], th: ['Agriculture'], modality: 'Présentiel', city: 'Fort-de-France', num: 9, start: D('2026-09-25T13:00:00Z'), end: D('2026-09-25T15:00:00Z') },
-  { k: 'E09', t: 'Dégustation (Guyane)', mod: MODERATION_OK, fmt: ['Dégustation ou menu végétal'], pub: ['Tout public'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Cayenne', num: 1, start: D('2026-09-26T14:00:00Z'), end: D('2026-09-26T16:00:00Z') },
-  { k: 'E10', t: 'Atelier (Guadeloupe)', mod: MODERATION_OK, fmt: ['Atelier pédagogique ou formation'], pub: ['Scolaires'], th: ['Santé & nutrition'], modality: 'Présentiel', city: 'Pointe-à-Pitre', num: 6, start: D('2026-09-22T13:00:00Z'), end: D('2026-09-22T15:00:00Z') },
-  { k: 'E11', t: 'Rencontre (Mayotte)', mod: MODERATION_OK, fmt: ['Autres'], pub: ['Tout public'], th: ['Agriculture'], modality: 'Présentiel', city: 'Mamoudzou', num: 2, start: D('2026-09-27T06:00:00Z'), end: D('2026-09-27T09:00:00Z') },
-  { k: 'E12', t: 'Cueillette (Corse)', mod: MODERATION_OK, fmt: ['Visite de jardin / potager ou cueillette'], pub: ['Familles / enfants'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Ajaccio', num: 8, start: D('2026-09-24T08:00:00Z'), end: D('2026-09-24T11:00:00Z') },
-  { k: 'E13', t: 'Adresse invalide (géocodage doit échouer)', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', rawAddr: ['zzzz qqqq 999 impasse introuvable', '00000', 'Nullepart-sur-Mer'], start: D('2026-09-23T10:00:00Z') },
-  { k: 'E14', t: 'Adresse vide, seulement ville + code postal', mod: MODERATION_OK, fmt: ['Dégustation ou menu végétal'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', rawAddr: ['', '34000', 'Montpellier'], start: D('2026-09-24T10:00:00Z') },
-  { k: 'E15', t: 'Sans format (champ lié vide)', mod: MODERATION_OK, fmt: [], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Bordeaux', num: 4, start: D('2026-09-25T10:00:00Z') },
+  { k: 'E01', t: 'Atelier cuisine de légumineuses (cas nominal, tous champs)', mod: MODERATION_OK, hl: true, fmt: ['Atelier de cuisine'], pub: ['Tout public', 'Familles / enfants'], th: ['Cuisine végétale', 'Santé & nutrition'], part: ['Association Légumineuses & Co', 'Ville de Nantes'], city: 'Nantes', num: 3, start: D(1, '16:00:00'), end: D(1, '18:30:00'), modality: 'Présentiel', img: [120, 200, 120], reg: true, cap: 25, tarif: 'Gratuit', access: ['Accessible PMR', 'Parking à proximité'], venue: 'Maison de quartier' },
+  { k: 'E02', t: 'Webinaire : manger végétal au quotidien (en ligne)', mod: MODERATION_OK, fmt: ['Conférence/webinaire/table-ronde'], pub: ['Tout public'], th: ['Santé & nutrition'], modality: 'Distanciel', visio: 'https://visio.example.org/lgsv-webinaire', start: D(2, '17:00:00'), end: D(2, '18:00:00'), tarif: 'Gratuit' },
+  { k: 'E03', t: 'Dégustation hybride (présentiel + visio)', mod: MODERATION_OK, fmt: ['Dégustation ou menu végétal'], pub: ['Professionnels'], th: ['Cuisine végétale'], modality: 'Hybride', city: 'Lyon', num: 12, visio: 'https://visio.example.org/hybride', start: D(3, '10:00:00'), end: D(3, '12:00:00') },
+  { k: 'E04', t: `Festival multi-jours (${dayFR(1)} au ${dayFR(5)})`, mod: MODERATION_OK, hl: true, fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité', 'Agriculture'], part: ['Ferme du Vert Bocage'], modality: 'Présentiel', city: 'Rennes', num: 7, start: D(1, '08:00:00'), end: D(5, '20:00:00'), img: [230, 130, 170] },
+  { k: 'E05', t: `Atelier hors semaine (avant, ${dayFR(-14)})`, mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Scolaires'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Toulouse', num: 5, start: D(-14, '09:00:00'), end: D(-14, '11:00:00') },
+  { k: 'E06', t: `Conférence après la semaine (${dayFR(14)})`, mod: MODERATION_OK, fmt: ['Conférence/webinaire/table-ronde'], pub: ['Professionnels'], th: ['Climat & environnement'], modality: 'Présentiel', city: 'Lille', num: 2, start: D(14, '18:00:00'), end: D(14, '20:00:00') },
+  { k: 'E07', t: 'Atelier créole végétal (La Réunion)', mod: MODERATION_OK, hl: true, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Saint-Denis', num: 4, start: D(2, '04:00:00'), end: D(2, '07:00:00') },
+  { k: 'E08', t: 'Visite de potager (Martinique)', mod: MODERATION_OK, fmt: ['Visite de jardin / potager ou cueillette'], pub: ['Familles / enfants'], th: ['Agriculture'], modality: 'Présentiel', city: 'Fort-de-France', num: 9, start: D(4, '13:00:00'), end: D(4, '15:00:00') },
+  { k: 'E09', t: 'Dégustation (Guyane)', mod: MODERATION_OK, fmt: ['Dégustation ou menu végétal'], pub: ['Tout public'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Cayenne', num: 1, start: D(5, '14:00:00'), end: D(5, '16:00:00') },
+  { k: 'E10', t: 'Atelier (Guadeloupe)', mod: MODERATION_OK, fmt: ['Atelier pédagogique ou formation'], pub: ['Scolaires'], th: ['Santé & nutrition'], modality: 'Présentiel', city: 'Pointe-à-Pitre', num: 6, start: D(1, '13:00:00'), end: D(1, '15:00:00') },
+  { k: 'E11', t: 'Rencontre (Mayotte)', mod: MODERATION_OK, fmt: ['Autres'], pub: ['Tout public'], th: ['Agriculture'], modality: 'Présentiel', city: 'Mamoudzou', num: 2, start: D(6, '06:00:00'), end: D(6, '09:00:00') },
+  { k: 'E12', t: 'Cueillette (Corse)', mod: MODERATION_OK, fmt: ['Visite de jardin / potager ou cueillette'], pub: ['Familles / enfants'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Ajaccio', num: 8, start: D(3, '08:00:00'), end: D(3, '11:00:00') },
+  { k: 'E13', t: 'Adresse invalide (géocodage doit échouer)', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', rawAddr: ['zzzz qqqq 999 impasse introuvable', '00000', 'Nullepart-sur-Mer'], start: D(2, '10:00:00') },
+  { k: 'E14', t: 'Adresse vide, seulement ville + code postal', mod: MODERATION_OK, fmt: ['Dégustation ou menu végétal'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', rawAddr: ['', '34000', 'Montpellier'], start: D(3, '10:00:00') },
+  { k: 'E15', t: 'Sans format (champ lié vide)', mod: MODERATION_OK, fmt: [], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Bordeaux', num: 4, start: D(4, '10:00:00') },
   { k: 'E16', t: 'Sans date de début', mod: MODERATION_OK, fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Strasbourg', num: 3, start: null, end: null },
-  { k: 'E17', t: '', mod: MODERATION_OK, fmt: ['Autres'], pub: ['Tout public'], th: [], modality: 'Présentiel', city: 'Dijon', num: 3, start: D('2026-09-25T09:00:00Z') },
-  { k: 'E18', t: 'Atelier payant (15 EUR)', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Professionnels'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Grenoble', num: 5, tarif: 'Payant', montant: 15, start: D('2026-09-26T09:00:00Z') },
-  { k: 'E19', t: 'Gratuit implicite (tarif et montant vides)', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Tours', num: 6, start: D('2026-09-26T09:00:00Z') },
-  { k: 'E20', t: 'Sans image ni description', mod: MODERATION_OK, fmt: ['Autres'], pub: ['Tout public'], th: [], modality: 'Présentiel', city: 'Limoges', num: 2, desc: '', start: D('2026-09-27T09:00:00Z') },
-  { k: 'E21', t: 'Titre très long avec caractères spéciaux <b>gras</b> & "guillemets" — ' + 'très long '.repeat(18), mod: MODERATION_OK, fmt: ['Conférence/webinaire/table-ronde'], pub: ['Tout public'], th: ['Santé & nutrition'], modality: 'Présentiel', city: 'Amiens', num: 4, desc: '<script>alert("xss")</script> Description longue. ' + 'Lorem ipsum dolor sit amet. '.repeat(60), start: D('2026-09-23T09:00:00Z') },
-  { k: 'E22', t: 'Multi thèmes, publics et partenaires', mod: MODERATION_OK, fmt: ['Festival'], pub: ['Tout public', 'Familles / enfants', 'Scolaires', 'Professionnels'], th: ['Cuisine végétale', 'Santé & nutrition', 'Biodiversité', 'Agriculture', 'Climat & environnement'], part: ['Association Légumineuses & Co', 'Ferme du Vert Bocage', 'Fédération des Cuisiniers Végétaux', '[TEST] Partenaire sans logo'], modality: 'Présentiel', city: 'Metz', num: 2, start: D('2026-09-25T09:00:00Z'), img: [100, 150, 220] },
-  { k: 'E23', t: 'Contact : e-mail animateur uniquement (repli)', mod: MODERATION_OK, fmt: ['Atelier pédagogique ou formation'], pub: ['Scolaires'], th: ['Santé & nutrition'], modality: 'Présentiel', city: 'Orléans', num: 9, noContactEmail: true, start: D('2026-09-24T14:00:00Z') },
-  { k: 'E24', t: 'Avec lien d\'inscription', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Poitiers', num: 3, reg: true, start: D('2026-09-23T14:00:00Z') },
-  { k: 'E25', t: 'Capacité 0 et accès multi-modalités', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Perpignan', num: 4, cap: 0, access: ACCESS, start: D('2026-09-23T09:00:00Z') },
-  { k: 'E26', t: 'Date de fin AVANT la date de début', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Brest', num: 4, start: D('2026-09-25T18:00:00Z'), end: D('2026-09-24T09:00:00Z') },
-  { k: 'E27', t: 'Fuseau horaire : 22h30 UTC = 00h30 Paris le 22/09', mod: MODERATION_OK, fmt: ['Dégustation ou menu végétal'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Paris', num: 20, start: D('2026-09-21T22:30:00Z'), end: D('2026-09-22T01:00:00Z') },
-  { k: 'E28', t: 'Format de test (picto invalide)', mod: MODERATION_OK, fmt: ['[TEST] Format picto invalide'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Marseille', num: 14, start: D('2026-09-24T09:00:00Z') },
-  { k: 'E29', t: 'Format de test (sans picto ni couleur)', mod: MODERATION_OK, fmt: ['[TEST] Format sans picto ni couleur'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Nice', num: 11, start: D('2026-09-24T09:00:00Z') },
-  { k: 'E30', t: 'Doublon de titre', mod: MODERATION_OK, fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Rouen', num: 3, start: D('2026-09-24T09:00:00Z') },
-  { k: 'E31', t: 'Doublon de titre', mod: MODERATION_OK, fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Clermont-Ferrand', num: 3, start: D('2026-09-24T09:00:00Z') },
-  { k: 'R01', t: '[REFUSÉ] Événement refusé par la modération', mod: 'Refusé', fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Paris', num: 1, start: D('2026-09-24T09:00:00Z') },
-  { k: 'R02', t: '[REFUSÉ] Autre événement refusé', mod: 'Refusé', fmt: ['Autres'], pub: ['Tout public'], th: [], modality: 'Distanciel', start: D('2026-09-25T09:00:00Z') },
-  { k: 'P01', t: '[EN ATTENTE] À modérer 1', mod: 'En attente', fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Lyon', num: 40, start: D('2026-09-24T09:00:00Z') },
-  { k: 'P02', t: '[EN ATTENTE] À modérer 2', mod: 'En attente', fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Nantes', num: 40, start: D('2026-09-24T09:00:00Z') },
-  { k: 'P03', t: '[MODÉRATION VIDE] Soumis par le formulaire, non traité', mod: null, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Toulouse', num: 40, start: D('2026-09-24T09:00:00Z') },
+  { k: 'E17', t: '', mod: MODERATION_OK, fmt: ['Autres'], pub: ['Tout public'], th: [], modality: 'Présentiel', city: 'Dijon', num: 3, start: D(4, '09:00:00') },
+  { k: 'E18', t: 'Atelier payant (15 EUR)', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Professionnels'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Grenoble', num: 5, tarif: 'Payant', montant: 15, start: D(5, '09:00:00') },
+  { k: 'E19', t: 'Gratuit implicite (tarif et montant vides)', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Tours', num: 6, start: D(5, '09:00:00') },
+  { k: 'E20', t: 'Sans image ni description', mod: MODERATION_OK, fmt: ['Autres'], pub: ['Tout public'], th: [], modality: 'Présentiel', city: 'Limoges', num: 2, desc: '', start: D(6, '09:00:00') },
+  { k: 'E21', t: 'Titre très long avec caractères spéciaux <b>gras</b> & "guillemets" — ' + 'très long '.repeat(18), mod: MODERATION_OK, fmt: ['Conférence/webinaire/table-ronde'], pub: ['Tout public'], th: ['Santé & nutrition'], modality: 'Présentiel', city: 'Amiens', num: 4, desc: '<script>alert("xss")</script> Description longue. ' + 'Lorem ipsum dolor sit amet. '.repeat(60), start: D(2, '09:00:00') },
+  { k: 'E22', t: 'Multi thèmes, publics et partenaires', mod: MODERATION_OK, fmt: ['Festival'], pub: ['Tout public', 'Familles / enfants', 'Scolaires', 'Professionnels'], th: ['Cuisine végétale', 'Santé & nutrition', 'Biodiversité', 'Agriculture', 'Climat & environnement'], part: ['Association Légumineuses & Co', 'Ferme du Vert Bocage', 'Fédération des Cuisiniers Végétaux', '[TEST] Partenaire sans logo'], modality: 'Présentiel', city: 'Metz', num: 2, start: D(4, '09:00:00'), img: [100, 150, 220] },
+  { k: 'E23', t: 'Contact : e-mail animateur uniquement (repli)', mod: MODERATION_OK, fmt: ['Atelier pédagogique ou formation'], pub: ['Scolaires'], th: ['Santé & nutrition'], modality: 'Présentiel', city: 'Orléans', num: 9, noContactEmail: true, start: D(3, '14:00:00') },
+  { k: 'E24', t: 'Avec lien d\'inscription', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Poitiers', num: 3, reg: true, start: D(2, '14:00:00') },
+  { k: 'E25', t: 'Capacité 0 et accès multi-modalités', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Perpignan', num: 4, cap: 0, access: ACCESS, start: D(2, '09:00:00') },
+  { k: 'E26', t: 'Date de fin AVANT la date de début', mod: MODERATION_OK, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Brest', num: 4, start: D(4, '18:00:00'), end: D(3, '09:00:00') },
+  { k: 'E27', t: `Fuseau horaire : 23h30 UTC, affiché à Paris après minuit le ${dayFR(1)}`, mod: MODERATION_OK, fmt: ['Dégustation ou menu végétal'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Paris', num: 20, start: D(0, '23:30:00'), end: D(1, '02:00:00') },
+  { k: 'E28', t: 'Format de test (picto invalide)', mod: MODERATION_OK, fmt: ['[TEST] Format picto invalide'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Marseille', num: 14, start: D(3, '09:00:00') },
+  { k: 'E29', t: 'Format de test (sans picto ni couleur)', mod: MODERATION_OK, fmt: ['[TEST] Format sans picto ni couleur'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Nice', num: 11, start: D(3, '09:00:00') },
+  { k: 'E30', t: 'Doublon de titre', mod: MODERATION_OK, fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Rouen', num: 3, start: D(3, '09:00:00') },
+  { k: 'E31', t: 'Doublon de titre', mod: MODERATION_OK, fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Clermont-Ferrand', num: 3, start: D(3, '09:00:00') },
+  { k: 'R01', t: '[REFUSÉ] Événement refusé par la modération', mod: 'Refusé', fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Paris', num: 1, start: D(3, '09:00:00') },
+  { k: 'R02', t: '[REFUSÉ] Autre événement refusé', mod: 'Refusé', fmt: ['Autres'], pub: ['Tout public'], th: [], modality: 'Distanciel', start: D(4, '09:00:00') },
+  { k: 'P01', t: '[EN ATTENTE] À modérer 1', mod: 'En attente', fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Lyon', num: 40, start: D(3, '09:00:00') },
+  { k: 'P02', t: '[EN ATTENTE] À modérer 2', mod: 'En attente', fmt: ['Festival'], pub: ['Tout public'], th: ['Biodiversité'], modality: 'Présentiel', city: 'Nantes', num: 40, start: D(3, '09:00:00') },
+  { k: 'P03', t: '[MODÉRATION VIDE] Soumis par le formulaire, non traité', mod: null, fmt: ['Atelier de cuisine'], pub: ['Tout public'], th: ['Cuisine végétale'], modality: 'Présentiel', city: 'Toulouse', num: 40, start: D(3, '09:00:00') },
 ];
 
 function bulk(n) {
@@ -411,10 +425,12 @@ function bulk(n) {
     const r = rand();
     const mod = r < 0.8 ? MODERATION_OK : r < 0.92 ? 'En attente' : 'Refusé';
     const online = rand() < 0.12;
-    const day = rand() < 0.75 ? 21 + Math.floor(rand() * 7) : 1 + Math.floor(rand() * 28);
-    const month = day >= 21 && day <= 27 && rand() < 0.99 ? 9 : pick([6, 7, 8, 10, 11]);
+    // 75 % pendant la semaine configurée, sinon réparti avant (majorité) ou après.
+    const dayOff = rand() < 0.75
+      ? Math.floor(rand() * WEEK_DAYS)
+      : (rand() < 0.6 ? -(15 + Math.floor(rand() * 120)) : WEEK_DAYS + Math.floor(rand() * 35));
     const hour = 7 + Math.floor(rand() * 13);
-    const start = `2026-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:00:00Z`;
+    const start = D(dayOff, `${String(hour).padStart(2, '0')}:00:00`);
     out.push({
       k: `B${i}`,
       t: `${pick(kinds)} ${pick(subjects)} #${i + 1}`,
@@ -427,7 +443,7 @@ function bulk(n) {
       city: online ? undefined : city,
       num: 1 + Math.floor(rand() * 6),
       start,
-      end: `2026-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour + 2).padStart(2, '0')}:00:00Z`,
+      end: D(dayOff, `${String(hour + 2).padStart(2, '0')}:00:00`),
       tarif: rand() < 0.8 ? 'Gratuit' : 'Payant',
       montant: undefined,
       hl: i % 25 === 0, // sans consommer le générateur : les données générées restent identiques
