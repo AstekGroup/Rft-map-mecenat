@@ -59,6 +59,7 @@ Points à traiter au merge : `feat/carte-sans-modalite` et `feat/coup-de-coeur` 
 
 ## Décisions en vigueur
 
+- **Dates de test (2026-10-26)** : semaine de `app.config.json` passée sur la semaine en cours (2026-10-26 → 2026-11-01) ; le seed dérive désormais les dates des événements de `app.eventDates` de la config (plus de dates en dur). `E27` commence à 23h30 UTC : affiché à Paris après minuit toute l'année (heure d'été comme d'hiver).
 - **Hors du plan actif (2026-10-19)** : session 8 (déploiement) et `develop` vers `main` avec tags. On reste sur `develop`.
 - **Tests « deux cartes » et modèle de PR (2026-10-19)** : remis (étape 1) ; leur retrait par #38 était une erreur. La vérification d'identité ou de config se fait avec `docs/audit/fixtures/app.config.second-map.json`.
 - **Config Astek (2026-10-19)** : supprimée (essai local sans valeur).
