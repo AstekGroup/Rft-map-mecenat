@@ -16,6 +16,7 @@ export interface ConfigValidationResult {
  * ajouter un rôle à `BaserowFieldMapping` sans l'ajouter ici ne compile pas.
  */
 const FIELD_MAPPING_ROLES: Record<keyof BaserowFieldMapping, true> = {
+  highlight: true,
   title: true,
   description: true,
   startDate: true,
@@ -58,9 +59,22 @@ const MODALITIES: Record<EventModality, true> = {
   distanciel: true,
 };
 
-export const FIELD_MAPPING_KEYS = Object.keys(
+/**
+ * Rôles OPTIONNELS : leur absence n'est pas une erreur (fonctionnalité inactive), seulement un
+ * avertissement. Tous les autres rôles de `BaserowFieldMapping` sont obligatoires.
+ */
+const OPTIONAL_FIELD_MAPPING_ROLES = [
+  'highlight',
+] as const satisfies readonly (keyof BaserowFieldMapping)[];
+
+const ALL_FIELD_MAPPING_KEYS = Object.keys(
   FIELD_MAPPING_ROLES,
 ) as (keyof BaserowFieldMapping)[];
+
+/** Rôles obligatoires de `baserow.fieldMapping` (hors rôles optionnels). */
+export const FIELD_MAPPING_KEYS = ALL_FIELD_MAPPING_KEYS.filter(
+  (role) => !(OPTIONAL_FIELD_MAPPING_ROLES as readonly string[]).includes(role),
+);
 export const REFERENCE_FIELD_KEYS = Object.keys(
   REFERENCE_FIELD_ROLES,
 ) as (keyof BaserowReferenceFields)[];
@@ -310,16 +324,17 @@ function validateFieldMapping(
       );
     }
   }
+  validateHighlightRole(mapping.highlight, warnings);
   for (const key of Object.keys(mapping)) {
     if (!has(FIELD_MAPPING_ROLES, key)) {
       warnings.push(
-        `baserow.fieldMapping.${key} : rôle inconnu, ignoré (rôles connus : ${FIELD_MAPPING_KEYS.join(', ')}).`,
+        `baserow.fieldMapping.${key} : rôle inconnu, ignoré (rôles connus : ${ALL_FIELD_MAPPING_KEYS.join(', ')}).`,
       );
     }
   }
 
   const byColumn = new Map<string, string[]>();
-  for (const role of FIELD_MAPPING_KEYS) {
+  for (const role of ALL_FIELD_MAPPING_KEYS) {
     const column = mapping[role];
     if (!isFilled(column)) continue;
     byColumn.set(column, [...(byColumn.get(column) ?? []), role]);
@@ -330,6 +345,22 @@ function validateFieldMapping(
         `baserow.fieldMapping : la colonne « ${column} » est utilisée par plusieurs rôles (${roles.join(', ')}). Vérifier qu'il ne s'agit pas d'une erreur de copie.`,
       );
     }
+  }
+}
+
+/**
+ * `highlight` (« coup de cœur ») est OPTIONNEL : clé absente ou vide = fonctionnalité inactive,
+ * signalée par un avertissement (jamais une erreur, la carte reste servie).
+ */
+function validateHighlightRole(value: unknown, warnings: string[]): void {
+  if (value === undefined) {
+    warnings.push(
+      "baserow.fieldMapping.highlight : rôle optionnel absent, la fonctionnalité « coup de cœur » est désactivée (aucun badge, aucun filtre). Pour l'activer, indiquer le nom d'une colonne Baserow de type case à cocher.",
+    );
+  } else if (!isFilled(value)) {
+    warnings.push(
+      `baserow.fieldMapping.highlight : nom de colonne attendu (reçu : ${show(value)}), la fonctionnalité « coup de cœur » est désactivée.`,
+    );
   }
 }
 

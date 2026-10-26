@@ -30,7 +30,7 @@ Cas limite assumé : `texts.home` mélange contenu de marque (`mainTitle`, `main
 | Titres | `texts.meta` (titre, description, Open Graph), `texts.home` | Un titre manquant a un repli lisible, jamais la clé brute. |
 | Période | `filters.dateFilterModes` | Libellés des modes ; le mode « pendant l'événement » n'existe que si la config le libelle. |
 | Design | `theme.colors`, `theme.fonts`, `theme.borderRadius` | Injectés en variables CSS par `ConfigProvider`. Des valeurs par défaut existent encore dans `globals.css` et `tailwind.config.ts` (palette de marque à neutraliser, [PLAN-FIN-REFONTE.md](PLAN-FIN-REFONTE.md) étape 3). |
-| Schéma Baserow | `baserow.fieldMapping` (rôle de colonne vers nom de colonne, toutes les clés obligatoires), `baserow.mapping.referenceFields` (colonnes des tables de référence), `baserow.mapping.modality` (valeur de la liste « modalité » vers modalité de l'application), `baserow.mapping.tariffFreeValue`, `baserow.moderationVisibleValue` | Aucun nom de colonne ni valeur de liste de choix dans le code. |
+| Schéma Baserow | `baserow.fieldMapping` (rôle de colonne vers nom de colonne, toutes les clés obligatoires **sauf** le rôle optionnel `highlight`, voir §5), `baserow.mapping.referenceFields` (colonnes des tables de référence), `baserow.mapping.modality` (valeur de la liste « modalité » vers modalité de l'application), `baserow.mapping.tariffFreeValue`, `baserow.moderationVisibleValue` | Aucun nom de colonne ni valeur de liste de choix dans le code. |
 
 Validation : la config est contrôlée au démarrage du backend (`apps/backend/src/config/config-validation.util.ts`) ; une config invalide empêche le démarrage avec la liste des erreurs, un `APP_CONFIG_PATH` qui ne désigne aucun fichier aussi. Le schéma Baserow est comparé à la config au démarrage et à chaque chargement : colonne absente nommée, colonne proche suggérée. Les métadonnées de `index.html` sont écrites **à la compilation** (`apps/frontend/scripts/update-index-html.cjs`) : une compilation par carte.
 
@@ -54,7 +54,8 @@ Une **seule définition** (`apps/frontend/src/utils/filterDefinitions.ts`, `FILT
 
 | Filtre | Source des options | Masqué quand |
 |---|---|---|
-| Modalité | code (tous, présentiel, en ligne) | jamais (retrait de la carte planifié, étape 6 du plan actif) |
+| Coup de cœur | Baserow : colonne case à cocher désignée par le rôle optionnel `fieldMapping.highlight` ; libellé « Coup de cœur » en dur | aucun événement n'est un coup de cœur, ou rôle absent de la config (sauf filtre déjà actif) |
+| Modalité | code (tous, présentiel, en ligne) | jamais (retrait de la carte : branche `feat/carte-sans-modalite`) |
 | Période | `filters.dateFilterModes` (config) | jamais |
 | Partenaires, Type d'événement, Thématiques, Public cible | Baserow (référentiels) | référentiel vide ; **pas** s'il est en erreur |
 | Code postal, Région | saisie, liste de régions du code | modalité « en ligne » (sauf filtre déjà actif) |
@@ -63,7 +64,18 @@ Règles : recherche multi-champs (titre, description, ville, organisateur, régi
 
 ## 5. Fonctionnalités activables : non
 
-Pas de flags `features.*` : toutes les fonctionnalités sont actives pour toutes les cartes. Seuls les filtres dont le référentiel Baserow est vide se masquent d'eux-mêmes. Piste conservée pour plus tard, **hors plan** : activation déduite des données (par exemple masquer les fonctions « en ligne » s'il n'y a aucun événement en ligne), avec les garde-fous suivants : distinguer « vide » de « en erreur », ne pas faire clignoter l'interface selon le moment où un modérateur accepte un événement, calcul côté backend, tout comportement automatique journalisé.
+Pas de flags `features.*` : toutes les fonctionnalités sont actives pour toutes les cartes. Seuls les filtres dont le référentiel Baserow est vide se masquent d'eux-mêmes.
+
+**Rôle optionnel `baserow.fieldMapping.highlight` (« coup de cœur »)** : ce n'est pas un flag mais un *rôle de colonne* optionnel, comme les autres rôles du mapping. Il désigne une colonne Baserow de type **case à cocher** ; un événement coché devient un coup de cœur (`Event.isHighlighted`) : filtre « Coup de cœur » (panneau de la carte et barre de la liste), badge sur la carte latérale, la liste et la fiche, pastille sur le marqueur, bandeau de la popup. Dégradation :
+
+| Situation | Effet |
+|---|---|
+| Clé absente (ou vide) de la config | Fonctionnalité inactive : aucun badge, aucun filtre, `isHighlighted` toujours `false`. **Avertissement** au démarrage (jamais une erreur). |
+| Clé présente, colonne absente de Baserow | Message du contrôle du schéma (`checkSchema` / `checkRecordColumns`) nommant le rôle et la colonne ; événements non marqués. |
+| Colonne présente, aucun événement coché | Filtre et badges absents (le filtre se masque de lui-même). |
+| Valeur non booléenne (texte, vide) | Non coché. Seul `true` compte. |
+
+**Procédure sur un Baserow déjà déployé** : créer à la main, dans la table des événements, une colonne de type *case à cocher* portant le nom indiqué dans `fieldMapping.highlight`, puis cocher les événements voulus (le cache des événements dure 5 minutes). Le seed local (`scripts/seed-baserow/seed.mjs`) crée la colonne et coche quelques lignes quand la config déclare le rôle. Sans la clé dans la config, rien n'est à faire (carte sans coup de cœur). Piste conservée pour plus tard, **hors plan** : activation déduite des données (par exemple masquer les fonctions « en ligne » s'il n'y a aucun événement en ligne), avec les garde-fous suivants : distinguer « vide » de « en erreur », ne pas faire clignoter l'interface selon le moment où un modérateur accepte un événement, calcul côté backend, tout comportement automatique journalisé.
 
 ## 6. Variables d'environnement
 

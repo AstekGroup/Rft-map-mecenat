@@ -45,11 +45,15 @@ type Transformer = {
     themes: Map<string, unknown>,
     formats: Map<string, unknown>,
     publics: Map<string, unknown>,
-  ): { title: string; isDuringWeek: boolean };
+  ): { title: string; isDuringWeek: boolean; isHighlighted: boolean };
 };
 
 /** Transforme un événement avec le vrai `BaserowService` configuré par `config`. */
-function transformWith(config: AppConfig, startDate: string) {
+function transformWith(
+  config: AppConfig,
+  startDate: string,
+  extra: BaserowRecord = { id: 1 },
+) {
   const appConfig = {
     get: () => config,
     get safe() {
@@ -69,7 +73,7 @@ function transformWith(config: AppConfig, startDate: string) {
   const fm = config.baserow.fieldMapping;
   const empty = new Map<string, never>();
   return service.transformRecord(
-    { id: 1, [fm.title]: 'Atelier', [fm.startDate]: startDate },
+    { ...extra, id: 1, [fm.title]: 'Atelier', [fm.startDate]: startDate },
     empty,
     empty,
     empty,
@@ -150,6 +154,31 @@ describe('deux cartes, un seul code', () => {
     expect(transformWith(first, inSecond).isDuringWeek).toBe(false);
     expect(transformWith(second, inSecond).isDuringWeek).toBe(true);
     expect(transformWith(second, inFirst).isDuringWeek).toBe(false);
+  });
+
+  it('active le coup de cœur seulement sur la carte dont la config déclare le rôle highlight', () => {
+    const [first, second] = MAPS.map((m) => loadServed(m.file));
+    const start = (c: AppConfig) => `${c.app.eventDates.weekStart}T10:00:00Z`;
+
+    // Carte 1 : rôle déclaré, la colonne cochée désigne un coup de cœur.
+    const column = first.baserow.fieldMapping.highlight;
+    expect(column).toBeTruthy();
+    expect(
+      transformWith(first, start(first), { id: 1, [column as string]: true })
+        .isHighlighted,
+    ).toBe(true);
+    expect(
+      transformWith(first, start(first), { id: 1, [column as string]: false })
+        .isHighlighted,
+    ).toBe(false);
+
+    // Carte 2 : rôle absent de la config, même code, sans planter : jamais de coup de cœur,
+    // même si l'enregistrement contient une colonne de ce nom.
+    expect(second.baserow.fieldMapping.highlight).toBeUndefined();
+    expect(
+      transformWith(second, start(second), { id: 1, [column as string]: true })
+        .isHighlighted,
+    ).toBe(false);
   });
 
   it('lit les colonnes de chaque carte avec le même code', () => {

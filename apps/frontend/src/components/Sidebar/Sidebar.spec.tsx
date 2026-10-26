@@ -26,6 +26,7 @@ const defaultFilters: EventFilters = {
   postalCode: '',
   modality: 'all',
   showPastEvents: false,
+  highlightOnly: false,
 };
 
 function renderSidebar(filters: EventFilters = defaultFilters) {

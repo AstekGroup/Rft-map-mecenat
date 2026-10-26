@@ -29,6 +29,13 @@ export function FilterPanel({ controls }: FilterPanelProps) {
         {visibleFilters.map((definition) => {
           const Icon = definition.icon;
           const count = definition.activeCount(filters);
+          if (definition.presentation === 'toggle') {
+            return (
+              <div key={definition.id} className="px-4 py-3 border-b border-primary/10">
+                <FilterContent id={definition.id} variant="panel" controls={controls} />
+              </div>
+            );
+          }
           return (
             <FilterAccordion
               key={definition.id}

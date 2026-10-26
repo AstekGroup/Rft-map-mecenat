@@ -1,8 +1,9 @@
 import type { LucideIcon } from 'lucide-react';
-import { BookOpen, Calendar, Globe, Handshake, Hash, MapPin, Tag, Users } from 'lucide-react';
+import { BookOpen, Calendar, Globe, Handshake, Heart, Hash, MapPin, Tag, Users } from 'lucide-react';
 import type { EventFilterControls, EventFilters } from '@/hooks/useEvents';
 import type { LinkedTableRow } from '@/types/event';
 import { isDateFilterActive } from '@/utils/eventDateRange';
+import { HIGHLIGHT_LABEL } from '@/utils/highlight';
 
 /**
  * Définition unique des filtres, partagée par le panneau de la carte (`FilterPanel`) et la barre
@@ -11,6 +12,7 @@ import { isDateFilterActive } from '@/utils/eventDateRange';
  * (La recherche texte et le bouton « événements passés » sont hors liste : les deux écrans les affichent toujours.)
  */
 export type FilterId =
+  | 'highlight'
   | 'modality'
   | 'date'
   | 'partners'
@@ -44,11 +46,23 @@ export interface FilterDefinition {
   hiddenForModality?: EventFilters['modality'];
   /** Écrans qui affichent ce filtre (défaut : tous). La modalité n'a pas sa place sur la carte (bouton « Événements en ligne »). */
   views?: readonly FilterView[];
+  /** Filtre à bascule (case ou bouton) : affiché directement, sans accordéon ni menu déroulant. */
+  presentation?: 'toggle';
+  /** Filtre sans objet tant qu'aucun événement chargé n'est un coup de cœur : masqué (sauf s'il est déjà actif). */
+  requiresHighlightedEvents?: boolean;
   /** Nombre de valeurs sélectionnées (0 = filtre inactif). */
   activeCount: (filters: EventFilters) => number;
 }
 
 export const FILTER_DEFINITIONS: readonly FilterDefinition[] = [
+  {
+    id: 'highlight',
+    title: HIGHLIGHT_LABEL,
+    icon: Heart,
+    presentation: 'toggle',
+    requiresHighlightedEvents: true,
+    activeCount: (f) => Number(f.highlightOnly),
+  },
   {
     id: 'modality',
     title: 'Modalité',
@@ -119,9 +133,13 @@ export function getVisibleFilters(
   references: FilterReferences,
   unavailable: readonly ReferenceKey[] = [],
   view?: FilterView,
+  hasHighlightedEvents = false,
 ): FilterDefinition[] {
   return FILTER_DEFINITIONS.filter((definition) => {
     if (view && definition.views && !definition.views.includes(view)) {
+      return false;
+    }
+    if (definition.requiresHighlightedEvents && !hasHighlightedEvents && definition.activeCount(filters) === 0) {
       return false;
     }
     if (
@@ -156,6 +174,7 @@ export function getVisibleFiltersFor(
     },
     controls.unavailableReferences,
     view,
+    controls.hasHighlightedEvents,
   );
 }
 

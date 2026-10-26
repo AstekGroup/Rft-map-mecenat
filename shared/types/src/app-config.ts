@@ -28,9 +28,17 @@ export interface AppConfigFilters {
 
 /**
  * Rôle d'une colonne de la table des événements → nom exact de la colonne dans Baserow.
- * Toutes les clés sont obligatoires : le code ne connaît que les rôles, jamais les noms.
+ * Toutes les clés sont obligatoires, sauf `highlight` (rôle optionnel) : le code ne connaît que
+ * les rôles, jamais les noms.
  */
 export interface BaserowFieldMapping {
+  /**
+   * OPTIONNEL : colonne Baserow de type « case à cocher » qui désigne les « coups de cœur ».
+   * Clé absente = fonctionnalité inactive (aucun badge, aucun filtre) ; la validation de la config
+   * l'indique par un avertissement, jamais par une erreur. Une colonne déclarée mais absente de
+   * Baserow est signalée par le contrôle du schéma. Libellé affiché : « Coup de cœur » (générique).
+   */
+  highlight?: string;
   title: string;
   description: string;
   startDate: string;

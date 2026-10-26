@@ -225,6 +225,42 @@ describe('validateAppConfig', () => {
       expect(warnings.join('\n')).toMatch(/plusieurs rôles \(address, city\)/);
     });
 
+    describe('rôle optionnel highlight (coup de cœur)', () => {
+      it("n'est pas un rôle obligatoire", () => {
+        expect(FIELD_MAPPING_KEYS).not.toContain('highlight');
+      });
+
+      it('clé absente : aucune erreur, seulement un avertissement (fonctionnalité désactivée)', () => {
+        const { errors, warnings } = validateAppConfig(
+          configWith((c) => {
+            delete c.baserow.fieldMapping.highlight;
+          }),
+        );
+        expect(errors).toEqual([]);
+        expect(warnings).toHaveLength(1);
+        expect(warnings[0]).toMatch(/fieldMapping\.highlight.*désactivée/);
+      });
+
+      it('nom vide ou non textuel : avertissement, jamais une erreur', () => {
+        for (const value of ['  ', 42]) {
+          const { errors, warnings } = validateAppConfig(
+            configWith((c) => {
+              c.baserow.fieldMapping.highlight = value;
+            }),
+          );
+          expect(errors).toEqual([]);
+          expect(warnings.join('\n')).toMatch(/fieldMapping\.highlight/);
+        }
+      });
+
+      it('clé renseignée : ni erreur ni avertissement', () => {
+        expect(validateAppConfig(buildTestConfig())).toEqual({
+          errors: [],
+          warnings: [],
+        });
+      });
+    });
+
     it("refuse un nom de colonne qui n'est pas du texte", () => {
       const { errors } = validateAppConfig(
         configWith((c) => {

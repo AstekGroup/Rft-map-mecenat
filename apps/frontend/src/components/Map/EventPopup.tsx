@@ -1,7 +1,7 @@
 import { Event } from '@/types/event';
 import { useConfig } from '@/hooks/useConfig';
 import { formatEventDate } from '@/utils/formatEventDate';
-import { Badge } from '@/components/UI';
+import { Badge, HighlightBadge } from '@/components/UI';
 import { Calendar, Clock, MapPin, User, Mail, Eye, Video, Building } from 'lucide-react';
 
 interface EventPopupProps {
@@ -23,11 +23,12 @@ export function EventPopup({ event, onClose, onViewDetails }: EventPopupProps) {
   return (
     <div className="bg-white rounded-card shadow-popup w-80 max-w-[90vw] animate-fade-in overflow-hidden font-inter">
       {/* Header */}
-      <div className="bg-primary p-4 text-white">
+      <div className={`bg-primary p-4 text-white ${event.isHighlighted ? 'border-t-4 border-accent-yellow' : ''}`}>
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <Badge type={event.type} size="sm" variant="highlight" />
+              {event.isHighlighted && <HighlightBadge size="sm" withLabel />}
               {event.modality && (
                 <span className="inline-flex items-center gap-1 text-xs bg-white/20 text-white px-2 py-0.5 rounded-full">
                   {event.modality === 'distanciel' ? (

@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
-import { Globe, MapPin, Search, X } from 'lucide-react';
+import { Globe, Heart, MapPin, Search, X } from 'lucide-react';
 import { useConfig } from '@/hooks';
 import type { EventFilterControls, EventFilters } from '@/hooks';
 import type { LinkedTableRow } from '@/types/event';
 import type { FilterId } from '@/utils/filterDefinitions';
+import { HIGHLIGHT_LABEL } from '@/utils/highlight';
 import { DEFAULT_FORMAT_COLOR, checkIconColor, getIcon } from '@/utils/iconResolver';
 import { DateCustomRangeInputs } from './DateCustomRangeInputs';
 
@@ -278,6 +279,45 @@ function RegionOptions({ filters, onToggleRegion, variant }: Pick<EventFilterCon
   );
 }
 
+/**
+ * Filtre « Coup de cœur » : une case à cocher mise en avant dans le panneau, un bouton à bascule dans
+ * la barre. Couleur : jeton `accent-yellow` du thème.
+ */
+function HighlightToggle({ filters, onUpdateFilters, variant }: Pick<EventFilterControls, 'filters' | 'onUpdateFilters'> & { variant: FilterVariant }) {
+  const checked = filters.highlightOnly;
+  const toggle = () => onUpdateFilters({ highlightOnly: !checked });
+
+  if (variant === 'bar') {
+    return (
+      <button
+        type="button"
+        onClick={toggle}
+        aria-pressed={checked}
+        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ring-1 ring-accent-yellow ${
+          checked ? 'bg-accent-yellow text-text-primary' : 'bg-accent-yellow/10 text-text-primary hover:bg-accent-yellow/25'
+        }`}
+      >
+        <Heart className={`w-4 h-4 ${checked ? 'fill-current' : ''}`} aria-hidden="true" />
+        {HIGHLIGHT_LABEL}
+      </button>
+    );
+  }
+
+  return (
+    <label
+      className={`flex items-center gap-3 cursor-pointer group rounded-lg px-3 py-2.5 transition-colors ring-1 ring-accent-yellow/60 ${
+        checked ? 'bg-accent-yellow/30' : 'bg-accent-yellow/10 hover:bg-accent-yellow/20'
+      }`}
+    >
+      <input type="checkbox" checked={checked} onChange={toggle} className={CHECKBOX_CLASS} />
+      <span className="w-6 h-6 shrink-0 rounded-md flex items-center justify-center bg-accent-yellow text-text-primary shadow-sm">
+        <Heart className="w-3.5 h-3.5 fill-current" aria-hidden="true" />
+      </span>
+      <span className="text-sm font-semibold text-text-primary">{HIGHLIGHT_LABEL}</span>
+    </label>
+  );
+}
+
 /** Champ de recherche texte (titre, description, ville, organisateur, région, lieu). */
 export function FilterSearch({
   filters,
@@ -323,6 +363,8 @@ export function FilterContent({ id, variant, controls }: FilterContentProps) {
   const { filters, onUpdateFilters } = controls;
 
   switch (id) {
+    case 'highlight':
+      return <HighlightToggle filters={filters} onUpdateFilters={onUpdateFilters} variant={variant} />;
     case 'modality':
       return <ModalityOptions filters={filters} onUpdateFilters={onUpdateFilters} variant={variant} />;
     case 'date':

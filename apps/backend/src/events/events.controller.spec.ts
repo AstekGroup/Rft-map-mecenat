@@ -23,6 +23,7 @@ const mockEvent: Event = {
   themes: [{ id: 'autre', name: 'Autres' }],
   organizer: 'Lab IA',
   isDuringWeek: true,
+  isHighlighted: false,
   modality: 'presentiel',
   targetAudience: [{ id: 'tout-public', name: 'tout-public' }],
   isFree: true,

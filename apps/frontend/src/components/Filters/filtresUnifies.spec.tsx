@@ -21,6 +21,7 @@ const defaultFilters: EventFilters = {
   postalCode: '',
   modality: 'all',
   showPastEvents: false,
+  highlightOnly: false,
 };
 
 const rows = (prefix: string): LinkedTableRow[] => [
@@ -43,6 +44,7 @@ function makeControls(overrides: Partial<EventFilterControls> = {}): EventFilter
     availableThemes: rows('thème'),
     availableFormats: rows('format'),
     availablePublics: rows('public'),
+    hasHighlightedEvents: true,
     unavailableReferences: [],
     ...overrides,
   };
@@ -52,6 +54,7 @@ const titleOf = (id: FilterId) => FILTER_DEFINITIONS.find((d) => d.id === id)!.t
 
 /** Le filtre `id` est-il proposé sur l'écran « panneau de la carte » ? (un accordéon par filtre) */
 function panelShows(id: FilterId): boolean {
+  if (id === 'highlight') return screen.queryByRole('checkbox', { name: titleOf(id) }) !== null;
   return screen.queryByRole('button', { name: new RegExp(`^${titleOf(id)}`) }) !== null;
 }
 
@@ -151,6 +154,49 @@ describe('filtres unifiés (panneau de la carte et barre de la liste)', () => {
     },
   );
 
+  it('masquent le filtre « Coup de cœur » sur les deux écrans quand aucun événement n’en est un', () => {
+    const controls = makeControls({ hasHighlightedEvents: false });
+    const panel = shownOn('panel', controls);
+    const bar = shownOn('bar', controls);
+
+    expect(panel).not.toContain('highlight');
+    expect(panel).toContain('themes');
+    expect(withoutModality(bar)).toEqual(panel);
+  });
+
+  it('gardent le filtre « Coup de cœur » affiché tant qu’il est actif, même sans coup de cœur chargé', () => {
+    const controls = makeControls({
+      hasHighlightedEvents: false,
+      filters: { ...defaultFilters, highlightOnly: true },
+    });
+    const panel = shownOn('panel', controls);
+    const bar = shownOn('bar', controls);
+
+    expect(panel).toContain('highlight');
+    expect(withoutModality(bar)).toEqual(panel);
+  });
+
+  it.each([
+    ['panneau', 'checkbox'],
+    ['barre', 'button'],
+  ] as const)('%s : un clic sur « Coup de cœur » active le filtre', async (name, role) => {
+    const controls = makeControls();
+    render(name === 'panneau' ? <FilterPanel controls={controls} /> : <EventFiltersBar controls={controls} />);
+
+    await userEvent.click(screen.getByRole(role, { name: new RegExp(`^${titleOf('highlight')}`) }));
+
+    expect(controls.onUpdateFilters).toHaveBeenCalledWith({ highlightOnly: true });
+  });
+
+  it('affiche une pastille retirable « Coup de cœur » dans la barre quand le filtre est actif', async () => {
+    const controls = makeControls({ filters: { ...defaultFilters, highlightOnly: true } });
+    render(<EventFiltersBar controls={controls} />);
+
+    await userEvent.click(screen.getByRole('button', { name: `Retirer le filtre ${titleOf('highlight')}` }));
+
+    expect(controls.onUpdateFilters).toHaveBeenCalledWith({ highlightOnly: false });
+  });
+
   it('ont le même champ de recherche', () => {
     const controls = makeControls();
     const panel = render(<FilterPanel controls={controls} />);
@@ -171,23 +217,33 @@ describe('getVisibleFilters', () => {
   };
 
   it('garde l\'ordre de FILTER_DEFINITIONS et tous les filtres si tout est rempli', () => {
-    expect(getVisibleFilters(defaultFilters, full).map((d) => d.id)).toEqual(ALL_IDS);
+    expect(getVisibleFilters(defaultFilters, full, [], undefined, true).map((d) => d.id)).toEqual(ALL_IDS);
   });
 
   it('retire un filtre dont le référentiel est vide', () => {
-    const ids = getVisibleFilters(defaultFilters, { ...full, publics: [] }).map((d) => d.id);
+    const ids = getVisibleFilters(defaultFilters, { ...full, publics: [] }, [], undefined, true).map((d) => d.id);
     expect(ids).not.toContain('audiences');
     expect(ids).toContain('themes');
   });
 
+  it('masque « Coup de cœur » par défaut et le propose quand un événement en est un', () => {
+    expect(getVisibleFilters(defaultFilters, full).map((d) => d.id)).not.toContain('highlight');
+    expect(getVisibleFilters(defaultFilters, full, [], undefined, true).map((d) => d.id)[0]).toBe('highlight');
+  });
+
+  it('garde « Coup de cœur » visible quand il est actif, même sans coup de cœur', () => {
+    const active = { ...defaultFilters, highlightOnly: true };
+    expect(getVisibleFilters(active, full).map((d) => d.id)).toContain('highlight');
+  });
+
   it('garde un filtre dont le référentiel est vide parce qu’il est en erreur', () => {
-    const ids = getVisibleFilters(defaultFilters, { ...full, publics: [] }, ['publics']).map((d) => d.id);
+    const ids = getVisibleFilters(defaultFilters, { ...full, publics: [] }, ['publics'], undefined, true).map((d) => d.id);
     expect(ids).toContain('audiences');
   });
 
   it('retire la modalité sur la carte, la garde sur la liste et sans écran précisé', () => {
     const idsFor = (view?: 'map' | 'list') =>
-      getVisibleFilters(defaultFilters, full, [], view).map((d) => d.id);
+      getVisibleFilters(defaultFilters, full, [], view, true).map((d) => d.id);
 
     expect(idsFor('map')).not.toContain('modality');
     expect(idsFor('map')).toEqual(ALL_IDS.filter((id) => id !== 'modality'));

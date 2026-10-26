@@ -652,6 +652,18 @@ export class BaserowService implements OnApplicationBootstrap {
     return record[column] as T | undefined;
   }
 
+  /**
+   * « Coup de cœur » : rôle OPTIONNEL (`baserow.fieldMapping.highlight`, colonne case à cocher).
+   * Rôle absent de la config = fonctionnalité inactive, sans avertissement répété ici (la
+   * validation de la config l'a déjà signalé au démarrage). Seule la valeur booléenne `true`
+   * compte : vide, texte ou colonne absente de l'enregistrement = non coché.
+   */
+  private isHighlighted(record: BaserowRecord): boolean {
+    const column = this.appConfig.safe.baserow.fieldMapping?.highlight;
+    if (!column) return false;
+    return record[column] === true;
+  }
+
   /** Nom de la colonne d'un rôle (pour les champs de liaison, lus par `mapLinkedRow`). */
   private columnOf(role: keyof BaserowFieldMapping): string {
     const column = this.appConfig.safe.baserow.fieldMapping?.[role];
@@ -786,6 +798,7 @@ export class BaserowService implements OnApplicationBootstrap {
       organizerContact,
       registrationUrl: read<string>('registrationUrl') || undefined,
       isDuringWeek,
+      isHighlighted: this.isHighlighted(record),
       modality,
       imageUrl,
       venueName: read<string>('venueName') || undefined,
