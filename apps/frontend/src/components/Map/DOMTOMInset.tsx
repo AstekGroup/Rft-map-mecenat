@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useId, useMemo, useState } from 'react';
+import { ChevronDown, ChevronUp, Globe } from 'lucide-react';
 import Map, { Marker } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -174,12 +175,54 @@ function TerritoryMap({ territory, geojson, mapStyleUrl, onEventClick, onTerrito
   );
 }
 
+/**
+ * Encart « Accès rapide » (métropole + outre-mer). Replié par défaut : un bouton compact « Outre-mer »
+ * au même emplacement ; les mini-cartes ne sont montées qu'une fois l'encart déplié.
+ */
 export function DOMTOMInset({ geojson, mapStyleUrl, onEventClick, onTerritoryClick }: DOMTOMInsetProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const panelId = useId();
+
+  if (!isOpen) {
+    return (
+      <div className="hidden md:block absolute bottom-4 right-4 z-10">
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          aria-expanded={false}
+          aria-controls={panelId}
+          title="Afficher l'accès rapide aux territoires"
+          className="bg-white/95 backdrop-blur-sm rounded-xl shadow-popup px-3 py-2 border border-primary/10 flex items-center gap-2 text-sm font-semibold text-text-primary hover:bg-surface-beige transition-colors"
+        >
+          <Globe className="w-4 h-4 text-primary" />
+          Outre-mer
+          <ChevronUp className="w-4 h-4 text-primary" />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="hidden md:block absolute bottom-4 right-4 z-10">
-      <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-popup p-2 border border-primary/10">
-        <div className="text-[10px] font-semibold text-primary/70 uppercase tracking-wide mb-2 px-1">
-          Accès rapide
+      <div
+        id={panelId}
+        className="bg-white/95 backdrop-blur-sm rounded-xl shadow-popup p-2 border border-primary/10"
+      >
+        <div className="flex items-center justify-between mb-2 px-1">
+          <span className="text-[10px] font-semibold text-primary/70 uppercase tracking-wide">
+            Accès rapide
+          </span>
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            aria-expanded={true}
+            aria-controls={panelId}
+            aria-label="Replier l'accès rapide"
+            title="Replier"
+            className="p-0.5 rounded text-primary/70 hover:text-primary hover:bg-primary/10 transition-colors"
+          >
+            <ChevronDown className="w-4 h-4" />
+          </button>
         </div>
         {/* France métropolitaine - full width */}
         <div className="mb-1.5">
