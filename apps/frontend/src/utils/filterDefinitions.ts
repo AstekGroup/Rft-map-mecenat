@@ -30,6 +30,9 @@ export interface FilterReferences {
 
 export type ReferenceKey = keyof FilterReferences;
 
+/** Écran qui affiche les filtres : panneau de la carte (`map`) ou barre de la liste (`list`). */
+export type FilterView = 'map' | 'list';
+
 export interface FilterDefinition {
   id: FilterId;
   /** Titre du groupe (wording générique de l'interface). */
@@ -39,6 +42,8 @@ export interface FilterDefinition {
   reference?: ReferenceKey;
   /** Filtre sans objet pour cette modalité (ex. code postal pour un événement en ligne) : masqué tant qu'il n'est pas utilisé. */
   hiddenForModality?: EventFilters['modality'];
+  /** Écrans qui affichent ce filtre (défaut : tous). La modalité n'a pas sa place sur la carte (bouton « Événements en ligne »). */
+  views?: readonly FilterView[];
   /** Nombre de valeurs sélectionnées (0 = filtre inactif). */
   activeCount: (filters: EventFilters) => number;
 }
@@ -48,6 +53,7 @@ export const FILTER_DEFINITIONS: readonly FilterDefinition[] = [
     id: 'modality',
     title: 'Modalité',
     icon: Globe,
+    views: ['list'],
     activeCount: (f) => Number(f.modality !== 'all'),
   },
   {
@@ -112,8 +118,12 @@ export function getVisibleFilters(
   filters: EventFilters,
   references: FilterReferences,
   unavailable: readonly ReferenceKey[] = [],
+  view?: FilterView,
 ): FilterDefinition[] {
   return FILTER_DEFINITIONS.filter((definition) => {
+    if (view && definition.views && !definition.views.includes(view)) {
+      return false;
+    }
     if (
       definition.reference &&
       references[definition.reference].length === 0 &&
@@ -132,7 +142,10 @@ export function getVisibleFilters(
 }
 
 /** Même chose à partir des `controls` que reçoivent les écrans de filtres. */
-export function getVisibleFiltersFor(controls: EventFilterControls): FilterDefinition[] {
+export function getVisibleFiltersFor(
+  controls: EventFilterControls,
+  view?: FilterView,
+): FilterDefinition[] {
   return getVisibleFilters(
     controls.filters,
     {
@@ -142,6 +155,7 @@ export function getVisibleFiltersFor(controls: EventFilterControls): FilterDefin
       publics: controls.availablePublics,
     },
     controls.unavailableReferences,
+    view,
   );
 }
 
