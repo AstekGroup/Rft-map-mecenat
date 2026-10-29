@@ -38,7 +38,7 @@ Vérifié le 2026-10-19 sur `origin/develop` (`2273bcb`) : `pnpm build`, `pnpm l
 | 4 | Cas dégradés restants (config absente sur carte et liste, section Format vide) | à faire |
 | 5 | README et `PROJECT_VIBE_CONF.md` neutres | à faire |
 | 6 | Filtre Modalité retiré de la carte ; picto kebab-case | à faire |
-| 7 | Ménage (`App.tsx`, e2e périmé, branches mergées, lint) | à faire |
+| 7 | Ménage (e2e périmé, branches mergées, lint ; `App.tsx` supprimé par `refactor/supprimer-home-page`) | à faire |
 | 8 | Verdict final | à faire |
 
 **Prochaine action** : merger les PR chaînées dans l'ordre (option « Create a merge commit »), en commençant par l'étape 1 (`test/retablir-deux-cartes`).
@@ -57,6 +57,10 @@ Cinq branches courtes, mergées le 2026-10-20 dans le `develop` **local** sans P
 
 Conflit déjà résolu dans la chaîne : `feat/carte-sans-modalite` et `feat/coup-de-coeur` modifient toutes deux `getVisibleFilters` / `getVisibleFiltersFor` (paramètres `view` d'un côté, `hasHighlightedEvents` de l'autre) ; les deux paramètres sont gardés, et les tests adaptés (`filtresUnifies.spec.tsx`, `deux-cartes.spec.tsx`, `Sidebar.spec.tsx`). Le coup de cœur s'ajoute à la définition des filtres : sur la carte, la case est en tête du panneau ; sur la liste, c'est un bouton avant les menus. `scripts/seed-baserow/schema.mjs` et `scripts/baserow-init/init.mjs` n'existent que sur `feat/deploiement-n-cartes` (pas sur `develop`) : si cette branche est mergée, ils doivent aussi créer la colonne `highlight` quand le rôle est déclaré (non fait ici). **Base de production** : créer la colonne case à cocher à la main avant de déclarer le rôle dans `app.config.json` (sinon le contrôle du schéma signale l'écart et les événements ne sont pas marqués).
 
+## Suppression de la page d'accueil (2026-10-29)
+
+Branche `refactor/supprimer-home-page` (une PR vers `develop`). La carte (`MapPage`) est la route `/` ; `/carte` redirige vers `/` (liens et iframes existants). `HomePage`, son test et le composant mort `App.tsx` sont supprimés ; la section `texts.home` disparaît du type `AppConfig`, de `app.config.json`, de la fixture « seconde carte » et de la validation (`texts` ne contient plus que `meta`). Le titre de la sidebar vient de `helpers.getEventName()` (`app.name`) ; `helpers.getText`, sans appelant, est supprimé. Une config déployée qui contient encore `texts.home` démarre toujours (section ignorée). Le bouton « Retour à l'accueil » de la liste devient « Retour à la carte ». `make-second-config.cjs` n'écrit plus `texts.home` mais est déjà en décalage avec la fixture (gabarit du libellé « Pendant », rôle `highlight`) : ne pas le relancer sans le reprendre. Vérifié dans le navigateur (seed local, 2026-10-29) : `/` affiche la carte, `/carte` redirige vers `/`, `/evenements?modality=distanciel` propose « Retour à la carte » qui ramène sur `/`, et le pied de sidebar affiche « 604 pour La Grande Semaine Végétale ». Page de détail non rejouée (non modifiée).
+
 ## Décisions en vigueur
 
 - **Dates de test (2026-10-26)** : semaine de `app.config.json` passée sur la semaine en cours (2026-10-26 → 2026-11-01) ; le seed dérive désormais les dates des événements de `app.eventDates` de la config (plus de dates en dur). `E27` commence à 23h30 UTC : affiché à Paris après minuit toute l'année (heure d'été comme d'hiver).
@@ -72,7 +76,7 @@ Conflit déjà résolu dans la chaîne : `feat/carte-sans-modalite` et `feat/cou
 
 - **PR #38** : sa description annonce le retrait du filtre Modalité de la carte et la conservation des tests « deux cartes ». Contenu réel : suppression des tests et du modèle de PR, rien sur les filtres. Le filtre Modalité est toujours sur la carte (étape 6).
 - `main` a 124 commits de retard sur `develop` (au 2026-10-19) : tout est sur `develop` ; le passage sur `main` est reporté.
-- Le test e2e `apps/backend/test/app.e2e-spec.ts` est périmé (`pnpm test:e2e` échoue) et n'est pas lancé par `pnpm test` ; `apps/frontend/src/App.tsx` est du code mort (étape 7).
+- Le test e2e `apps/backend/test/app.e2e-spec.ts` est périmé (`pnpm test:e2e` échoue) et n'est pas lancé par `pnpm test`.
 - Un test frontend sensible aux délais (`eventDateRange.spec.ts`) a expiré une fois en exécution parallèle lourde : à surveiller.
 - `prettier` n'est pas idempotent sur un bloc de `baserow.service.degraded.spec.ts` : `pnpm lint:fix` peut demander deux passes.
 - Le lint ne détecte ni couleur ni marque en dur (règle d'`AGENTS.md` vérifiée à la revue seulement) ; garde-fou optionnel à l'étape 7.
