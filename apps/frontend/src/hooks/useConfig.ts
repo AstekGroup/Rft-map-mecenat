@@ -3,8 +3,6 @@ import type { AppConfig } from '@/types/event';
 
 export interface ConfigHelpers {
   getEnumLabel: (category: keyof typeof ENUM_MAP, id: string) => string;
-  /** Texte de la config (`texts.<section>.<key>`) ; chaîne vide si absent (jamais la clé brute). */
-  getText: (section: string, key: string) => string;
   getRegionGroups: () => { metropole: string[]; domtom: string[] };
   /** Nom de l'événement (`app.name`) ; chaîne vide si la config ne le donne pas. */
   getEventName: () => string;
@@ -78,13 +76,6 @@ export function buildHelpers(config: AppConfig | null): ConfigHelpers {
     getEnumLabel(category, id) {
       const map = enumMap(category);
       return map[id] || id;
-    },
-    getText(section, key) {
-      const sections = config?.texts as Record<string, Record<string, unknown> | undefined> | undefined;
-      const value = sections?.[section]?.[key];
-      // Texte absent : chaîne vide, jamais la clé brute (« mainTitle ») à l'écran. L'appelant
-      // choisit son repli lisible ou masque l'élément.
-      return typeof value === 'string' ? value : '';
     },
     getEventName() {
       return config?.app?.name?.trim() ?? '';
