@@ -66,7 +66,7 @@ Branche `fix/residus-en-dur`.
 
 - [ ] `apps/frontend/src/components/UI/Badge.tsx` (lignes 24-25, `#F2EDE4` et `#1F7A3E`) : passer par les variables de thème injectées par `ConfigProvider.tsx`.
 - [ ] `apps/frontend/src/styles/globals.css` (ligne 11 et replis lignes 53-71) et `apps/frontend/tailwind.config.ts` (replis lignes 12-29) : palette neutre par défaut à la place de la palette LGSV.
-- [ ] Le gris de repli `#D4DDE2`, dupliqué dans `HomePage.tsx`, `EventListView.tsx`, `EventCard.tsx`, `EventMarker.tsx` : utiliser `DEFAULT_FORMAT_COLOR` d'`utils/iconResolver.ts`.
+- [ ] Le gris de repli `#D4DDE2`, dupliqué dans `EventListView.tsx`, `EventCard.tsx`, `EventMarker.tsx` : utiliser `DEFAULT_FORMAT_COLOR` d'`utils/iconResolver.ts`.
 - [ ] Étendre les tests « deux cartes » : le badge de format suit la couleur de thème de la seconde config.
 - Fait quand : `rg -i "#[0-9a-f]{6}" apps/frontend/src --glob '!*.spec.*'` ne renvoie que la constante de repli neutre ; vérifié dans le navigateur avec la seconde config.
 
@@ -74,9 +74,8 @@ Branche `fix/residus-en-dur`.
 
 Branche `fix/cas-degrades-restants`.
 
-- [ ] `MapPage.tsx` et `EventsListPage.tsx` : état d'erreur propre si `/api/config` échoue (comme l'accueil), sans badge vide ni clé brute.
+- [ ] `MapPage.tsx` et `EventsListPage.tsx` : état d'erreur propre si `/api/config` échoue (l'ancien écran d'accueil, qui le faisait, est supprimé), sans badge vide ni clé brute.
 - [ ] `EventDetailPage.tsx` (lignes 289-296) : masquer la section « Format » quand l'événement n'a pas de format (E15).
-- [ ] Rendu de la page d'erreur de l'accueil sans thème (en partie réglé par la palette neutre de l'étape 3).
 - [ ] Un test par cas.
 - Fait quand : E15 et « config absente » s'affichent sans erreur ni texte vide, vérifié avec le seed.
 
@@ -97,7 +96,8 @@ Branche `docs/alignement`. La partie `docs/` et les références cassées d'`AGE
 
 Branche `chore/menage`.
 
-- [ ] Supprimer `apps/frontend/src/App.tsx` (aucun import) et le test e2e périmé `apps/backend/test/app.e2e-spec.ts`.
+- [x] `apps/frontend/src/App.tsx` supprimé (branche `refactor/supprimer-home-page`).
+- [ ] Supprimer le test e2e périmé `apps/backend/test/app.e2e-spec.ts`.
 - [ ] Les 3 avertissements du lint frontend (`MapView.tsx:79` et `:165`, `MapStyleSelector.tsx:12`) : corriger seulement si le comportement des hooks ne change pas, sinon les garder documentés.
 - [ ] Supprimer les branches de travail mergées (locales et distantes, dont `wip/audit-snapshot`) : **liste donnée au propriétaire avant, aucune suppression sans son accord**. Les 3 branches obsolètes (`add-dynamic-filters`, `modify-audiences-filters`, `modif_audience_filters`) : accord de leur auteur d'abord.
 - [ ] `scripts/seed-baserow/seed.mjs` : refuser toute URL non locale, comme le fait déjà `robustness.mjs` (garde-fou annoncé par la règle « Baserow en lecture seule »).

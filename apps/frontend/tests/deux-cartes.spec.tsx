@@ -1,8 +1,8 @@
 /**
- * « 1 code, N cartes » côté frontend : la même page d'accueil et le même `ConfigProvider` sont
- * rendus avec deux configs de carte réelles (la config du dépôt et la fixture « seconde
- * carte »), servies comme le fait `/api/config` (gabarits résolus par le backend). Titres,
- * dates et thème doivent suivre la config, sans rien de la première carte dans la seconde.
+ * « 1 code, N cartes » côté frontend : le même `ConfigProvider` est rendu avec deux configs de
+ * carte réelles (la config du dépôt et la fixture « seconde carte »), servies comme le fait
+ * `/api/config` (gabarits résolus par le backend). Titres, dates et thème doivent suivre la
+ * config, sans rien de la première carte dans la seconde.
  *
  * Ce fichier vit hors de `src/` (comme `scripts/config-template.spec.ts`) parce qu'il importe
  * du code backend ; `tsc -b` ne compile que `src/`.
@@ -11,12 +11,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import type { AppConfig } from '@make-map/types';
 import { ConfigProvider } from '@/components/Layout/ConfigProvider';
-import { buildHelpers } from '@/hooks/useConfig';
+import { buildHelpers, useConfig } from '@/hooks/useConfig';
 import { fetchConfig } from '@/services/api';
-import { HomePage } from '@/pages/HomePage';
 import type { EventFilters } from '@/hooks/useEvents';
 import type { Event } from '@/types/event';
 import { matchesFilters } from '@/utils/eventFilters';
@@ -24,10 +22,6 @@ import { countDefinedFilters, getVisibleFilters } from '@/utils/filterDefinition
 import { resolveConfigTemplates } from '../../backend/src/config/config-template.util';
 
 vi.mock('@/services/api', () => ({ fetchConfig: vi.fn() }));
-vi.mock('@/hooks', () => ({
-  useEvents: () => ({ allEvents: [], loading: false }),
-}));
-
 const ROOT = resolve(__dirname, '../../..');
 const MAPS = [
   { label: 'carte du dépôt', file: 'app.config.json' },
@@ -46,14 +40,18 @@ function rgb(hex: string): string {
   return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`;
 }
 
-async function renderHome(file: string): Promise<{ config: AppConfig; text: string }> {
+/** Affiche le nom de l'événement tel que le donne la config (rien tant qu'elle charge). */
+function EventNameProbe() {
+  const { helpers, loading } = useConfig();
+  return loading ? null : <h1>{helpers.getEventName()}</h1>;
+}
+
+async function renderConfig(file: string): Promise<{ config: AppConfig; text: string }> {
   const config = served(file);
   vi.mocked(fetchConfig).mockResolvedValue(config);
   render(
     <ConfigProvider>
-      <MemoryRouter>
-        <HomePage />
-      </MemoryRouter>
+      <EventNameProbe />
     </ConfigProvider>,
   );
   await screen.findByRole('heading', { level: 1 });
@@ -71,18 +69,14 @@ describe('deux cartes, un seul code (frontend)', () => {
   afterEach(resetTheme);
 
   describe.each(MAPS)('$label', ({ file }) => {
-    it("affiche le nom de l'événement et l'édition de sa config", async () => {
-      const { config } = await renderHome(file);
-      const year = config.app.eventDates.weekStart.slice(0, 4);
+    it("affiche le nom de l'événement de sa config", async () => {
+      const { config } = await renderConfig(file);
 
       expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(config.app.name);
-      expect(document.body.textContent).toContain(`${config.texts.home.editionLabel} ${year}`);
-      expect(document.body.textContent).toContain(config.texts.home.mainDescription);
-      expect(screen.getByRole('link', { name: new RegExp(config.texts.home.ctaText) })).toBeTruthy();
     });
 
     it('injecte le thème (couleurs, polices) de sa config', async () => {
-      const { config } = await renderHome(file);
+      const { config } = await renderConfig(file);
       const root = document.documentElement.style;
 
       for (const [key, hex] of Object.entries(config.theme.colors)) {
@@ -183,7 +177,7 @@ describe('deux cartes, un seul code (frontend)', () => {
 
   it('ne laisse rien de la première carte dans la seconde', async () => {
     const first = served(MAPS[0].file);
-    const { config: second, text } = await renderHome(MAPS[1].file);
+    const { config: second, text } = await renderConfig(MAPS[1].file);
 
     expect(first.app.name).not.toBe(second.app.name);
     expect(text).not.toContain(first.app.name);

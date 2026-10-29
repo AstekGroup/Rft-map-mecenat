@@ -105,13 +105,10 @@ describe('deux cartes, un seul code', () => {
 
       // Le nom est écrit une seule fois : les autres titres passent par un gabarit.
       expect(raw.texts.meta.title).toContain('{{app.name}}');
-      expect(raw.texts.home.mainTitle).toBe('{{app.name}}');
       expect(JSON.stringify(raw.texts)).not.toContain(name);
 
       expect(served.texts.meta.title).toContain(name);
       expect(served.texts.meta.ogTitle).toContain(name);
-      expect(served.texts.home.mainTitle).toBe(name);
-      expect(served.texts.home.infoTitle).toContain(name);
       const duringWeek = served.filters.dateFilterModes.find(
         (m) => m.mode === 'during-week',
       );

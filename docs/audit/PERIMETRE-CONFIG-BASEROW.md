@@ -19,7 +19,7 @@ Arbre de décision pour un cas nouveau :
 4. Wording d'interface générique (« Voir la carte », placeholders) ou logique : **code**, en français.
 5. Fonctionnalité à activer ou désactiver : **non** (pas de flags, voir §5).
 
-Cas limite assumé : `texts.home` mélange contenu de marque (`mainTitle`, `mainDescription`, `infoTitle`, `infoDescription`) et wording (`ctaText`, `seeAll`, `nearbySubtitle`, `sectionPresentiel`, `editionLabel`). On n'ajoute pas de nouvelle clé de wording à la config et on n'en retire pas.
+La page d'accueil et sa section `texts.home` ont été supprimées : la carte est la route `/`, et le titre affiché dans l'interface est `app.name`. On n'ajoute pas de clé de wording à la config.
 
 ## 2. Ce que porte la config (et comment)
 
@@ -27,7 +27,7 @@ Cas limite assumé : `texts.home` mélange contenu de marque (`mainTitle`, `main
 |---|---|---|
 | Identité | `app.name`, `app.shortName`, `app.description`, `app.url`, `app.locale`, `profile` | Le nom de l'événement s'écrit **une seule fois** (`app.name`) ; les autres chaînes le reprennent par gabarit : `"Carte - {{app.name}}"`. Un placeholder inconnu donne une chaîne vide et un avertissement dans les logs. |
 | Dates | `app.eventDates.weekStart`, `weekEnd` | Obligatoires, validées au démarrage ; plus de repli de dates. |
-| Titres | `texts.meta` (titre, description, Open Graph), `texts.home` | Un titre manquant a un repli lisible, jamais la clé brute. |
+| Titres | `app.name` (titre affiché dans l'interface), `texts.meta` (titre, description, Open Graph, écrits dans `index.html` au build) | Un titre manquant a un repli lisible, jamais la clé brute. |
 | Période | `filters.dateFilterModes` | Libellés des modes ; le mode « pendant l'événement » n'existe que si la config le libelle. |
 | Design | `theme.colors`, `theme.fonts`, `theme.borderRadius` | Injectés en variables CSS par `ConfigProvider`. Des valeurs par défaut existent encore dans `globals.css` et `tailwind.config.ts` (palette de marque à neutraliser, [PLAN-FIN-REFONTE.md](PLAN-FIN-REFONTE.md) étape 3). |
 | Schéma Baserow | `baserow.fieldMapping` (rôle de colonne vers nom de colonne, toutes les clés obligatoires **sauf** le rôle optionnel `highlight`, voir §5), `baserow.mapping.referenceFields` (colonnes des tables de référence), `baserow.mapping.modality` (valeur de la liste « modalité » vers modalité de l'application), `baserow.mapping.tariffFreeValue`, `baserow.moderationVisibleValue` | Aucun nom de colonne ni valeur de liste de choix dans le code. |

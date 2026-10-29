@@ -243,10 +243,10 @@ function validateTheme(theme: unknown, errors: string[]): void {
 
 function validateTexts(texts: unknown, errors: string[]): void {
   if (!isDict(texts)) {
-    errors.push('texts : section absente (meta et home).');
+    errors.push('texts : section absente (meta).');
     return;
   }
-  for (const section of ['meta', 'home']) {
+  for (const section of ['meta']) {
     const entries = texts[section];
     if (!isDict(entries)) {
       errors.push(`texts.${section} : section absente (objet de textes).`);

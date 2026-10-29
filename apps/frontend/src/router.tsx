@@ -1,5 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
-import { HomePage } from './pages/HomePage';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { MapPage } from './pages/MapPage';
 import { EventsListPage } from './pages/EventsListPage';
 import { EventDetailPage } from './pages/EventDetailPage';
@@ -7,11 +6,12 @@ import { EventDetailPage } from './pages/EventDetailPage';
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <HomePage />,
+    element: <MapPage />,
   },
   {
+    // Ancienne adresse de la carte : conservée pour les liens et iframes existants.
     path: '/carte',
-    element: <MapPage />,
+    element: <Navigate to="/" replace />,
   },
   {
     path: '/evenements',

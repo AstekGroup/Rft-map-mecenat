@@ -14,7 +14,6 @@ export interface AppConfigTheme {
 /** Titres et noms propres à l'événement (le wording générique de l'interface reste dans le code). */
 export interface AppConfigTexts {
   meta: Record<string, string>;
-  home: Record<string, string>;
 }
 
 export interface AppConfigDateFilterMode {
