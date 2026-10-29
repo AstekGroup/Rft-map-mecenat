@@ -159,7 +159,7 @@ export function extractImageUrl(
   if (!attachments || attachments.length === 0) return undefined;
   const first = attachments[0];
   return (
-    first.thumbnails?.card?.url || first.thumbnails?.small?.url || first.url
+    first.thumbnails?.card_cover?.url || first.thumbnails?.small?.url || first.url
   );
 }
 

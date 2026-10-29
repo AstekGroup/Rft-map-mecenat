@@ -222,17 +222,17 @@ describe('extractImageUrl', () => {
     expect(extractImageUrl([])).toBeUndefined();
   });
 
-  it('retourne le thumbnail card si disponible', () => {
+  it('retourne le thumbnail card_cover si disponible', () => {
     const attachments: BaserowAttachment[] = [];
     const item: BaserowAttachment = {
       url: 'https://example.com/original.jpg',
       filename: 'image.jpg',
       thumbnails: {
-        card: { url: 'https://example.com/card.jpg', width: 400, height: 300 },
+        card_cover: { url: 'https://example.com/card_cover.jpg', width: 400, height: 300 },
       },
     };
     attachments.push(item);
-    expect(extractImageUrl(attachments)).toBe('https://example.com/card.jpg');
+    expect(extractImageUrl(attachments)).toBe('https://example.com/card_cover.jpg');
   });
 
   it("retourne l'URL directe si pas de thumbnail", () => {
