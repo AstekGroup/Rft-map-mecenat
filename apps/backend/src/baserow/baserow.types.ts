@@ -21,7 +21,7 @@ export interface BaserowAttachment {
 export interface BaserowThumbnails {
   tiny?: BaserowThumbnail;
   small?: BaserowThumbnail;
-  card?: BaserowThumbnail;
+  card_cover?: BaserowThumbnail;
 }
 
 export interface BaserowThumbnail {

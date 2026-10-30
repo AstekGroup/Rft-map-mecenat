@@ -98,9 +98,8 @@ export function EventDetailPage() {
           <img
             src={event.imageUrl}
             alt={event.title}
-            className="w-full h-full object-cover opacity-80"
+            className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent" />
           <button
             onClick={() => navigate(-1)}
             className="absolute top-4 left-4 inline-flex items-center gap-2 bg-white/90 text-primary-dark px-3 py-2 rounded-lg text-sm font-medium hover:bg-white transition-colors"
