@@ -5,15 +5,15 @@ describe('resolveConfigTemplates', () => {
     const config = {
       app: { name: 'Les Journées du Test' },
       texts: {
-        home: {
-          mainTitle: '{{app.name}}',
+        meta: {
+          title: '{{app.name}}',
           info: "C'est quoi {{ app.name }} ?",
         },
       },
     };
     const resolved = resolveConfigTemplates(config);
-    expect(resolved.texts.home.mainTitle).toBe('Les Journées du Test');
-    expect(resolved.texts.home.info).toBe("C'est quoi Les Journées du Test ?");
+    expect(resolved.texts.meta.title).toBe('Les Journées du Test');
+    expect(resolved.texts.meta.info).toBe("C'est quoi Les Journées du Test ?");
   });
 
   it('change tous les titres quand le nom change (un seul champ à modifier)', () => {

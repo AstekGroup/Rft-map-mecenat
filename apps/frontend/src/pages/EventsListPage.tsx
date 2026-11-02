@@ -2,7 +2,7 @@ import { useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useEvents, type EventFilters } from '@/hooks';
 import { EventListView, EventFiltersBar } from '@/components/Events';
-import { Loader2, Home, Map } from 'lucide-react';
+import { Loader2, ArrowLeft, Map } from 'lucide-react';
 
 export function EventsListPage() {
   const navigate = useNavigate();
@@ -98,9 +98,9 @@ export function EventsListPage() {
           <Link
             to="/"
             className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-            aria-label="Retour à l'accueil"
+            aria-label="Retour à la carte"
           >
-            <Home className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
             <h1 className="font-poppins font-semibold text-lg">{pageTitle}</h1>
@@ -113,7 +113,7 @@ export function EventsListPage() {
         {/* Bouton vers la carte - visible uniquement en mode présentiel */}
         {!isOnlineMode && (
           <button
-            onClick={() => navigate('/carte')}
+            onClick={() => navigate('/')}
             className="flex items-center gap-2 px-4 py-2 rounded-button text-sm font-semibold transition-all bg-accent-yellow text-text-primary hover:bg-yellow-500 shadow-md"
           >
             <Map className="w-4 h-4" />

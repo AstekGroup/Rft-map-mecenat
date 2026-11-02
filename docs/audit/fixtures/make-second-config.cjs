@@ -16,13 +16,6 @@ Object.assign(c.theme.fonts, {
   body: 'Inter',
   googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Inter:wght@400;600&display=swap',
 });
-Object.assign(c.texts.home, {
-  mainTitle: 'Les Journées du Test',
-  mainDescription: 'Texte de test : une autre carte, un autre événement, le même code.',
-  ctaText: 'Ouvrir la carte de test',
-  editionLabel: 'Session',
-  infoTitle: "C'est quoi les Journées du Test ?",
-});
 c.filters.dateFilterModes[1].label = 'Pendant les Journées du Test';
 
 fs.writeFileSync(path.join(__dirname, 'app.config.second-map.json'), JSON.stringify(c, null, 2) + '\n');

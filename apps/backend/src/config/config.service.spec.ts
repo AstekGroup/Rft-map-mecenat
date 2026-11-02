@@ -42,12 +42,14 @@ describe('AppConfigService', () => {
     it('sert une config dont les gabarits sont résolus', () => {
       const config = buildTestConfig();
       config.app.name = 'Les Journées du Test';
-      config.texts.home.mainTitle = '{{app.name}}';
+      config.texts.meta.title = 'Carte - {{app.name}}';
       const service = serviceFor(write(config));
 
       service.onModuleInit();
 
-      expect(service.safe.texts.home.mainTitle).toBe('Les Journées du Test');
+      expect(service.safe.texts.meta.title).toBe(
+        'Carte - Les Journées du Test',
+      );
     });
   });
 

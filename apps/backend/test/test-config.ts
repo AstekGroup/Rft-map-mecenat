@@ -19,7 +19,6 @@ export function buildTestConfig(): AppConfig {
     },
     texts: {
       meta: { title: 'Carte - {{app.name}}' },
-      home: { mainTitle: '{{app.name}}' },
     },
     filters: { dateFilterModes: [] },
     baserow: {

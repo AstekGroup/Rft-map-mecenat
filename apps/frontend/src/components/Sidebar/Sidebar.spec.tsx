@@ -6,7 +6,7 @@ import { Sidebar } from './Sidebar';
 
 vi.mock('@/hooks', () => ({
   useConfig: () => ({
-    helpers: { getText: () => 'Carte test', getEventName: () => 'Carte test' },
+    helpers: { getEventName: () => 'Carte test' },
   }),
 }));
 vi.mock('@/components/Map', () => ({}));

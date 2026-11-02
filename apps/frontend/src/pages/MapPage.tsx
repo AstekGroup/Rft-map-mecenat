@@ -1,11 +1,11 @@
 import { useState, useCallback, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Event } from '@/types/event';
 import { useEvents } from '@/hooks';
 import { MapView, MapBounds } from '@/components/Map';
 import { Sidebar } from '@/components/Sidebar';
 import { SearchOverlay } from '@/components/Map/SearchOverlay';
-import { Loader2, List, Home, Filter, Wifi } from 'lucide-react';
+import { Loader2, List, Filter, Wifi } from 'lucide-react';
 
 export interface MapViewHandle {
   flyTo: (lng: number, lat: number, zoom?: number) => void;
@@ -107,14 +107,6 @@ export function MapPage() {
         aria-label="Navigation de la carte"
         className="absolute top-4 right-4 z-20 hidden sm:flex flex-row items-center gap-2"
       >
-        <Link
-          to="/"
-          className="bg-white shadow-popup rounded-xl p-2.5 hover:bg-surface-beige transition-all border border-primary/5 group"
-          title="Retour à l'accueil"
-          aria-label="Retour à l'accueil"
-        >
-          <Home className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-        </Link>
         <button
           onClick={() => navigate('/evenements')}
           title="Voir la liste"

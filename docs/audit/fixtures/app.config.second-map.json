@@ -30,18 +30,6 @@
       "ogTitle": "Carte Interactive - {{app.name}}",
       "ogDescription": "Découvrez les ateliers cuisine, dégustations et événements végétaux près de chez vous",
       "iconRef": "https://lagrandesemainevegetale.fr/favicon.ico"
-    },
-    "home": {
-      "mainTitle": "{{app.name}}",
-      "mainDescription": "Texte de test : une autre carte, un autre événement, le même code.",
-      "ctaText": "Ouvrir la carte de test",
-      "ctaTextShort": "Découvrir les événements",
-      "editionLabel": "Session",
-      "nearbySubtitle": "Près de chez vous",
-      "seeAll": "Tout voir",
-      "infoTitle": "C'est quoi {{app.name}} ?",
-      "infoDescription": "Une initiative nationale pour démocratiser l'alimentation végétale. Pendant une semaine, des fermes, des restaurants, des associations et des cuisiniers se mobilisent pour vous faire découvrir de nouvelles saveurs, apprendre à cuisiner les légumineuses et comprendre les enjeux de notre alimentation.",
-      "sectionPresentiel": "Événements en présentiel"
     }
   },
   "filters": {

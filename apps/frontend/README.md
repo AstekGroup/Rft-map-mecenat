@@ -57,8 +57,7 @@ src/
 │   ├── useClusters.ts # Clustering avec Supercluster
 │   └── useMapViewport.ts
 ├── pages/
-│   ├── HomePage.tsx        # Page d'accueil (carrefour)
-│   ├── MapPage.tsx         # Carte interactive
+│   ├── MapPage.tsx         # Carte interactive (route `/`)
 │   ├── EventsListPage.tsx  # Liste des événements
 │   └── EventDetailPage.tsx # Détail d'un événement
 ├── services/

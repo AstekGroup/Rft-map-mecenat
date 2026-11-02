@@ -37,7 +37,7 @@ export function Sidebar({
 }: SidebarProps) {
   const { filters, onUpdateFilters, onResetFilters } = controls;
   const { helpers } = useConfig();
-  const eventTitle = helpers.getText('home', 'mainTitle') || helpers.getEventName();
+  const eventTitle = helpers.getEventName();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [hasCollapsedOnce, setHasCollapsedOnce] = useState(false);
   const [showAttention, setShowAttention] = useState(false);

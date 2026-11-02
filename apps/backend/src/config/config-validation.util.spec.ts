@@ -130,11 +130,18 @@ describe('validateAppConfig', () => {
     it('exige les sections de textes et des chaînes', () => {
       const { errors } = validateAppConfig(
         configWith((c) => {
-          delete c.texts.home;
+          delete c.texts.meta;
+        }),
+      );
+      expect(errors.join('\n')).toMatch(/texts\.meta/);
+    });
+
+    it('exige que les textes soient des chaînes', () => {
+      const { errors } = validateAppConfig(
+        configWith((c) => {
           c.texts.meta.title = 12;
         }),
       );
-      expect(errors.join('\n')).toMatch(/texts\.home/);
       expect(errors.join('\n')).toMatch(/texts\.meta\.title/);
     });
 
