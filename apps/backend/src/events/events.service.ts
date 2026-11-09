@@ -1,4 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnApplicationBootstrap,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import type { Event, LinkedTableRow } from '@make-map/types';
 import { BaserowService } from '../baserow/baserow.service';
 
@@ -7,6 +12,8 @@ interface CachedData {
   timestamp: number;
   /** Durée de validité (ms) : courte quand le chargement était dégradé. */
   ttl: number;
+  /** Dernier chargement réussi depuis Baserow (inchangé par les échecs de rafraîchissement). */
+  loadedAt: number;
 }
 
 interface CachedLinkedTable {
@@ -15,7 +22,7 @@ interface CachedLinkedTable {
 }
 
 @Injectable()
-export class EventsService {
+export class EventsService implements OnApplicationBootstrap, OnModuleDestroy {
   private readonly logger = new Logger(EventsService.name);
 
   // Cache en mémoire avec TTL
@@ -29,11 +36,49 @@ export class EventsService {
   // Quand une table de référence était en erreur, les événements ont été servis sans leurs
   // partenaires/thématiques/formats/publics : on ne fige pas ce résultat 5 minutes.
   private readonly DEGRADED_CACHE_TTL = 30 * 1000; // 30 secondes
+  // Une liste périmée n'est servie que pendant le rafraîchissement ou une panne passagère de
+  // Baserow, pas indéfiniment : un événement retiré de la modération ne doit pas rester public.
+  // Au-delà, on ne sert plus rien (erreur, comme avant l'arrivée du cache en arrière-plan).
+  private readonly MAX_STALE_AGE = 60 * 60 * 1000; // 1 heure
+
+  /** Chargements en cours (un par mode) : les requêtes simultanées partagent le même. */
+  private readonly loading = new Map<boolean, Promise<Event[]>>();
+  private refreshTimer: NodeJS.Timeout | null = null;
+  /** Vérification périodique : le rafraîchissement lui-même suit les TTL ci-dessus. */
+  private readonly REFRESH_CHECK_INTERVAL = 30 * 1000;
 
   constructor(private readonly baserowService: BaserowService) {}
 
   /**
+   * Au démarrage : charge les événements sans attendre (le port s'ouvre tout de suite) puis
+   * vérifie périodiquement si le cache a expiré, pour que les visiteurs ne paient jamais
+   * ni la lecture Baserow ni le géocodage. Le mode `devMode` reste à la demande.
+   */
+  onApplicationBootstrap(): void {
+    this.refreshInBackground(false);
+    this.refreshTimer = setInterval(() => {
+      const cached = this.cache;
+      if (!cached || Date.now() - cached.timestamp >= cached.ttl) {
+        this.refreshInBackground(false);
+      }
+    }, this.REFRESH_CHECK_INTERVAL);
+    // N'empêche pas l'arrêt du processus.
+    this.refreshTimer.unref();
+  }
+
+  onModuleDestroy(): void {
+    if (this.refreshTimer) {
+      clearInterval(this.refreshTimer);
+      this.refreshTimer = null;
+    }
+  }
+
+  /**
    * Récupère tous les événements (avec cache TTL).
+   *
+   * Cache expiré mais présent : la liste précédente est servie tout de suite et un
+   * rafraîchissement part en arrière-plan (jamais d'attente pour le visiteur).
+   * Aucun cache : le visiteur attend le chargement, partagé avec les requêtes simultanées.
    */
   async findAll(devMode = false): Promise<Event[]> {
     const cached = devMode ? this.devCache : this.cache;
@@ -45,22 +90,80 @@ export class EventsService {
       return cached.events;
     }
 
-    this.logger.log(`Cache miss, chargement depuis Baserow...`);
-    const events = await this.baserowService.fetchEvents(devMode);
-
-    const degraded = this.baserowService.degradedReferences();
-    const newCache: CachedData = {
-      events,
-      timestamp: Date.now(),
-      ttl: degraded.length > 0 ? this.DEGRADED_CACHE_TTL : this.CACHE_TTL,
-    };
-    if (devMode) {
-      this.devCache = newCache;
-    } else {
-      this.cache = newCache;
+    if (cached && Date.now() - cached.loadedAt < this.MAX_STALE_AGE) {
+      this.logger.debug(
+        `Cache expiré (${devMode ? 'dev' : 'prod'}) : liste précédente servie, rafraîchissement en arrière-plan`,
+      );
+      this.refreshInBackground(devMode);
+      return cached.events;
     }
 
-    return events;
+    this.logger.log(`Cache miss, chargement depuis Baserow...`);
+    return this.load(devMode);
+  }
+
+  /** Lance un rafraîchissement dont l'échec est journalisé (jamais d'exception non gérée). */
+  private refreshInBackground(devMode: boolean): void {
+    this.load(devMode).catch(() => undefined);
+  }
+
+  /**
+   * Un seul chargement à la fois par mode. En cas d'échec avec une liste déjà en cache, on la
+   * garde (30 s avant la prochaine tentative, pour ne pas marteler Baserow) ; sans liste,
+   * l'erreur remonte comme avant.
+   */
+  private load(devMode: boolean): Promise<Event[]> {
+    const running = this.loading.get(devMode);
+    if (running) return running;
+
+    const promise = (async () => {
+      try {
+        const events = await this.baserowService.fetchEvents(devMode);
+        const degraded = this.baserowService.degradedReferences();
+        const now = Date.now();
+        this.setCache(devMode, {
+          events,
+          timestamp: now,
+          loadedAt: now,
+          ttl: degraded.length > 0 ? this.DEGRADED_CACHE_TTL : this.CACHE_TTL,
+        });
+        return events;
+      } catch (error) {
+        const cached = devMode ? this.devCache : this.cache;
+        const previous =
+          cached && Date.now() - cached.loadedAt < this.MAX_STALE_AGE
+            ? cached
+            : null;
+        this.logger.error(
+          `Rafraîchissement des événements impossible${previous ? ' : liste précédente conservée' : ''} : ${error instanceof Error ? error.message : String(error)}`,
+        );
+        if (previous) {
+          this.setCache(devMode, {
+            events: previous.events,
+            timestamp: Date.now(),
+            loadedAt: previous.loadedAt,
+            ttl: this.DEGRADED_CACHE_TTL,
+          });
+          return previous.events;
+        }
+        throw error;
+      }
+    })();
+
+    this.loading.set(devMode, promise);
+    const clear = () => {
+      if (this.loading.get(devMode) === promise) this.loading.delete(devMode);
+    };
+    promise.then(clear, clear);
+    return promise;
+  }
+
+  private setCache(devMode: boolean, data: CachedData): void {
+    if (devMode) {
+      this.devCache = data;
+    } else {
+      this.cache = data;
+    }
   }
 
   /**
