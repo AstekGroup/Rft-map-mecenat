@@ -55,6 +55,10 @@ services:
       - PORT=8080
       - NODE_ENV=production
       - CORS_ORIGIN=${CORS_ORIGIN:-*}
+      # Cache de géocodage persistant : survit aux redéploiements (volume ci-dessous).
+      - GEOCODING_CACHE_PATH=/data/geocoding.json
+    volumes:
+      - geocoding_data:/data
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080/api/health"]
       interval: 30s
@@ -65,3 +69,4 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+  geocoding_data:

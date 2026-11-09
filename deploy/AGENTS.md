@@ -2,7 +2,7 @@
 
 [← Instructions racine](../AGENTS.md) · [README déploiement](./README.md) · [Suivi de la refonte](../docs/audit/SUIVI.md)
 
-> Le déploiement est traité **en dernier** (session 8 du [plan](../docs/audit/PLAN-SESSIONS.md)). Ne pas y toucher avant, hors mise à jour des variables d'environnement (session 2).
+> Le déploiement est traité **en dernier** (session 8 du [plan](../docs/audit/PLAN-SESSIONS.md)). Ne pas y toucher avant, hors mise à jour des variables d'environnement (session 2). **Exception décidée par le propriétaire le 2026-11-06** : le volume `geocoding_data` (cache de géocodage persistant, `GEOCODING_CACHE_PATH=/data/geocoding.json`) dans `docker-compose.prod.yml`. Jamais exécuté en réel (non vérifié) ; ne pas faire `docker compose down -v` (supprime le volume).
 
 ## Contexte
 
