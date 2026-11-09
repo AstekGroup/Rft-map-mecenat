@@ -107,6 +107,20 @@ Branche `chore/menage`.
 
 - [ ] Branche `docs/verdict-final` : rejouer `pnpm build`, `pnpm lint`, `pnpm run test -- --force` et les recherches du verdict sur `develop`, mettre à jour [../verdict.md](../verdict.md) et `SUIVI.md`. La session 8 et `develop` vers `main` restent « hors plan, non faits ».
 
+### 9. Optimisation du chargement de la carte (2026-11-06) — code fait, à découper en PR
+
+Problème : le géocodage de ~1000 adresses (API BAN) bloquait le visiteur après chaque redémarrage ou expiration du cache.
+
+- [x] Géocodage : clé normalisée, repli retrouvé sans nouvel appel, échecs mémorisés (24 h / 1 h), journal de durée (`geocoding.service.ts`).
+- [x] Cache persistant JSON (`geocoding-cache.store.ts`, `GEOCODING_CACHE_PATH`), cas dégradés testés.
+- [x] `EventsService` : chargement unique partagé, liste précédente servie pendant le rafraîchissement, préchargement et minuteur de 30 s, liste périmée limitée à 1 h (fail-closed).
+- [x] Compression gzip (`main.ts`).
+- [x] Volume `geocoding_data` dans `deploy/docker-compose.prod.yml` (exception à la règle « déploiement en session 8 », décidée par le propriétaire).
+- [x] Docs : `.env.example`, `AGENTS.md` (racine, backend, deploy), READMEs, `JOURNAL.md`, `SUIVI.md`.
+- [x] Branche `feat/cache-geocodage-persistant`, une PR vers `develop` en 5 commits (voir `SUIVI.md`).
+- [ ] Mesurer avant/après avec le seed à ~1000 événements (non fait).
+- Hors périmètre : coordonnées dans Baserow (écriture interdite), SQLite, re-géocodage périodique des adresses trouvées.
+
 ## Vérification finale
 
 - Depuis la racine : `pnpm build`, `pnpm lint`, `pnpm run test -- --force`, résultats notés dans `JOURNAL.md`.

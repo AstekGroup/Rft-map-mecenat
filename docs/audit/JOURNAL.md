@@ -173,3 +173,16 @@ Décision du propriétaire : **la PR `develop` → `main` et les tags (`v0.1.0`,
 - Incident local : un clic dans la grille Baserow a recopié « Jaune » sur la ligne 111 ; remis à vide par `PATCH /api/database/rows/table/67/111/` (base locale jetable).
 - Résultats (racine) : `pnpm lint` 0 erreur (3 avertissements frontend connus) ; `pnpm build` `Tasks: 3 successful` ; `pnpm run test -- --force` : types 5, backend 15 suites / 246 tests, frontend 11 fichiers / 140 tests.
 - Nettoyage de la base locale : table « Couleurs » de la PR 50 absente ; colonnes « Couleur (hexa) » (recherche) supprimées dans Formats, Publics et Thématiques (`DELETE /api/database/fields/7950|7952|7954/`). Test hérité de la recherche reformulé (le format `[{ value: <code> }]` reste accepté).
+
+
+## Optimisation des temps de chargement : cache de géocodage persistant (2026-11-06)
+
+- Code, sur la branche `feat/cache-geocodage-persistant` (créée depuis `origin/develop` à `ff5c57a`, 5 commits, une seule PR) :
+  - `apps/backend/src/geocoding/geocoding.service.ts` : clé normalisée, repli enregistré sous la clé d'origine, échecs mémorisés (24 h introuvable, 1 h erreur HTTP/réseau), une seule recherche par adresse en cours, pas de pause entre paquets quand tout vient du cache, journal « N adresses en X ms : en cache / géocodées / en échec ».
+  - `apps/backend/src/geocoding/geocoding-cache.store.ts` (nouveau) : fichier JSON versionné (`GEOCODING_CACHE_PATH`, défaut `.cache/geocoding.json`), écriture atomique une fois par lot, purge à 30 jours d'inutilisation, fichier illisible mis de côté.
+  - `apps/backend/src/events/events.service.ts` : chargement unique partagé par mode, liste précédente servie pendant le rafraîchissement, préchargement au démarrage, minuteur de 30 s (`unref`, arrêté à la destruction), liste périmée conservée **1 h au plus** si Baserow est en panne (`MAX_STALE_AGE`).
+  - `apps/backend/src/main.ts` : middleware `compression` (dépendances `compression`, `@types/compression`).
+  - `deploy/docker-compose.prod.yml` : volume `geocoding_data` monté sur `/data`, `GEOCODING_CACHE_PATH=/data/geocoding.json` (exception documentée dans `deploy/AGENTS.md`).
+- Tests : `pnpm run test -- --force` : backend 17 suites / 283 tests, frontend 13 fichiers (tous verts). `pnpm lint` : 0 erreur, 3 avertissements connus du frontend. `pnpm build` du backend : passe (`pnpm build` de la racine non rejoué).
+- Compression, vérifiée sur un backend lancé en local (`node dist/main.js`, port 3999) : `GET /api/config` 1154 octets bruts, 570 avec `Accept-Encoding: gzip`, en-tête `Content-Encoding: gzip`. Le même lancement a bien préchargé les événements au démarrage et chargé le cache (« Aucun cache de géocodage à … : il sera créé »). **Non mesuré** : poids de `/api/events` avant/après (pas de Baserow joignable pendant cette session).
+- **Non vérifié** : mesure avant/après du temps de chargement avec ~1000 événements (Baserow local + `scripts/seed-baserow/seed.mjs`) ; à faire en rejouant le seed puis en lisant le journal « Géocodage de N adresses en X ms » au premier puis au deuxième démarrage. `docker build` et `docker compose up` avec le volume : jamais exécutés.

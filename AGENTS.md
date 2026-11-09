@@ -72,7 +72,7 @@ Qualité (session 7) : `pnpm lint` couvre le frontend (ESLint, 3 avertissements 
 
 Limites connues (preuves dans [docs/audit/JOURNAL.md](./docs/audit/JOURNAL.md)) : `pnpm build` génère `apps/frontend/index.html` (ignoré par git) depuis `index.template.html` : le modèle n'est jamais modifié ; le test e2e `apps/backend/test/app.e2e-spec.ts` est le modèle Nest périmé (il attend « Hello World! » sur `/` ; `pnpm test:e2e` échoue, constaté en session 7) et n'est pas lancé par `pnpm test`. Ne pas contourner un échec sans le dire.
 
-Environnement : `apps/backend/.env.example` et `apps/frontend/.env.example` (le backend lit `BASEROW_API_URL`, `BASEROW_API_TOKEN`, `BASEROW_EVENT_TABLE_ID`, `BASEROW_MODERATION_FIELD_ID`, `BASEROW_PARTNERS_TABLE_ID`, `BASEROW_THEMATIQUES_TABLE_ID`, `BASEROW_FORMATS_TABLE_ID`, `BASEROW_PUBLICS_TABLE_ID`, `PORT`, `CORS_ORIGIN`, `APP_CONFIG_PATH`, `ALLOW_DEV_MODE`).
+Environnement : `apps/backend/.env.example` et `apps/frontend/.env.example` (le backend lit `BASEROW_API_URL`, `BASEROW_API_TOKEN`, `BASEROW_EVENT_TABLE_ID`, `BASEROW_MODERATION_FIELD_ID`, `BASEROW_PARTNERS_TABLE_ID`, `BASEROW_THEMATIQUES_TABLE_ID`, `BASEROW_FORMATS_TABLE_ID`, `BASEROW_PUBLICS_TABLE_ID`, `PORT`, `CORS_ORIGIN`, `APP_CONFIG_PATH`, `ALLOW_DEV_MODE`, `GEOCODING_CACHE_PATH`).
 
 ## Documentation associée
 
