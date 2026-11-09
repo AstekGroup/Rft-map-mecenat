@@ -1,11 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger } from '@nestjs/common';
+import * as compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
   const isProduction = process.env.NODE_ENV === 'production';
+
+  // Compression gzip des réponses JSON (la liste des événements pèse vite plusieurs centaines
+  // de Ko). Active en local comme en production : même comportement pour les démos.
+  app.use(compression());
 
   // CORS configurable via env var
   const corsOrigin = process.env.CORS_ORIGIN;
