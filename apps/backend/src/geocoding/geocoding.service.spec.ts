@@ -164,6 +164,99 @@ describe('GeocodingService', () => {
     });
   });
 
+  describe('cache des échecs et du repli', () => {
+    const emptyBan = {
+      ok: true,
+      json: async () => ({ type: 'FeatureCollection', features: [] }),
+    };
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it("retrouve le repli sans nouvel appel (enregistré sous la clé d'origine)", async () => {
+      mockFetch.mockResolvedValueOnce(emptyBan);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => makeBanResponse(4.8357, 45.764),
+      });
+
+      const first = await service.geocodeAddress(
+        'rue inconnue',
+        '69001',
+        'Lyon',
+      );
+      expect(first).not.toBeNull();
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+
+      const second = await service.geocodeAddress(
+        'rue inconnue',
+        '69001',
+        'Lyon',
+      );
+      expect(second).toEqual(first);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('ne retente pas une adresse introuvable avant 24 h, puis la retente', async () => {
+      jest.useFakeTimers({ now: new Date('2026-05-20T10:00:00Z') });
+      mockFetch.mockResolvedValue(emptyBan);
+
+      await service.geocodeAddress('rue introuvable', '99999', 'Ville');
+      const callsAfterFirst = mockFetch.mock.calls.length;
+      expect(callsAfterFirst).toBe(2); // adresse complète + repli
+
+      jest.setSystemTime(new Date('2026-05-21T09:00:00Z'));
+      await service.geocodeAddress('rue introuvable', '99999', 'Ville');
+      expect(mockFetch).toHaveBeenCalledTimes(callsAfterFirst);
+
+      jest.setSystemTime(new Date('2026-05-21T10:00:01Z'));
+      await service.geocodeAddress('rue introuvable', '99999', 'Ville');
+      expect(mockFetch.mock.calls.length).toBeGreaterThan(callsAfterFirst);
+    });
+
+    it("ne retente une erreur HTTP ou réseau qu'après 1 h", async () => {
+      jest.useFakeTimers({ now: new Date('2026-05-20T10:00:00Z') });
+      mockFetch.mockResolvedValue({ ok: false, status: 503 });
+
+      await service.geocodeAddress('rue test', '69001', 'Lyon');
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+
+      jest.setSystemTime(new Date('2026-05-20T10:59:00Z'));
+      await service.geocodeAddress('rue test', '69001', 'Lyon');
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+
+      jest.setSystemTime(new Date('2026-05-20T11:00:01Z'));
+      await service.geocodeAddress('rue test', '69001', 'Lyon');
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('normalise la clé (casse et espaces)', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => makeBanResponse(4.8357, 45.764),
+      });
+
+      await service.geocodeAddress('1  Rue   Test', '69001', 'LYON');
+      await service.geocodeAddress(' 1 rue test ', '69001', 'lyon');
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("ne fait qu'un appel pour deux événements à la même adresse dans un lot", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => makeBanResponse(4.8357, 45.764),
+      });
+
+      const results = await service.batchGeocode([
+        { id: 'a', address: '1 rue test', postalCode: '69001', city: 'Lyon' },
+        { id: 'b', address: '1 rue test', postalCode: '69001', city: 'Lyon' },
+      ]);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(results.get('a')).toEqual(results.get('b'));
+    });
+  });
+
   describe('cache management', () => {
     it('getCacheSize retourne 0 initialement', () => {
       expect(service.getCacheSize()).toBe(0);

@@ -1,4 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import * as path from 'path';
+import {
+  GeocodeFailure,
+  GeocodingCacheEntry,
+  GeocodingCacheStore,
+} from './geocoding-cache.store';
 
 // ============================================================
 // Types
@@ -155,10 +161,39 @@ const DEPT_TO_REGION: Record<string, string> = {
 
 const BAN_API_URL = 'https://api-adresse.data.gouv.fr/search/';
 
+/** Adresse inconnue de la BAN : on ne la redemande pas avant 24 h. */
+export const NOT_FOUND_RETRY_MS = 24 * 60 * 60 * 1000;
+/** Erreur HTTP ou réseau (passagère) : nouvelle tentative après 1 h. */
+export const ERROR_RETRY_MS = 60 * 60 * 1000;
+
+/** Issue d'une recherche d'adresse. */
+type GeocodeOutcome =
+  | { kind: 'ok'; result: GeocodingResult }
+  | { kind: 'failed'; failure: GeocodeFailure };
+
+/** Compteurs d'un lot, pour le journal (mesure avant/après). */
+interface BatchStats {
+  cached: number;
+  geocoded: number;
+  failed: number;
+}
+
 @Injectable()
-export class GeocodingService {
+export class GeocodingService implements OnModuleInit {
   private readonly logger = new Logger(GeocodingService.name);
-  private readonly cache = new Map<string, GeocodingResult>();
+  /** Mémoire seule tant que `onModuleInit` n'a pas fourni de chemin de fichier. */
+  private store = new GeocodingCacheStore();
+  /** Recherches en cours, par clé : deux événements à la même adresse ne font qu'un appel. */
+  private readonly inflight = new Map<string, Promise<GeocodeOutcome>>();
+
+  /** Charge le cache persistant (`GEOCODING_CACHE_PATH`, sinon `.cache/geocoding.json`). */
+  onModuleInit(): void {
+    const filePath = process.env.GEOCODING_CACHE_PATH?.trim()
+      ? process.env.GEOCODING_CACHE_PATH.trim()
+      : path.join('.cache', 'geocoding.json');
+    this.store = new GeocodingCacheStore(path.resolve(filePath));
+    this.store.load();
+  }
 
   /**
    * Dérive la région depuis un code postal
@@ -176,13 +211,114 @@ export class GeocodingService {
     postalCode: string,
     city: string,
   ): Promise<GeocodingResult | null> {
-    const cacheKey = `${address}|${postalCode}|${city}`.toLowerCase().trim();
-    const cached = this.cache.get(cacheKey);
-    if (cached) return cached;
+    const outcome = await this.resolve(address, postalCode, city);
+    await this.store.flush();
+    return outcome.kind === 'ok' ? outcome.result : null;
+  }
 
+  /**
+   * Clé du cache : adresse, code postal et ville, en minuscules et espaces réduits. Une adresse
+   * modifiée dans Baserow donne donc une nouvelle clé, géocodée au chargement suivant.
+   */
+  private cacheKey(address: string, postalCode: string, city: string): string {
+    return [address, postalCode, city]
+      .map((part) => (part ?? '').toLowerCase().replace(/\s+/g, ' ').trim())
+      .join('|');
+  }
+
+  /**
+   * Cherche une adresse : cache d'abord (résultat, ou échec encore « frais »), puis la BAN.
+   * Ne lève jamais ; n'écrit pas le fichier (c'est `flush` qui le fait, une fois par lot).
+   */
+  private async resolve(
+    address: string,
+    postalCode: string,
+    city: string,
+    stats?: BatchStats,
+  ): Promise<GeocodeOutcome> {
     const query = [address, city].filter(Boolean).join(', ');
-    if (!query) return null;
+    if (!query) return { kind: 'failed', failure: 'not_found' };
 
+    const key = this.cacheKey(address, postalCode, city);
+    const cached = this.store.get(key);
+    if (cached) {
+      if (cached.result) {
+        if (stats) stats.cached++;
+        return { kind: 'ok', result: cached.result };
+      }
+      if (cached.failure && (cached.retryAfter ?? 0) > Date.now()) {
+        if (stats) stats.cached++;
+        return { kind: 'failed', failure: cached.failure };
+      }
+    }
+
+    const running = this.inflight.get(key);
+    if (running) return running;
+
+    const search = this.searchAndStore(key, address, postalCode, city, stats);
+    this.inflight.set(key, search);
+    try {
+      return await search;
+    } finally {
+      this.inflight.delete(key);
+    }
+  }
+
+  private async searchAndStore(
+    key: string,
+    address: string,
+    postalCode: string,
+    city: string,
+    stats?: BatchStats,
+  ): Promise<GeocodeOutcome> {
+    let outcome = await this.callBan(address, postalCode, city);
+
+    // Repli : adresse inconnue, on essaie avec le seul code postal + ville. Le résultat est
+    // aussi enregistré sous la clé de l'adresse d'origine (ci-dessous), donc plus d'appel inutile.
+    if (
+      outcome.kind === 'failed' &&
+      outcome.failure === 'not_found' &&
+      address
+    ) {
+      outcome = await this.resolve('', postalCode, city, stats);
+      // `resolve` a déjà compté le repli ; ne pas compter deux fois l'adresse d'origine.
+      this.storeOutcome(key, outcome);
+      return outcome;
+    }
+
+    if (stats) {
+      if (outcome.kind === 'ok') stats.geocoded++;
+      else stats.failed++;
+    }
+    this.storeOutcome(key, outcome);
+    return outcome;
+  }
+
+  private storeOutcome(key: string, outcome: GeocodeOutcome): void {
+    const now = Date.now();
+    const entry: GeocodingCacheEntry =
+      outcome.kind === 'ok'
+        ? { result: outcome.result, geocodedAt: now, lastUsedAt: now }
+        : {
+            failure: outcome.failure,
+            geocodedAt: now,
+            retryAfter:
+              now +
+              (outcome.failure === 'not_found'
+                ? NOT_FOUND_RETRY_MS
+                : ERROR_RETRY_MS),
+            lastUsedAt: now,
+          };
+    this.store.set(key, entry);
+  }
+
+  /** Un appel à la BAN. « Introuvable » et « erreur » sont distingués (délais de reprise différents). */
+  private async callBan(
+    address: string,
+    postalCode: string,
+    city: string,
+  ): Promise<GeocodeOutcome> {
+    const query = [address, city].filter(Boolean).join(', ');
     const url = new URL(BAN_API_URL);
     url.searchParams.set('q', query);
     if (postalCode) url.searchParams.set('postcode', postalCode);
@@ -192,35 +328,31 @@ export class GeocodingService {
       const response = await fetch(url.toString());
       if (!response.ok) {
         this.logger.warn(`Erreur HTTP ${response.status} pour "${query}"`);
-        return null;
+        return { kind: 'failed', failure: 'error' };
       }
 
       const data = (await response.json()) as BanResponse;
       if (!data.features || data.features.length === 0) {
-        // Fallback : essayer juste avec le code postal et la ville
-        if (address) {
-          return this.geocodeAddress('', postalCode, city);
-        }
-        return null;
+        return { kind: 'failed', failure: 'not_found' };
       }
 
       const feature = data.features[0];
       const [longitude, latitude] = feature.geometry.coordinates;
       const parts = feature.properties.context.split(',').map((s) => s.trim());
 
-      const result: GeocodingResult = {
-        latitude,
-        longitude,
-        region: parts[2] || parts[1] || 'Inconnue',
-        department: parts[1] || 'Inconnu',
-        cityCode: feature.properties.citycode,
+      return {
+        kind: 'ok',
+        result: {
+          latitude,
+          longitude,
+          region: parts[2] || parts[1] || 'Inconnue',
+          department: parts[1] || 'Inconnu',
+          cityCode: feature.properties.citycode,
+        },
       };
-
-      this.cache.set(cacheKey, result);
-      return result;
     } catch (error) {
       this.logger.warn(`Erreur réseau pour "${query}": ${error}`);
-      return null;
+      return { kind: 'failed', failure: 'error' };
     }
   }
 
@@ -233,17 +365,24 @@ export class GeocodingService {
     const BATCH_SIZE = 5;
     const DELAY_BETWEEN_BATCHES = 100;
     const results = new Map<string, GeocodingResult | null>();
+    const stats: BatchStats = { cached: 0, geocoded: 0, failed: 0 };
+    const startedAt = Date.now();
 
     for (let i = 0; i < items.length; i += BATCH_SIZE) {
       const batch = items.slice(i, i + BATCH_SIZE);
+      const callsBefore = stats.geocoded + stats.failed;
       const batchResults = await Promise.all(
         batch.map(async (item) => {
-          const result = await this.geocodeAddress(
+          const outcome = await this.resolve(
             item.address,
             item.postalCode,
             item.city,
+            stats,
           );
-          return { id: item.id, result };
+          return {
+            id: item.id,
+            result: outcome.kind === 'ok' ? outcome.result : null,
+          };
         }),
       );
 
@@ -251,28 +390,40 @@ export class GeocodingService {
         results.set(id, result);
       }
 
-      if (i + BATCH_SIZE < items.length) {
+      // Pas de pause quand tout le paquet vient du cache : elle n'a de raison d'être
+      // que pour ménager la BAN.
+      const calledBan = stats.geocoded + stats.failed > callsBefore;
+      if (i + BATCH_SIZE < items.length && calledBan) {
         await new Promise((resolve) =>
           setTimeout(resolve, DELAY_BETWEEN_BATCHES),
         );
       }
     }
 
+    // Une seule écriture du fichier par lot.
+    await this.store.flush();
+
+    if (items.length > 0) {
+      this.logger.log(
+        `Géocodage de ${items.length} adresses en ${Date.now() - startedAt} ms : ${stats.cached} en cache, ${stats.geocoded} géocodées, ${stats.failed} en échec`,
+      );
+    }
+
     return results;
   }
 
   /**
-   * Nombre d'entrées dans le cache mémoire
+   * Nombre d'entrées dans le cache (résultats et échecs en attente de nouvelle tentative)
    */
   getCacheSize(): number {
-    return this.cache.size;
+    return this.store.size;
   }
 
   /**
-   * Vide le cache mémoire
+   * Vide le cache (mémoire ; le fichier est réécrit au prochain géocodage)
    */
   clearCache(): void {
-    this.cache.clear();
+    this.store.clear();
   }
 
   private getDepartmentCode(postalCode: string): string {
