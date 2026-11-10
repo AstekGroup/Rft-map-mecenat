@@ -65,7 +65,7 @@ Branche `test/retablir-deux-cartes`.
 Branche `fix/residus-en-dur`.
 
 - [ ] `apps/frontend/src/components/UI/Badge.tsx` (lignes 24-25, `#F2EDE4` et `#1F7A3E`) : passer par les variables de thème injectées par `ConfigProvider.tsx`.
-- [ ] `apps/frontend/src/styles/globals.css` (ligne 11 et replis lignes 53-71) et `apps/frontend/tailwind.config.ts` (replis lignes 12-29) : palette neutre par défaut à la place de la palette LGSV.
+- [ ] `apps/frontend/src/styles/globals.css` (ligne 11 et replis lignes 53-71) et `apps/frontend/tailwind.config.ts` (replis lignes 12-29) : palette LGSV par défaut depuis `app.config.json` à la place de valeurs codées en dur.
 - [ ] Le gris de repli `#D4DDE2`, dupliqué dans `EventListView.tsx`, `EventCard.tsx`, `EventMarker.tsx` : utiliser `DEFAULT_FORMAT_COLOR` d'`utils/iconResolver.ts`.
 - [ ] Étendre les tests « deux cartes » : le badge de format suit la couleur de thème de la seconde config.
 - Fait quand : `rg -i "#[0-9a-f]{6}" apps/frontend/src --glob '!*.spec.*'` ne renvoie que la constante de repli neutre ; vérifié dans le navigateur avec la seconde config.

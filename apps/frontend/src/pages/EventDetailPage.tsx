@@ -19,8 +19,7 @@ import {
 } from 'lucide-react';
 import { useEvents } from '@/hooks';
 import { useConfig } from '@/hooks/useConfig';
-import { HighlightBadge } from '@/components/UI';
-import { Loader2 } from 'lucide-react';
+import { HighlightBadge, PageSkeletonLoader } from '@/components/UI';
 import {getIcon} from "@/utils/iconResolver.ts";
 import { formatEventDate } from '@/utils/formatEventDate';
 
@@ -34,16 +33,7 @@ export function EventDetailPage() {
   const event = allEvents.find(e => e.id === id);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-surface-offwhite flex items-center justify-center font-inter">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-primary mx-auto animate-spin" />
-          <p className="mt-4 font-poppins font-semibold text-text-primary text-lg">
-            Chargement de l'événement...
-          </p>
-        </div>
-      </div>
-    );
+    return <PageSkeletonLoader variant="detail" />;
   }
 
   if (error) {
@@ -94,7 +84,7 @@ export function EventDetailPage() {
     <div className="min-h-screen bg-surface-offwhite overflow-y-auto font-inter">
       {/* Hero Image */}
       {event.imageUrl ? (
-        <div className="relative h-64 md:h-80 bg-primary">
+        <div className="relative h-64 md:h-80" style={{ backgroundColor: `rgb(var(--color-primary-rgb))` }}>
           <img
             src={event.imageUrl}
             alt={event.title}
@@ -109,7 +99,7 @@ export function EventDetailPage() {
           </button>
         </div>
       ) : (
-        <div className="bg-primary py-8 px-4">
+        <div className="py-8 px-4" style={{ backgroundColor: `rgb(var(--color-primary-rgb))` }}>
           <div className="max-w-4xl mx-auto">
             <button
               onClick={() => navigate(-1)}
@@ -131,23 +121,28 @@ export function EventDetailPage() {
             <div className="flex flex-wrap items-center gap-2 mb-4">
               {event.isHighlighted && <HighlightBadge size="md" withLabel />}
               <span
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-surface-beige text-primary-dark"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-surface-beige"
+                style={{ color: `rgb(var(--color-primary-dark-rgb))` }}
               >
                 <Icon className="w-4 h-4" />
                 {event.type?.name}
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-primary/10 text-primary-dark">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-primary/10">
                 {event.modality === 'distanciel' ? (
                   <Video className="w-4 h-4" />
                 ) : (
                   <Building className="w-4 h-4" />
                 )}
-                {helpers.getEnumLabel('modalities', event.modality)}
+                <span style={{ color: `rgb(var(--color-primary-dark-rgb))` }}>
+                  {helpers.getEnumLabel('modalities', event.modality)}
+                </span>
               </span>
               {event.isDuringWeek && editionBadge && (
-                <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary-dark px-3 py-1.5 rounded-full text-sm font-medium">
+                <span className="inline-flex items-center gap-1.5 bg-primary/10 px-3 py-1.5 rounded-full text-sm font-medium">
                   <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                  {editionBadge}
+                  <span style={{ color: `rgb(var(--color-primary-dark-rgb))` }}>
+                    {editionBadge}
+                  </span>
                 </span>
               )}
               {isComplete && (
@@ -166,7 +161,7 @@ export function EventDetailPage() {
             {/* Organizer & Partners */}
             <div className="flex flex-col gap-4">
               <p className="text-text-secondary">
-                Organisé par <span className="font-medium text-primary-dark">{event.organizer}</span>
+                Organisé par <span className="font-medium" style={{ color: `rgb(var(--color-primary-dark-rgb))` }}>{event.organizer}</span>
               </p>
 
               {event.partners && event.partners.length > 0 && (
@@ -306,7 +301,8 @@ export function EventDetailPage() {
                 {event.targetAudience.map((audience) => (
                   <span
                     key={audience.id}
-                    className="text-sm bg-primary/5 text-primary-dark px-2.5 py-1 rounded-full border border-primary/10"
+                    className="text-sm bg-primary/5 px-2.5 py-1 rounded-full border border-primary/10"
+                    style={{ color: `rgb(var(--color-primary-dark-rgb))` }}
                   >
                     {audience.name}
                   </span>

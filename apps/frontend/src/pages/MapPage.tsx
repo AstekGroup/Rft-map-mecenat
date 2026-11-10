@@ -5,7 +5,8 @@ import { useEvents } from '@/hooks';
 import { MapView, MapBounds } from '@/components/Map';
 import { Sidebar } from '@/components/Sidebar';
 import { SearchOverlay } from '@/components/Map/SearchOverlay';
-import { Loader2, List, Filter, Wifi } from 'lucide-react';
+import { PageSkeletonLoader } from '@/components/UI';
+import { List, Filter, Wifi } from 'lucide-react';
 
 export interface MapViewHandle {
   flyTo: (lng: number, lat: number, zoom?: number) => void;
@@ -56,16 +57,7 @@ export function MapPage() {
 
   // État de chargement
   if (loading) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-surface-offwhite font-inter">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-primary mx-auto animate-spin" />
-          <p className="mt-4 font-poppins font-semibold text-text-primary text-lg">
-            Chargement des événements...
-          </p>
-        </div>
-      </div>
-    );
+    return <PageSkeletonLoader variant="map" />;
   }
 
   // État d'erreur
