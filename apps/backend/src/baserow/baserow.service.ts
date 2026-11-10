@@ -227,6 +227,7 @@ export class BaserowService implements OnApplicationBootstrap {
    * Inclut le géocodage des adresses.
    */
   async fetchEvents(devMode = false): Promise<Event[]> {
+    const startedAt = Date.now();
     this.logger.log(
       `Chargement des événements depuis Baserow (mode ${devMode ? 'dev' : 'production'})...`,
     );
@@ -252,8 +253,9 @@ export class BaserowService implements OnApplicationBootstrap {
 
     // 5. Récupérer les enregistrements bruts
     const records = await this.fetchRecords(devMode);
+    const baserowMs = Date.now() - startedAt;
     this.logger.log(
-      `${records.length} enregistrements récupérés depuis Baserow`,
+      `${records.length} enregistrements récupérés depuis Baserow en ${baserowMs} ms (référentiels inclus)`,
     );
     if (records.length > 0) this.checkRecordColumns(records[0]);
 
@@ -311,7 +313,7 @@ export class BaserowService implements OnApplicationBootstrap {
     });
 
     this.logger.log(
-      `${events.length} événements prêts (${events.filter((e) => e.latitude !== 0).length} géocodés)`,
+      `${events.length} événements prêts (${events.filter((e) => e.latitude !== 0).length} géocodés) en ${Date.now() - startedAt} ms au total`,
     );
 
     return events;

@@ -99,9 +99,15 @@ ssh root@$IP "cd /opt/make-map/deploy && docker compose -f docker-compose.prod.y
 ssh root@$IP "cd /opt/make-map/deploy && docker compose -f docker-compose.prod.yml ps"
 ```
 
+### Cache de geocodage (volume persistant)
+
+Le backend garde ses resultats de geocodage dans `/data/geocoding.json`, sur le volume Docker nomme `geocoding_data`. Il survit aux redeploiements (`pnpm deploy:v2`) et aux `docker compose down`. **Ne pas utiliser `down -v`** : cela supprime le volume, et le premier visiteur attendrait de nouveau le geocodage de toutes les adresses. Perdre ce fichier n'est pas grave (il se reconstruit tout seul), c'est seulement lent une fois.
+
+Notes : exception a la regle « ne pas toucher au deploiement avant la session 8 » decidee par le proprietaire le 2026-11-06. Aucun `docker build` ni `docker compose up` reel n'a ete execute avec ce volume : non verifie.
+
 ## Variables d'environnement
 
-Voir `deploy/.env.prod.example` pour la liste complete.
+Voir `deploy/.env.prod.example` pour la liste complete. `GEOCODING_CACHE_PATH` est fixee dans `docker-compose.prod.yml` (`/data/geocoding.json`), pas besoin de la definir dans `envmap`.
 
 | Variable | Description | Exemple |
 |----------|-------------|---------|
