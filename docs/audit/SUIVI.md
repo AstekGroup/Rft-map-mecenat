@@ -34,7 +34,7 @@ Vérifié le 2026-10-19 sur `origin/develop` (`2273bcb`) : `pnpm build`, `pnpm l
 |---|---|---|
 | 0 | Plan dans le dépôt, nettoyage de `docs/`, config Astek supprimée | **fait** (PR `docs/plan-fin-refonte`) |
 | 1 | Remettre les tests « deux cartes » et le modèle de PR | **fait** (branche `test/retablir-deux-cartes`) |
-| 3 | Résidus en dur (`Badge.tsx`, palette par défaut, gris de repli) | à faire |
+| 3 | Résidus en dur (`Badge.tsx`, palette LGSV par défaut depuis `app.config.json`, gris de repli) | à faire |
 | 4 | Cas dégradés restants (config absente sur carte et liste, section Format vide) | à faire |
 | 5 | README et `PROJECT_VIBE_CONF.md` neutres | à faire |
 | 6 | Filtre Modalité retiré de la carte ; picto kebab-case | à faire |
@@ -82,6 +82,6 @@ Branche `refactor/supprimer-home-page` (une PR vers `develop`). La carte (`MapPa
 - Le lint ne détecte ni couleur ni marque en dur (règle d'`AGENTS.md` vérifiée à la revue seulement) ; garde-fou optionnel à l'étape 7.
 - Schéma de la vraie base Baserow de production : jamais fourni (non vérifié) ; la carte doit fonctionner avec le schéma indiqué par la config.
 - Base Baserow réelle : si les admins ont déjà appliqué la procédure de la PR #50 (colonne de lien `Couleur` vers la table `Couleurs`), garder `referenceFields.color` = `Couleur (hexa)` le temps de convertir `Couleur` en liste de choix (voir [../baserow/couleurs.md](../baserow/couleurs.md), migration). Non vérifié : schéma de production jamais fourni.
-- Palette Baserow (`apps/backend/src/baserow/baserow-palette.ts`) relevée sur la 2.4.1 : à revérifier à chaque montée de version de Baserow (pastille inconnue = message dans les journaux).
+- Palette Baserow (`apps/backend/src/baserow/baserow-palette.ts`) relevée sur la 2.4.1 : à revérifier à chaque montée de version de Baserow (pastille inconnue = message dans les journaux). | **Palette LGSV comme valeurs par défaut du thème** : `app.config.json` fournit la palette par défaut (rose `#AE3B5D`), utilisée avant chargement de la config ou si une couleur manque.
 - Branches obsolètes `add-dynamic-filters`, `modify-audiences-filters`, `modif_audience_filters` : accord de leur auteur requis avant suppression.
 - Réglage GitHub à faire par le propriétaire : protéger `main` et `develop` (non vérifié).
