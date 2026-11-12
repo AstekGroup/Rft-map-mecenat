@@ -5,6 +5,7 @@ import type { EventFilterControls } from '@/hooks';
 import { EventCard } from './EventCard';
 import { FilterPanel } from '@/components/Filters/FilterPanel';
 import { PastEventsToggle } from '@/components/Filters/PastEventsToggle';
+import { ActiveFilterTags } from '@/components/Filters/ActiveFilterTags';
 import { ChevronLeft, ChevronRight, Filter, List, MapIcon } from 'lucide-react';
 import { MapBounds } from '@/components/Map';
 import { countActiveFilters } from '@/utils/eventFilters';
@@ -84,8 +85,8 @@ export function Sidebar({
           }`}
           aria-label={
             activeFiltersCount > 0
-              ? `Ouvrir le panneau Filtres et liste (${activeFiltersCount} filtre${activeFiltersCount > 1 ? 's' : ''} actif${activeFiltersCount > 1 ? 's' : ''})`
-              : 'Ouvrir le panneau Filtres et liste'
+              ? `Ouvrir le panneau Filtres et résultats (${activeFiltersCount} filtre${activeFiltersCount > 1 ? 's' : ''} actif${activeFiltersCount > 1 ? 's' : ''})`
+              : 'Ouvrir le panneau Filtres et résultats'
           }
         >
           {activeFiltersCount > 0 && (
@@ -98,7 +99,7 @@ export function Sidebar({
           )}
           <Filter className="w-5 h-5" aria-hidden="true" />
           <span className="[writing-mode:vertical-rl] text-sm font-semibold font-poppins tracking-wide py-1">
-            Filtres &amp; liste
+            Filtres &amp; résultats
           </span>
           <ChevronRight className="w-5 h-5" aria-hidden="true" />
         </button>
@@ -141,7 +142,7 @@ export function Sidebar({
             }`}
           >
             <List className="w-4 h-4" />
-            Liste
+            Résultats
           </button>
           <button
             onClick={() => setActiveTab('filters')}
@@ -166,6 +167,7 @@ export function Sidebar({
       <div className="flex-1 overflow-y-auto scrollbar-thin">
         {activeTab === 'list' ? (
           <div className="p-4 space-y-4">
+            <ActiveFilterTags controls={controls} />
             <div className="rounded-xl border-2 border-primary/30 bg-primary/5 overflow-hidden">
               <div className="px-3 py-2 bg-primary/10 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
