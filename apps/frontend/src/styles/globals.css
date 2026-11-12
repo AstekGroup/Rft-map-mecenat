@@ -8,7 +8,7 @@
 /* Base styles */
 @layer base {
 :root {
-  --color-primary-rgb: 59 174 93;
+  --color-primary-rgb: 174 59 93;
   --color-primary-dark-rgb: 31 122 62;
   --color-primary-light-rgb: 167 215 181;
   --color-accent-yellow-rgb: 244 197 66;
