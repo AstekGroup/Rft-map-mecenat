@@ -51,13 +51,13 @@ function renderSidebar(filters: EventFilters = defaultFilters) {
 }
 
 describe('Sidebar : onglet de réouverture', () => {
-  it('replie le panneau et propose un onglet « Filtres & liste » sans pastille quand aucun filtre n’est actif', async () => {
+  it('replie le panneau et propose un onglet « Filtres & résultats » sans pastille quand aucun filtre n’est actif', async () => {
     renderSidebar();
 
     await userEvent.click(screen.getByRole('button', { name: 'Fermer le panneau latéral' }));
 
-    const onglet = screen.getByRole('button', { name: 'Ouvrir le panneau Filtres et liste' });
-    expect(onglet).toHaveTextContent('Filtres & liste');
+    const onglet = screen.getByRole('button', { name: 'Ouvrir le panneau Filtres et résultats' });
+    expect(onglet).toHaveTextContent('Filtres & résultats');
     expect(screen.queryByTestId('sidebar-tab-badge')).toBeNull();
   });
 
@@ -68,7 +68,7 @@ describe('Sidebar : onglet de réouverture', () => {
 
     expect(screen.getByTestId('sidebar-tab-badge')).toHaveTextContent('3');
     expect(
-      screen.getByRole('button', { name: 'Ouvrir le panneau Filtres et liste (3 filtres actifs)' }),
+      screen.getByRole('button', { name: 'Ouvrir le panneau Filtres et résultats (3 filtres actifs)' }),
     ).toBeInTheDocument();
   });
 
@@ -76,7 +76,7 @@ describe('Sidebar : onglet de réouverture', () => {
     renderSidebar();
     await userEvent.click(screen.getByRole('button', { name: 'Fermer le panneau latéral' }));
 
-    await userEvent.click(screen.getByRole('button', { name: 'Ouvrir le panneau Filtres et liste' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Ouvrir le panneau Filtres et résultats' }));
 
     expect(screen.getByRole('button', { name: 'Fermer le panneau latéral' })).toBeInTheDocument();
   });

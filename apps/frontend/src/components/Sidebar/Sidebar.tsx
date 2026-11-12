@@ -84,8 +84,8 @@ export function Sidebar({
           }`}
           aria-label={
             activeFiltersCount > 0
-              ? `Ouvrir le panneau Filtres et liste (${activeFiltersCount} filtre${activeFiltersCount > 1 ? 's' : ''} actif${activeFiltersCount > 1 ? 's' : ''})`
-              : 'Ouvrir le panneau Filtres et liste'
+              ? `Ouvrir le panneau Filtres et résultats (${activeFiltersCount} filtre${activeFiltersCount > 1 ? 's' : ''} actif${activeFiltersCount > 1 ? 's' : ''})`
+              : 'Ouvrir le panneau Filtres et résultats'
           }
         >
           {activeFiltersCount > 0 && (
@@ -98,7 +98,7 @@ export function Sidebar({
           )}
           <Filter className="w-5 h-5" aria-hidden="true" />
           <span className="[writing-mode:vertical-rl] text-sm font-semibold font-poppins tracking-wide py-1">
-            Filtres &amp; liste
+            Filtres &amp; résultats
           </span>
           <ChevronRight className="w-5 h-5" aria-hidden="true" />
         </button>
@@ -141,7 +141,7 @@ export function Sidebar({
             }`}
           >
             <List className="w-4 h-4" />
-            Liste
+            Résultats
           </button>
           <button
             onClick={() => setActiveTab('filters')}
