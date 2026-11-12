@@ -109,12 +109,12 @@ export function MapPage() {
       >
         <button
           onClick={() => navigate('/evenements')}
-          title="Voir la liste"
-          aria-label="Voir la liste"
+          title="Vue Liste"
+          aria-label="Vue Liste"
           className="bg-white shadow-popup rounded-xl p-2.5 2xl:px-4 flex items-center gap-2 text-sm font-semibold text-text-primary hover:bg-surface-beige transition-all border border-primary/5 group whitespace-nowrap"
         >
           <List className="w-5 h-5 2xl:w-4 2xl:h-4 group-hover:scale-110 transition-transform text-primary" />
-          <span className="hidden 2xl:inline">Voir la liste</span>
+          <span className="hidden 2xl:inline">Vue Liste</span>
         </button>
         <button
           onClick={() => navigate('/evenements?modality=distanciel')}
@@ -180,7 +180,7 @@ export function MapPage() {
           className="bg-primary text-white rounded-full px-5 py-3 shadow-popup flex items-center gap-2 font-poppins font-semibold text-sm"
         >
           <Filter className="w-4 h-4" />
-          {mobileShowSidebar ? 'Fermer' : 'Filtres & Liste'}
+          {mobileShowSidebar ? 'Fermer' : 'Filtres & Résultats'}
         </button>
       </div>
     </div>
