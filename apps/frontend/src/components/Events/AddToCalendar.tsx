@@ -90,18 +90,6 @@ export function AddToCalendar({ event }: AddToCalendarProps) {
           <button
             type="button"
             role="menuitem"
-            onClick={onDownloadIcs}
-            className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg text-left hover:bg-surface-beige/60 transition-colors"
-          >
-            <Download className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-            <span>
-              <span className="block text-sm font-medium text-text-primary">Télécharger le fichier .ics</span>
-              <span className="block text-xs text-text-secondary">Apple Calendar, Outlook, autres</span>
-            </span>
-          </button>
-          <button
-            type="button"
-            role="menuitem"
             onClick={() => onOpenLink(buildGoogleCalendarUrl(data))}
             className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg text-left hover:bg-surface-beige/60 transition-colors"
           >
@@ -116,6 +104,18 @@ export function AddToCalendar({ event }: AddToCalendarProps) {
           >
             <ExternalLink className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
             <span className="block text-sm font-medium text-text-primary">Outlook</span>
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={onDownloadIcs}
+            className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg text-left hover:bg-surface-beige/60 transition-colors"
+          >
+            <Download className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+            <span>
+              <span className="block text-sm font-medium text-text-primary">Télécharger le fichier .ics</span>
+              <span className="block text-xs text-text-secondary">Apple Calendar, Outlook, autres</span>
+            </span>
           </button>
         </div>
       )}
