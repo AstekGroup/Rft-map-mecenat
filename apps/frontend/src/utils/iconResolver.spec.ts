@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { ChefHat, Globe, HelpCircle } from 'lucide-react';
-import { getIcon, checkIconColor, DEFAULT_FORMAT_COLOR } from './iconResolver';
+import { getIcon, checkIconColor } from './iconResolver';
 
 describe('iconResolver', () => {
   describe('getIcon', () => {
