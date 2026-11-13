@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EventsModule } from './events/events.module';
 import { AppConfigModule } from './config/config.module';
+import { BaserowModule } from './baserow/baserow.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -10,6 +11,7 @@ import { AppController } from './app.controller';
       isGlobal: true,
     }),
     AppConfigModule,
+    BaserowModule,
     EventsModule,
   ],
   controllers: [AppController],

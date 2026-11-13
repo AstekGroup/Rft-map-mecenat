@@ -20,10 +20,8 @@ RUN pnpm install --frozen-lockfile --filter @make-map/frontend...
 # Variables de build (injectées dans le bundle JS par Vite)
 # VITE_API_URL vide = appels relatifs (/api/events), proxiés par Caddy
 ARG VITE_API_URL=""
-ARG VITE_MAPTILER_KEY=""
 
 ENV VITE_API_URL=${VITE_API_URL}
-ENV VITE_MAPTILER_KEY=${VITE_MAPTILER_KEY}
 
 # Build production
 RUN cd apps/frontend && pnpm build

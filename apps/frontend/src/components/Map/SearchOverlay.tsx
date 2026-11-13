@@ -16,6 +16,12 @@ interface BanSuggestion {
   type: string;
 }
 
+/** Entrée de la réponse de l'API adresse (champs lus uniquement). */
+interface BanFeature {
+  properties: { label: string; postcode?: string; city?: string; context?: string; type: string };
+  geometry: { coordinates: [number, number] };
+}
+
 /**
  * Barre de recherche proéminente sur la carte avec :
  * - Autocomplétion via api-adresse.data.gouv.fr
@@ -63,8 +69,8 @@ export function SearchOverlay({ onFlyTo, onSearchFilter }: SearchOverlayProps) {
       const response = await fetch(url.toString());
       if (!response.ok) return;
 
-      const data = await response.json();
-      const results: BanSuggestion[] = data.features.map((f: any) => ({
+      const data = (await response.json()) as { features: BanFeature[] };
+      const results: BanSuggestion[] = data.features.map((f) => ({
         label: f.properties.label,
         postcode: f.properties.postcode || '',
         city: f.properties.city || '',
@@ -164,7 +170,7 @@ export function SearchOverlay({ onFlyTo, onSearchFilter }: SearchOverlayProps) {
   }, [onSearchFilter]);
 
   return (
-    <div ref={containerRef} className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-[90%] max-w-lg font-inter">
+    <div ref={containerRef} className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-[90%] sm:max-w-sm lg:max-w-lg font-inter">
       {/* Barre de recherche */}
       <div className="relative flex items-center">
         <div className="relative flex-1">

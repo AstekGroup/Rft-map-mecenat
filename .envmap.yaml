@@ -6,11 +6,15 @@ envs:
     provider: local-dev
     prefix: make-map/prod/
     keys:
-      # Backend (Airtable)
-      - AIRTABLE_API_KEY
-      - AIRTABLE_BASE_ID
-      - AIRTABLE_TABLE_ID
-      - AIRTABLE_PARTNERS_TABLE_ID
+      # Backend (Baserow)
+      - BASEROW_API_URL
+      - BASEROW_API_TOKEN
+      - BASEROW_EVENT_TABLE_ID
+      - BASEROW_MODERATION_FIELD_ID
+      - BASEROW_PARTNERS_TABLE_ID
+      - BASEROW_THEMATIQUES_TABLE_ID
+      - BASEROW_FORMATS_TABLE_ID
+      - BASEROW_PUBLICS_TABLE_ID
       # Frontend
       - VITE_API_URL
       # Scaleway

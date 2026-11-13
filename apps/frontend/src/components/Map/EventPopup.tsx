@@ -1,7 +1,18 @@
 import { Event } from '@/types/event';
 import { useConfig } from '@/hooks/useConfig';
-import { Badge } from '@/components/UI';
-import { Calendar, Clock, MapPin, User, Mail, Eye, Video, Building } from 'lucide-react';
+import { formatEventDate } from '@/utils/formatEventDate';
+import { Badge, HighlightBadge } from '@/components/UI';
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  User,
+  Mail,
+  Eye,
+  Video,
+  Building,
+  ExternalLink,
+} from 'lucide-react';
 
 interface EventPopupProps {
   event: Event;
@@ -12,7 +23,8 @@ interface EventPopupProps {
 export function EventPopup({ event, onClose, onViewDetails }: EventPopupProps) {
   const { helpers } = useConfig();
   const modalityLabel = helpers.getEnumLabel('modalities', event.modality);
-  const formattedDate = new Date(event.date).toLocaleDateString('fr-FR', {
+  const editionBadge = helpers.getEditionBadge();
+  const formattedDate = formatEventDate(event.date, {
     weekday: 'short',
     day: 'numeric',
     month: 'long',
@@ -21,11 +33,12 @@ export function EventPopup({ event, onClose, onViewDetails }: EventPopupProps) {
   return (
     <div className="bg-white rounded-card shadow-popup w-80 max-w-[90vw] animate-fade-in overflow-hidden font-inter">
       {/* Header */}
-      <div className="bg-primary p-4 text-white">
+      <div className={`bg-primary p-4 text-white ${event.isHighlighted ? 'border-t-4 border-accent-yellow' : ''}`}>
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <Badge type={event.type} size="sm" variant="highlight" />
+              {event.isHighlighted && <HighlightBadge size="sm" withLabel />}
               {event.modality && (
                 <span className="inline-flex items-center gap-1 text-xs bg-white/20 text-white px-2 py-0.5 rounded-full">
                   {event.modality === 'distanciel' ? (
@@ -64,11 +77,11 @@ export function EventPopup({ event, onClose, onViewDetails }: EventPopupProps) {
           <span>{event.time}{event.endTime ? ` - ${event.endTime}` : ''}</span>
         </div>
         
-        {/* Badge semaine LGSV */}
-        {event.isDuringWeek && (
+        {/* Badge « pendant l'événement » (nom depuis la config) */}
+        {event.isDuringWeek && editionBadge && (
           <div className="inline-flex items-center gap-1.5 bg-primary/10 text-primary-dark px-2.5 py-1 rounded-full text-xs font-medium">
             <span className="w-2 h-2 bg-primary rounded-full animate-pulse-soft" />
-            {helpers.getText('home', 'mainTitle')}
+            {editionBadge}
           </div>
         )}
         
@@ -94,8 +107,18 @@ export function EventPopup({ event, onClose, onViewDetails }: EventPopupProps) {
         
         {/* Organisateur */}
         <div className="flex items-center gap-2 text-sm">
-          <User className="w-4 h-4 text-primary" />
-          <span className="text-text-secondary">{event.organizer}</span>
+          <User className="w-4 h-4 text-primary flex-shrink-0" />
+          <span className="min-w-0 truncate text-text-secondary">{event.organizer}</span>
+          {event.contactEmail && (
+            <a
+              href={`mailto:${event.contactEmail}`}
+              className="flex-shrink-0 text-primary hover:text-primary-dark transition-colors"
+              title="Contacter l'organisateur"
+              aria-label="Contacter l'organisateur par e-mail"
+            >
+              <Mail className="w-4 h-4" />
+            </a>
+          )}
         </div>
         
         {/* Description */}
@@ -113,16 +136,18 @@ export function EventPopup({ event, onClose, onViewDetails }: EventPopupProps) {
             Détails
           </button>
           
-          {event.organizerContact || event.contactEmail ? (
+          {event.registrationUrl && (
             <a
-              href={`mailto:${event.organizerContact || event.contactEmail}`}
-              className="flex items-center justify-center gap-1.5 py-2 px-3 bg-primary/10 hover:bg-primary/20 text-primary-dark font-medium rounded-button text-sm transition-colors border border-primary/20"
-              title="Contacter l'organisateur"
+              href={event.registrationUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-primary hover:bg-primary-dark text-white font-medium rounded-button text-sm transition-colors"
+              title="S'inscrire par Internet"
             >
-              <Mail className="w-4 h-4" />
-              Contact
+              <ExternalLink className="w-4 h-4" />
+              S'inscrire
             </a>
-          ) : null}
+          )}
         </div>
       </div>
     </div>

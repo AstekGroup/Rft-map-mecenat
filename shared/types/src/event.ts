@@ -30,6 +30,11 @@ export interface Event {
   organizerContact?: string;
   registrationUrl?: string;
   isDuringWeek: boolean;
+  /**
+   * Vrai si la colonne `baserow.fieldMapping.highlight` est cochée (« coup de cœur »).
+   * Toujours `false` quand ce rôle optionnel n'est pas configuré.
+   */
+  isHighlighted: boolean;
   modality: EventModality;
   imageUrl?: string;
   venueName?: string;

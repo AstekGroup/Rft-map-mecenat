@@ -1,11 +1,11 @@
 import { useState, useCallback, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Event, EventType, TargetAudience } from '@/types/event';
+import { useNavigate } from 'react-router-dom';
+import { Event } from '@/types/event';
 import { useEvents } from '@/hooks';
 import { MapView, MapBounds } from '@/components/Map';
 import { Sidebar } from '@/components/Sidebar';
 import { SearchOverlay } from '@/components/Map/SearchOverlay';
-import { Loader2, List, Home, Filter, Wifi } from 'lucide-react';
+import { Loader2, List, Filter, Wifi } from 'lucide-react';
 
 export interface MapViewHandle {
   flyTo: (lng: number, lat: number, zoom?: number) => void;
@@ -19,20 +19,10 @@ export function MapPage() {
     geojson,
     loading,
     error,
-    filters,
-    updateFilters,
-    resetFilters,
-    toggleRegion,
-    toggleType,
-    toggleTheme,
-    togglePartner,
-    availablePartners,
-    toggleAudience,
+    controls,
     stats,
-    availableThemes,
-    availableFormats,
-    availablePublics,
   } = useEvents();
+  const { filters, onUpdateFilters: updateFilters } = controls;
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [hoveredEvent, setHoveredEvent] = useState<Event | null>(null);
@@ -111,31 +101,31 @@ export function MapPage() {
       />
 
       {/* Navigation Controls - masqués sur mobile (accessibles via bouton Filtres en bas) */}
-      <div className="absolute top-4 left-4 z-20 hidden sm:flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <Link
-            to="/"
-            className="bg-white shadow-popup rounded-xl p-2.5 hover:bg-surface-beige transition-all border border-primary/5 group"
-            title="Retour à l'accueil"
-          >
-            <Home className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-          </Link>
-          <button
-            onClick={() => navigate('/evenements')}
-            className="bg-white shadow-popup rounded-xl px-4 py-2.5 flex items-center gap-2 text-sm font-semibold text-text-primary hover:bg-surface-beige transition-all border border-primary/5 group"
-          >
-            <List className="w-4 h-4 group-hover:scale-110 transition-transform text-primary" />
-            Voir la liste
-          </button>
-        </div>
+      {/* En haut à droite, sur une seule ligne, au-dessus de la pile de zoom (top-20) de MapView.
+          Sous 2xl : icônes seules (titre + aria-label) pour ne pas chevaucher la barre de recherche centrée. */}
+      <nav
+        aria-label="Navigation de la carte"
+        className="absolute top-4 right-4 z-20 hidden sm:flex flex-row items-center gap-2"
+      >
+        <button
+          onClick={() => navigate('/evenements')}
+          title="Voir la liste"
+          aria-label="Voir la liste"
+          className="bg-white shadow-popup rounded-xl p-2.5 2xl:px-4 flex items-center gap-2 text-sm font-semibold text-text-primary hover:bg-surface-beige transition-all border border-primary/5 group whitespace-nowrap"
+        >
+          <List className="w-5 h-5 2xl:w-4 2xl:h-4 group-hover:scale-110 transition-transform text-primary" />
+          <span className="hidden 2xl:inline">Voir la liste</span>
+        </button>
         <button
           onClick={() => navigate('/evenements?modality=distanciel')}
-          className="bg-white shadow-popup rounded-xl px-4 py-2.5 flex items-center gap-2 text-sm font-semibold text-text-primary hover:bg-surface-beige transition-all border border-primary/5 group"
+          title="Événements en ligne"
+          aria-label="Événements en ligne"
+          className="bg-white shadow-popup rounded-xl p-2.5 2xl:px-4 flex items-center gap-2 text-sm font-semibold text-text-primary hover:bg-surface-beige transition-all border border-primary/5 group whitespace-nowrap"
         >
-          <Wifi className="w-4 h-4 group-hover:scale-110 transition-transform text-primary" />
-          Événements en ligne
+          <Wifi className="w-5 h-5 2xl:w-4 2xl:h-4 group-hover:scale-110 transition-transform text-primary" />
+          <span className="hidden 2xl:inline">Événements en ligne</span>
         </button>
-      </div>
+      </nav>
 
       {/* Carte */}
       <MapView
@@ -154,24 +144,13 @@ export function MapPage() {
       <div className="hidden sm:block">
         <Sidebar
           events={events}
-          filters={filters}
-          onUpdateFilters={updateFilters}
-          onToggleRegion={toggleRegion}
-          onToggleType={(type) => toggleType(type as EventType)}
-          onToggleTheme={toggleTheme}
-          onTogglePartner={togglePartner}
-          availablePartners={availablePartners}
-          onToggleAudience={(audience) => toggleAudience(audience as TargetAudience)}
-          onResetFilters={resetFilters}
+          controls={controls}
           selectedEvent={selectedEvent}
           onSelectEvent={handleSidebarEventClick}
           hoveredEvent={hoveredEvent}
           onHoverEvent={setHoveredEvent}
           stats={stats}
           mapBounds={mapBounds}
-          availableThemes={availableThemes}
-          availableFormats={availableFormats}
-          availablePublics={availablePublics}
         />
       </div>
 
@@ -180,15 +159,7 @@ export function MapPage() {
         <div className="sm:hidden">
           <Sidebar
             events={events}
-            filters={filters}
-            onUpdateFilters={updateFilters}
-            onToggleRegion={toggleRegion}
-            onToggleType={(type) => toggleType(type as EventType)}
-            onToggleTheme={toggleTheme}
-            onTogglePartner={togglePartner}
-            availablePartners={availablePartners}
-          onToggleAudience={(audience) => toggleAudience(audience as TargetAudience)}
-            onResetFilters={resetFilters}
+            controls={controls}
             selectedEvent={selectedEvent}
             onSelectEvent={(event) => {
               handleSidebarEventClick(event);
@@ -198,9 +169,6 @@ export function MapPage() {
             onHoverEvent={setHoveredEvent}
             stats={stats}
             mapBounds={mapBounds}
-            availableThemes={availableThemes}
-            availableFormats={availableFormats}
-            availablePublics={availablePublics}
           />
         </div>
       )}

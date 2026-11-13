@@ -12,7 +12,7 @@ Instance Scaleway DEV1-S (2 vCPU, 2 Go RAM, ~11 EUR/mois)
 │   ├── /       -> Frontend Nginx (port 3080)
 │   └── /api/*  -> Backend NestJS (port 8080)
 ├── Frontend Nginx (fichiers statiques React)
-└── Backend NestJS (API Airtable + Geocodage)
+└── Backend NestJS (proxy Baserow + Geocodage)
 ```
 
 ## Prerequis
@@ -46,10 +46,14 @@ ssh root@$IP "curl -fsSL https://get.docker.com | sh"
 
 ```bash
 envmap set --env prod SCW_INSTANCE_IP --prompt    # IP publique de l'instance
-envmap set --env prod AIRTABLE_API_KEY --prompt    # Token Airtable
-envmap set --env prod AIRTABLE_BASE_ID --prompt    # Base ID Airtable
-envmap set --env prod AIRTABLE_TABLE_ID --prompt   # Table ID Airtable Evènements
-envmap set --env prod AIRTABLE_PARTNERS_TABLE_ID --prompt   # Table ID Airtable Têtes de réseau
+envmap set --env prod BASEROW_API_URL --prompt              # URL de l'instance Baserow
+envmap set --env prod BASEROW_API_TOKEN --prompt            # Jeton de base de données Baserow
+envmap set --env prod BASEROW_EVENT_TABLE_ID --prompt       # Table des événements
+envmap set --env prod BASEROW_MODERATION_FIELD_ID --prompt  # Champ de modération
+envmap set --env prod BASEROW_PARTNERS_TABLE_ID --prompt    # Table des partenaires
+envmap set --env prod BASEROW_THEMATIQUES_TABLE_ID --prompt # Table des thématiques
+envmap set --env prod BASEROW_FORMATS_TABLE_ID --prompt     # Table des formats
+envmap set --env prod BASEROW_PUBLICS_TABLE_ID --prompt     # Table des publics
 envmap set --env prod DOMAIN --prompt              # Domaine (ex: map.semaine-ia.fr)
 ```
 
@@ -95,16 +99,26 @@ ssh root@$IP "cd /opt/make-map/deploy && docker compose -f docker-compose.prod.y
 ssh root@$IP "cd /opt/make-map/deploy && docker compose -f docker-compose.prod.yml ps"
 ```
 
+### Cache de geocodage (volume persistant)
+
+Le backend garde ses resultats de geocodage dans `/data/geocoding.json`, sur le volume Docker nomme `geocoding_data`. Il survit aux redeploiements (`pnpm deploy:v2`) et aux `docker compose down`. **Ne pas utiliser `down -v`** : cela supprime le volume, et le premier visiteur attendrait de nouveau le geocodage de toutes les adresses. Perdre ce fichier n'est pas grave (il se reconstruit tout seul), c'est seulement lent une fois.
+
+Notes : exception a la regle « ne pas toucher au deploiement avant la session 8 » decidee par le proprietaire le 2026-11-06. Aucun `docker build` ni `docker compose up` reel n'a ete execute avec ce volume : non verifie.
+
 ## Variables d'environnement
 
-Voir `deploy/.env.prod.example` pour la liste complete.
+Voir `deploy/.env.prod.example` pour la liste complete. `GEOCODING_CACHE_PATH` est fixee dans `docker-compose.prod.yml` (`/data/geocoding.json`), pas besoin de la definir dans `envmap`.
 
 | Variable | Description | Exemple |
 |----------|-------------|---------|
-| `AIRTABLE_API_KEY` | Token Airtable PAT | `pats...` |
-| `AIRTABLE_BASE_ID` | ID de la base Airtable | `app...` |
-| `AIRTABLE_TABLE_ID` | ID de la table Evenements | `tbl...` |
-| `AIRTABLE_PARTNERS_TABLE_ID` | ID de la table Têtes de réseau | `tbl...` |
+| `BASEROW_API_URL` | URL de l'instance Baserow | `https://baserow.example.org` |
+| `BASEROW_API_TOKEN` | Jeton de base de données Baserow | `...` |
+| `BASEROW_EVENT_TABLE_ID` | ID de la table des événements | `123` |
+| `BASEROW_MODERATION_FIELD_ID` | ID du champ de modération | `456` |
+| `BASEROW_PARTNERS_TABLE_ID` | ID de la table des partenaires | `124` |
+| `BASEROW_THEMATIQUES_TABLE_ID` | ID de la table des thématiques | `125` |
+| `BASEROW_FORMATS_TABLE_ID` | ID de la table des formats | `126` |
+| `BASEROW_PUBLICS_TABLE_ID` | ID de la table des publics | `127` |
 | `DOMAIN` | Nom de domaine | `map.semaine-ia.fr` |
 | `CORS_ORIGIN` | Origines CORS autorisees | `*` |
 

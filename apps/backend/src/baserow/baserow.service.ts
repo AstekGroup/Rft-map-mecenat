@@ -1,26 +1,91 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { Event, LinkedTableRow } from '@make-map/types';
 import type {
+  BaserowFieldMapping,
+  Event,
+  LinkedTableRow,
+} from '@make-map/types';
+import type {
+  BaserowAttachment,
   BaserowRecord,
   BaserowResponse,
   BaserowLinkedTableRecord,
+  BaserowSelect,
 } from './baserow.types';
 import {
   mapModality,
+  isFreeTariff,
+  mapReferenceRecord,
   extractImageUrl,
   computeIsDuringWeek,
   parseDateTime,
+  parseCapacity,
+  isEndBeforeStart,
   buildOrganizerContact,
   buildAccessibilityInfo,
   mapLinkedRow,
 } from './baserow-mapping.util';
+import {
+  checkEventColumns,
+  checkReferenceColumns,
+  type ReferenceTableColumns,
+} from './baserow-schema.util';
+import {
+  ReferenceTableError,
+  type ReferenceTableStatus,
+} from './baserow.errors';
 import { GeocodingService } from '../geocoding/geocoding.service';
 import { AppConfigService } from '../config/config.service';
 
+/** Événement liant plusieurs formats (un seul est retenu). */
+interface MultipleFormatsIssue {
+  id: string;
+  title: string;
+  formats: string[];
+}
+
+/** Événement signalé dans un message agrégé (identifiant Baserow et titre, éventuellement vide). */
+interface AffectedEvent {
+  id: string;
+  title: string;
+}
+
+/** Écarts relevés pendant la transformation, journalisés une fois pour l'ensemble des événements. */
+interface TransformIssues {
+  multipleFormats: MultipleFormatsIssue[];
+  /** Sans date de début valide : écartés de la carte et de la liste. */
+  missingDate: AffectedEvent[];
+  /** Date de fin antérieure au début : la fin est ignorée, l'événement reste publié. */
+  endBeforeStart: AffectedEvent[];
+  /** Capacité renseignée mais inexploitable (texte, négatif, décimal) : ignorée. */
+  invalidCapacity: AffectedEvent[];
+}
+
+const emptyIssues = (): TransformIssues => ({
+  multipleFormats: [],
+  missingDate: [],
+  endBeforeStart: [],
+  invalidCapacity: [],
+});
+
+const errorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
+
+/** Variables d'environnement (sans le suffixe `_ID`) des tables de référence. */
+const REFERENCE_TABLES = [
+  'BASEROW_PARTNERS_TABLE',
+  'BASEROW_THEMATIQUES_TABLE',
+  'BASEROW_FORMATS_TABLE',
+  'BASEROW_PUBLICS_TABLE',
+] as const;
+
 @Injectable()
-export class BaserowService {
+export class BaserowService implements OnApplicationBootstrap {
   private readonly logger = new Logger(BaserowService.name);
+  /** Avertissements déjà émis (un seul message par cause, pas un par ligne). */
+  private readonly warned = new Set<string>();
+  /** Dernier état de lecture de chaque table de référence (voir `getReferenceStatus`). */
+  private readonly referenceStatus = new Map<string, ReferenceTableStatus>();
 
   constructor(
     private readonly configService: ConfigService,
@@ -29,40 +94,188 @@ export class BaserowService {
   ) {}
 
   /**
+   * Contrôle du schéma au démarrage, sans bloquer le démarrage : Baserow injoignable ou colonne
+   * absente donnent des messages précis dans les logs, jamais un arrêt ni un 500.
+   */
+  onApplicationBootstrap(): void {
+    void this.checkSchema();
+  }
+
+  /**
+   * Compare les colonnes réelles de Baserow (lues sur une ligne de chaque table) à la config.
+   * Journalise chaque écart et renvoie la liste des messages (vide si tout est en ordre).
+   * Une table sans ligne ne peut pas être contrôlée : elle est signalée, pas ignorée.
+   */
+  async checkSchema(): Promise<string[]> {
+    const issues: string[] = [];
+    try {
+      const baserow = this.appConfig.get()?.baserow;
+      const apiToken = this.configService.get<string>('BASEROW_API_TOKEN');
+      const apiUrl = this.configService.get<string>('BASEROW_API_URL');
+      const eventTableId = this.configService.get<string>(
+        'BASEROW_EVENT_TABLE_ID',
+      );
+      if (!baserow || !apiToken || !apiUrl || !eventTableId) {
+        this.logger.warn(
+          'Contrôle du schéma Baserow impossible : config ou variables BASEROW_API_URL / BASEROW_API_TOKEN / BASEROW_EVENT_TABLE_ID manquantes.',
+        );
+        return issues;
+      }
+
+      const eventColumns = await this.fetchSampleColumns(
+        apiUrl,
+        apiToken,
+        eventTableId,
+      );
+      if (eventColumns) {
+        issues.push(...checkEventColumns(eventColumns, baserow.fieldMapping));
+      } else {
+        this.logger.warn(
+          'Table des événements vide : colonnes non contrôlables (le contrôle sera fait au premier chargement des événements).',
+        );
+      }
+
+      const referenceTables: ReferenceTableColumns[] = [];
+      for (const envName of REFERENCE_TABLES) {
+        const tableId = this.configService.get<string>(`${envName}_ID`);
+        if (!tableId) {
+          this.logger.warn(
+            `Variable ${envName}_ID absente : table de référence non contrôlée (aucun élément ne sera chargé).`,
+          );
+          continue;
+        }
+        try {
+          const columns = await this.fetchSampleColumns(
+            apiUrl,
+            apiToken,
+            tableId,
+          );
+          if (columns) {
+            referenceTables.push({ label: envName, columns });
+          } else {
+            this.logger.warn(
+              `Table de référence ${envName} vide : colonnes non contrôlables.`,
+            );
+          }
+        } catch (error) {
+          this.logger.warn(
+            `Contrôle du schéma impossible pour la table ${envName} : ${errorMessage(error)}`,
+          );
+        }
+      }
+      issues.push(
+        ...checkReferenceColumns(
+          referenceTables,
+          baserow.mapping.referenceFields,
+        ),
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Contrôle du schéma Baserow impossible : ${errorMessage(error)}`,
+      );
+      return issues;
+    }
+
+    if (issues.length === 0) {
+      this.logger.log(
+        'Contrôle du schéma Baserow : toutes les colonnes de la config sont présentes.',
+      );
+    }
+    for (const issue of issues) this.logger.error(issue);
+    return issues;
+  }
+
+  /** Noms des colonnes d'une table, lus sur sa première ligne ; `null` si la table est vide. */
+  private async fetchSampleColumns(
+    apiUrl: string,
+    apiToken: string,
+    tableId: string,
+  ): Promise<string[] | null> {
+    const url = new URL(`${apiUrl}/api/database/rows/table/${tableId}/`);
+    url.searchParams.set('user_field_names', 'true');
+    url.searchParams.set('size', '1');
+    const response = await fetch(url.toString(), {
+      headers: { Authorization: `Token ${apiToken}` },
+    });
+    if (!response.ok) {
+      throw new Error(
+        `Baserow a répondu ${response.status} ${response.statusText} pour la table ${tableId}`,
+      );
+    }
+    const data = (await response.json()) as BaserowResponse<BaserowRecord>;
+    if (!data.results || data.results.length === 0) return null;
+    return Object.keys(data.results[0]);
+  }
+
+  /**
+   * Même contrôle à chaque chargement des événements : une colonne renommée pendant que le
+   * serveur tourne est signalée au prochain rafraîchissement du cache (une seule fois par écart).
+   */
+  private checkRecordColumns(record: BaserowRecord): void {
+    const fieldMapping = this.appConfig.get()?.baserow?.fieldMapping;
+    if (!fieldMapping) return;
+    for (const message of checkEventColumns(
+      Object.keys(record),
+      fieldMapping,
+    )) {
+      this.errorOnce(`columns:${message}`, message);
+    }
+  }
+
+  /**
    * Récupère et transforme tous les événements depuis Baserow.
    * Inclut le géocodage des adresses.
    */
   async fetchEvents(devMode = false): Promise<Event[]> {
+    const startedAt = Date.now();
     this.logger.log(
       `Chargement des événements depuis Baserow (mode ${devMode ? 'dev' : 'production'})...`,
     );
 
     // 1. Récupérer les partenaires
-    const partnersMap = await this.fetchLinkedTableMap(
-      'BASEROW_PARTNERS_TABLE',
-    );
+    const partnersMap = await this.loadReferenceMap('BASEROW_PARTNERS_TABLE');
 
     // 2. Récupérer les thématiques
-    const themesMap = await this.fetchLinkedTableMap(
-      'BASEROW_THEMATIQUES_TABLE',
-    );
+    const themesMap = await this.loadReferenceMap('BASEROW_THEMATIQUES_TABLE');
 
     // 3. Récupérer les formats
-    const formatsMap = await this.fetchLinkedTableMap('BASEROW_FORMATS_TABLE');
+    const formatsMap = await this.loadReferenceMap('BASEROW_FORMATS_TABLE');
 
     // 4. Récupérer l'audience (public cible)'
-    const publicsMap = await this.fetchLinkedTableMap('BASEROW_PUBLICS_TABLE');
+    const publicsMap = await this.loadReferenceMap('BASEROW_PUBLICS_TABLE');
+
+    const degraded = this.degradedReferences();
+    if (degraded.length > 0) {
+      this.logger.error(
+        `Événements chargés sans le(s) référentiel(s) en erreur : ${degraded.join(', ')}. Leurs liens (partenaires, thématiques, formats ou publics) sont vides tant que la table n'est pas relue avec succès.`,
+      );
+    }
 
     // 5. Récupérer les enregistrements bruts
     const records = await this.fetchRecords(devMode);
+    const baserowMs = Date.now() - startedAt;
     this.logger.log(
-      `${records.length} enregistrements récupérés depuis Baserow`,
+      `${records.length} enregistrements récupérés depuis Baserow en ${baserowMs} ms (référentiels inclus)`,
     );
+    if (records.length > 0) this.checkRecordColumns(records[0]);
 
     // 6. Transformer sans géocodage
-    const partialEvents = records.map((r) =>
-      this.transformRecord(r, partnersMap, themesMap, formatsMap, publicsMap),
+    const issues = emptyIssues();
+    const transformed = records.map((r) =>
+      this.transformRecord(
+        r,
+        partnersMap,
+        themesMap,
+        formatsMap,
+        publicsMap,
+        issues,
+      ),
     );
+    this.reportIssues(issues);
+
+    // Un événement sans date ne peut être ni placé dans le temps ni filtré : on ne le publie
+    // pas (signalé dans les logs ci-dessus), plutôt que d'afficher « Invalid Date ».
+    const partialEvents = transformed.filter((e) => e.date !== '');
 
     // 7. Préparer le batch geocoding (seulement pour les événements présentiels)
     const itemsToGeocode = partialEvents
@@ -100,7 +313,7 @@ export class BaserowService {
     });
 
     this.logger.log(
-      `${events.length} événements prêts (${events.filter((e) => e.latitude !== 0).length} géocodés)`,
+      `${events.length} événements prêts (${events.filter((e) => e.latitude !== 0).length} géocodés) en ${Date.now() - startedAt} ms au total`,
     );
 
     return events;
@@ -111,9 +324,10 @@ export class BaserowService {
    */
   async fetchLinkedTableRow(tableName: string): Promise<LinkedTableRow[]> {
     const map = await this.fetchLinkedTableMap(tableName);
-    return Array.from(map.values()).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
+    // Ordre des lignes dans Baserow (celui de l'API sans tri : ordre manuel de la table, puis
+    // identifiant), jamais l'ordre alphabétique : les organisateurs maîtrisent l'ordre
+    // d'affichage des options (ex. « Autres » en dernier) en déplaçant les lignes dans Baserow.
+    return Array.from(map.values());
   }
 
   /**
@@ -135,6 +349,7 @@ export class BaserowService {
 
     try {
       const linkedTableMap = new Map<string, LinkedTableRow>();
+      const unknownColors = new Set<string>();
       let page = 1;
       let hasNext = true;
 
@@ -159,20 +374,25 @@ export class BaserowService {
         const data =
           (await response.json()) as BaserowResponse<BaserowLinkedTableRecord>;
 
+        const referenceFields =
+          this.appConfig.safe.baserow.mapping.referenceFields;
+        if (
+          data.results.length > 0 &&
+          !(referenceFields.name in data.results[0])
+        ) {
+          this.warnOnce(
+            `reference-name:${tableName}`,
+            `Colonne « ${referenceFields.name} » (baserow.mapping.referenceFields.name) introuvable dans la table ${tableName} : les libellés seront vides. Vérifier le nom de la colonne dans Baserow et dans la config.`,
+          );
+        }
+
         for (const record of data.results) {
-          linkedTableMap.set(String(record.id), {
-            id: String(record.id),
-            name: record.Nom,
-            logoUrl: extractImageUrl(record.Logo),
-            pictoName:
-              record.Picto && record.Picto.length > 0
-                ? record.Picto[0].value
-                : undefined,
-            colorHexa:
-              record.Couleur && record.Couleur.length > 0
-                ? record.Couleur[0].value
-                : undefined,
-          });
+          linkedTableMap.set(
+            String(record.id),
+            mapReferenceRecord(record, referenceFields, (color) =>
+              unknownColors.add(color),
+            ),
+          );
         }
 
         if (data.next) {
@@ -182,16 +402,64 @@ export class BaserowService {
         }
       }
 
+      if (unknownColors.size > 0) {
+        const colors = [...unknownColors].sort().join(', ');
+        this.warnOnce(
+          `unknown-color:${tableName}:${colors}`,
+          `Table ${tableName} : pastille(s) de couleur Baserow inconnue(s) (${colors}) dans la colonne « ${this.appConfig.safe.baserow.mapping.referenceFields.color} » ; la couleur de repli est affichée. Compléter BASEROW_SELECT_PALETTE (baserow-palette.ts) après une montée de version de Baserow.`,
+        );
+      }
+
       this.logger.log(
         `${linkedTableMap.size} éléments récupérés à partir de la table ${tableName}`,
       );
+      this.setReferenceStatus(tableName, true);
       return linkedTableMap;
     } catch (error) {
+      const message = errorMessage(error);
       this.logger.error(
-        `Erreur lors de la récupération des éléments à partir de la table ${tableName}: ${error.message}`,
+        `Erreur lors de la récupération des éléments à partir de la table ${tableName}: ${message}`,
       );
-      return new Map();
+      this.setReferenceStatus(tableName, false);
+      // Pas de liste vide ici : une table en erreur n'est pas une table vide.
+      throw new ReferenceTableError(tableName, message);
     }
+  }
+
+  /**
+   * Lit une table de référence pour enrichir les événements : en cas d'erreur, les événements
+   * restent servis (sans cette dimension) plutôt que de tout refuser. L'erreur est déjà
+   * journalisée et visible dans `getReferenceStatus()`.
+   */
+  private async loadReferenceMap(
+    tableName: string,
+  ): Promise<Map<string, LinkedTableRow>> {
+    try {
+      return await this.fetchLinkedTableMap(tableName);
+    } catch (error) {
+      if (error instanceof ReferenceTableError) return new Map();
+      throw error;
+    }
+  }
+
+  private setReferenceStatus(table: string, ok: boolean): void {
+    this.referenceStatus.set(table, {
+      table,
+      ok,
+      checkedAt: new Date().toISOString(),
+    });
+  }
+
+  /** Dernier état connu de chaque table de référence déjà lue (vide tant qu'aucune ne l'a été). */
+  getReferenceStatus(): ReferenceTableStatus[] {
+    return Array.from(this.referenceStatus.values());
+  }
+
+  /** Tables de référence dont la dernière lecture a échoué. */
+  degradedReferences(): string[] {
+    return this.getReferenceStatus()
+      .filter((status) => !status.ok)
+      .map((status) => status.table);
   }
 
   /**
@@ -211,6 +479,25 @@ export class BaserowService {
       );
     }
 
+    // Fail-closed : sans champ de modération, on ne publie rien plutôt que
+    // de rendre publics des événements non modérés.
+    if (!devMode && !moderationFieldId) {
+      const message =
+        'BASEROW_MODERATION_FIELD_ID manquant : publication refusée (modération non vérifiable).';
+      this.logger.error(message);
+      throw new Error(message);
+    }
+
+    // Idem sans valeur « visible » dans la config : aucune valeur par défaut.
+    const moderationVisibleValue =
+      this.appConfig.get()?.baserow?.moderationVisibleValue;
+    if (!devMode && !moderationVisibleValue) {
+      const message =
+        'baserow.moderationVisibleValue absent de la config : publication refusée (valeur de modération visible inconnue).';
+      this.logger.error(message);
+      throw new Error(message);
+    }
+
     const records: BaserowRecord[] = [];
     let page = 1;
     let hasNext = true;
@@ -224,7 +511,7 @@ export class BaserowService {
       if (!devMode && moderationFieldId) {
         url.searchParams.set(
           `filter__field_${moderationFieldId}__contains_word`,
-          this.appConfig.get()?.baserow.moderationVisibleValue || 'Accepté',
+          moderationVisibleValue as string,
         );
       }
 
@@ -239,12 +526,17 @@ export class BaserowService {
         this.logger.error(
           `Erreur Baserow API: ${response.status} ${errorBody}`,
         );
+        if (errorBody.includes('ERROR_FILTER_FIELD_NOT_FOUND')) {
+          const message = `Champ de modération introuvable dans Baserow (BASEROW_MODERATION_FIELD_ID=${moderationFieldId}) : vérifier que le champ n'a pas été supprimé ou recréé.`;
+          this.logger.error(message);
+          throw new Error(message);
+        }
         throw new Error(
           `Erreur Baserow: ${response.status} ${response.statusText}`,
         );
       }
 
-      const data: BaserowResponse<BaserowRecord> = await response.json();
+      const data = (await response.json()) as BaserowResponse<BaserowRecord>;
       records.push(...data.results);
 
       if (data.next) {
@@ -257,12 +549,134 @@ export class BaserowService {
     return records;
   }
 
-  private get fm(): Record<string, string> {
-    return this.appConfig.get()?.baserow.fieldMapping || {};
+  /** Journalise les écarts d'un chargement, un message agrégé par cause. */
+  private reportIssues(issues: TransformIssues): void {
+    this.reportMultipleFormats(issues.multipleFormats);
+    const fieldMapping = this.appConfig.get()?.baserow?.fieldMapping;
+    const startDate = fieldMapping?.startDate;
+    const endDate = fieldMapping?.endDate;
+    const capacity = fieldMapping?.capacity;
+    this.reportAffected(
+      'missing-date',
+      issues.missingDate,
+      `événement(s) sans date de début valide (colonne « ${startDate} ») : masqués de la carte et de la liste. Renseigner la date dans Baserow pour les publier`,
+    );
+    this.reportAffected(
+      'end-before-start',
+      issues.endBeforeStart,
+      `événement(s) dont la date de fin (colonne « ${endDate} ») précède le début : la fin est ignorée (événement ponctuel). Corriger la date dans Baserow`,
+    );
+    this.reportAffected(
+      'invalid-capacity',
+      issues.invalidCapacity,
+      `événement(s) avec une capacité inexploitable (colonne « ${capacity} » : un entier positif est attendu) : capacité ignorée`,
+    );
   }
 
-  private get mm() {
-    return this.appConfig.get()?.baserow.mapping;
+  /**
+   * Message agrégé « N événement(s) … » avec 3 exemples ; répété seulement si la liste des
+   * événements concernés change (voir `warnOnce`).
+   */
+  private reportAffected(
+    kind: string,
+    affected: AffectedEvent[],
+    description: string,
+  ): void {
+    if (affected.length === 0) return;
+    this.warnOnce(
+      `${kind}:${affected.map((e) => e.id).join(',')}`,
+      `${affected.length} ${description}. Exemples : ${this.describeExamples(affected)}.`,
+    );
+  }
+
+  private describeExamples(affected: AffectedEvent[]): string {
+    const examples = affected
+      .slice(0, 3)
+      .map((e) => `« ${e.title || 'sans titre'} » (id ${e.id})`)
+      .join(' ; ');
+    const more =
+      affected.length > 3 ? ` et ${affected.length - 3} autre(s)` : '';
+    return `${examples}${more}`;
+  }
+
+  /**
+   * Avertit (un seul message pour tous les événements concernés) que des événements portent
+   * plusieurs formats : l'application n'en garde qu'un, le premier lié dans Baserow. Le message
+   * n'est répété que si la liste des événements concernés change.
+   */
+  private reportMultipleFormats(affected: MultipleFormatsIssue[]): void {
+    if (affected.length === 0) return;
+    const examples = affected
+      .slice(0, 3)
+      .map(
+        (e) =>
+          `« ${e.title || 'sans titre'} » (id ${e.id} : ${e.formats.join(', ')})`,
+      )
+      .join(' ; ');
+    const more =
+      affected.length > 3 ? ` et ${affected.length - 3} autre(s)` : '';
+    this.warnOnce(
+      `multiple-formats:${affected.map((e) => e.id).join(',')}`,
+      `${affected.length} événement(s) ont plusieurs formats ; seul le premier lié dans Baserow est retenu (un événement n'a qu'un format). Rendre la colonne de format à choix unique ou ne lier qu'un format. Exemples : ${examples}${more}.`,
+    );
+  }
+
+  /** Journalise un avertissement une seule fois (clé = cause). */
+  private warnOnce(key: string, message: string): void {
+    if (this.warned.has(key)) return;
+    this.warned.add(key);
+    this.logger.warn(message);
+  }
+
+  /** Comme `warnOnce`, au niveau erreur (donnée dégradée : colonne absente). */
+  private errorOnce(key: string, message: string): void {
+    if (this.warned.has(key)) return;
+    this.warned.add(key);
+    this.logger.error(message);
+  }
+
+  /**
+   * Lit la colonne associée à un rôle dans l'enregistrement. Le nom de la colonne vient
+   * uniquement de `baserow.fieldMapping` : rôle absent de la config = valeur vide + avertissement.
+   */
+  private readField<T = unknown>(
+    record: BaserowRecord,
+    role: keyof BaserowFieldMapping,
+  ): T | undefined {
+    const column = this.appConfig.safe.baserow.fieldMapping?.[role];
+    if (!column) {
+      this.warnOnce(
+        `role:${role}`,
+        `baserow.fieldMapping.${role} absent de la config : le champ est ignoré (valeur vide).`,
+      );
+      return undefined;
+    }
+    return record[column] as T | undefined;
+  }
+
+  /**
+   * « Coup de cœur » : rôle OPTIONNEL (`baserow.fieldMapping.highlight`, colonne case à cocher).
+   * Rôle absent de la config = fonctionnalité inactive, sans avertissement répété ici (la
+   * validation de la config l'a déjà signalé au démarrage). Seule la valeur booléenne `true`
+   * compte : vide, texte ou colonne absente de l'enregistrement = non coché.
+   */
+  private isHighlighted(record: BaserowRecord): boolean {
+    const column = this.appConfig.safe.baserow.fieldMapping?.highlight;
+    if (!column) return false;
+    return record[column] === true;
+  }
+
+  /** Nom de la colonne d'un rôle (pour les champs de liaison, lus par `mapLinkedRow`). */
+  private columnOf(role: keyof BaserowFieldMapping): string {
+    const column = this.appConfig.safe.baserow.fieldMapping?.[role];
+    if (!column) {
+      this.warnOnce(
+        `role:${role}`,
+        `baserow.fieldMapping.${role} absent de la config : le champ est ignoré (valeur vide).`,
+      );
+      return '';
+    }
+    return column;
   }
 
   /**
@@ -274,107 +688,140 @@ export class BaserowService {
     thematiquesMap: Map<string, LinkedTableRow>,
     formatsMap: Map<string, LinkedTableRow>,
     publicsMap: Map<string, LinkedTableRow>,
+    issues?: TransformIssues,
   ): Event {
-    const fm = this.fm;
+    const read = <T = unknown>(role: keyof BaserowFieldMapping) =>
+      this.readField<T>(record, role);
+    const text = (role: keyof BaserowFieldMapping) =>
+      (read<string>(role) || '').trim();
+    const { modality: modalityMap, tariffFreeValue } =
+      this.appConfig.safe.baserow.mapping;
 
-    const startDateTime = parseDateTime(
-      record[fm.startDate || "Date de début de l'événement"],
+    const startDateRaw = read<string>('startDate');
+    const startDateTime = parseDateTime(startDateRaw);
+    const endDateRaw = read<string>('endDate');
+    const endDateTime = parseDateTime(endDateRaw);
+    const affected: AffectedEvent = {
+      id: String(record.id),
+      title: text('title'),
+    };
+    if (!startDateTime.date) issues?.missingDate.push(affected);
+    // Fin avant le début : on l'ignore (événement ponctuel) plutôt que d'afficher un intervalle
+    // incohérent. Sans début valide l'événement est de toute façon écarté.
+    const endBeforeStart = isEndBeforeStart(startDateRaw, endDateRaw);
+    if (endBeforeStart && startDateTime.date) {
+      issues?.endBeforeStart.push(affected);
+    }
+
+    const modality = mapModality(
+      read<BaserowSelect>('modality'),
+      modalityMap,
+      (value) =>
+        this.warnOnce(
+          `modality:${value}`,
+          `Valeur « ${value} » de la liste de choix de modalité absente de baserow.mapping.modality : traitée comme présentiel.`,
+        ),
     );
-    const endDateTime = parseDateTime(
-      record[fm.endDate || "Date de fin de l'événement"],
-    );
 
-    const modality = mapModality(record[fm.modality || "Type de l'événement"]);
-
-    const format = mapLinkedRow(record, fm.format || 'Formats', formatsMap);
-
+    // Un événement n'a qu'un seul format : le premier lié dans Baserow. Les autres sont signalés.
+    const formats = mapLinkedRow(record, this.columnOf('format'), formatsMap);
+    if (formats.length > 1) {
+      issues?.multipleFormats.push({
+        id: String(record.id),
+        title: text('title'),
+        formats: formats.map((f) => f.name),
+      });
+    }
     const targetAudience = mapLinkedRow(
       record,
-      fm.audience || 'Publics',
+      this.columnOf('audience'),
       publicsMap,
     );
-
-    const themes = mapLinkedRow(
-      record,
-      fm.theme || 'Thématiques',
-      thematiquesMap,
-    );
-
+    const themes = mapLinkedRow(record, this.columnOf('theme'), thematiquesMap);
     const partners = mapLinkedRow(
       record,
-      fm.partnerField || 'Partenaires',
+      this.columnOf('partnerField'),
       partnersMap,
     );
 
-    const imageUrl = extractImageUrl(
-      record[fm.image || "Visuel de l'évènement"],
-    );
+    const imageUrl = extractImageUrl(read<BaserowAttachment[]>('image'));
     const { weekStart, weekEnd } = this.appConfig.eventDates;
     const isDuringWeek = computeIsDuringWeek(
-      record[fm.startDate || "Date de début de l'événement"],
+      startDateRaw,
+      endDateRaw,
       weekStart,
       weekEnd,
     );
     const organizerContact = buildOrganizerContact(
-      record[fm.organizerFirstName || "Prénom de l'animateur"],
-      record[fm.organizerLastName || "Nom de l'animateur"],
+      read<string>('organizerFirstName'),
+      read<string>('organizerLastName'),
     );
     const accessibilityInfo = buildAccessibilityInfo(
-      record[fm.accessModalities || "Modalités spécifiques d'accès au lieu"],
+      read<BaserowSelect[]>('accessModalities'),
     );
-    const postalCode = (
-      record[fm.postalCode || 'Code postal du lieu'] || ''
-    ).trim();
+    const postalCode = text('postalCode');
     const fallbackRegion =
       this.geocodingService.getRegionFromPostalCode(postalCode);
 
+    const price = read('price');
+
+    const capacityRaw = read('capacity');
+    const capacity = parseCapacity(capacityRaw);
+    // 0 et vide = « non renseignée » (normal) ; tout autre valeur rejetée est signalée.
+    if (
+      capacity === undefined &&
+      capacityRaw !== undefined &&
+      capacityRaw !== null &&
+      capacityRaw !== '' &&
+      capacityRaw !== 0 &&
+      capacityRaw !== '0'
+    ) {
+      issues?.invalidCapacity.push(affected);
+    }
+
     return {
       id: String(record.id),
-      title: record[fm.title || "Nom de l'événement"] || 'Événement sans titre',
-      description: record[fm.description || 'Description'] || '',
+      title: read<string>('title') || 'Événement sans titre',
+      description: read<string>('description') || '',
       date: startDateTime.date,
       time: startDateTime.time,
-      endDate: endDateTime.date || undefined,
-      endTime: endDateTime.time || undefined,
-      address: (record[fm.address || 'Adresse du lieu'] || '').trim(),
-      city: (record[fm.city || 'Ville du lieu'] || '').trim(),
+      endDate: endBeforeStart ? undefined : endDateTime.date || undefined,
+      endTime: endBeforeStart ? undefined : endDateTime.time || undefined,
+      address: text('address'),
+      city: text('city'),
       region: fallbackRegion,
       department: '',
       postalCode,
       latitude: 0,
       longitude: 0,
-      type: format[0],
+      type: formats[0],
       themes,
-      organizer:
-        record[fm.organizer || 'Nom de la structure organisatrice'] || '',
+      organizer: read<string>('organizer') || '',
       organizerContact,
-      registrationUrl:
-        record[fm.registrationUrl || "Lien d'inscription à l'événement"] ||
-        undefined,
+      registrationUrl: read<string>('registrationUrl') || undefined,
       isDuringWeek,
+      isHighlighted: this.isHighlighted(record),
       modality,
       imageUrl,
-      venueName: record[fm.venueName || 'Lieu'] || undefined,
+      venueName: read<string>('venueName') || undefined,
       accessibilityInfo,
-      videoConferenceUrl:
-        record[fm.videoConferenceUrl || 'Lien de la visio'] || undefined,
+      videoConferenceUrl: read<string>('videoConferenceUrl') || undefined,
       targetAudience,
       contactEmail:
-        record[fm.contactEmail || 'Email contact événement'] ||
-        record[fm.contactEmailFallback || "E-mail de l'animateur"] ||
+        read<string>('contactEmail') ||
+        read<string>('contactEmailFallback') ||
         undefined,
-      contactPhone:
-        record[fm.contactPhone || 'Téléphone inscription'] || undefined,
-      organizerWebsite:
-        record[fm.organizerWebsite || 'Site web de la structure'] || undefined,
-      capacity:
-        record[fm.capacity || "Capacité d'accueil de l'événement"] || undefined,
+      contactPhone: read<string>('contactPhone') || undefined,
+      organizerWebsite: read<string>('organizerWebsite') || undefined,
+      capacity,
       registeredCount: undefined,
       partners: partners.length > 0 ? partners : undefined,
-      isFree:
-        record[fm.tariff || 'Tarif']?.value === 'Gratuit' ||
-        !record[fm.price || 'Montant'],
-      price: record[fm.price || 'Montant'] || undefined,
+      isFree: isFreeTariff(
+        read<BaserowSelect>('tariff'),
+        price,
+        tariffFreeValue,
+      ),
+      price: (price as number | undefined) || undefined,
     };
   }
 }

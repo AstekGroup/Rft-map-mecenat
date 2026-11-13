@@ -9,11 +9,9 @@ Carte interactive pour visualiser les événements de **La Grande Semaine Végé
 ```
 make-map/
 ├── AGENTS.md               # Consignes pour assistants IA (Cursor, etc.)
-├── CLAUDE.md               # Architecture détaillée pour agents
 ├── apps/
 │   ├── frontend/           # React + Vite (consomme l'API backend)
-│   ├── backend/            # NestJS (proxy Baserow + géocodage)
-│   └── map-interactive/    # Version standalone originale (référence)
+│   └── backend/            # NestJS (proxy Baserow + géocodage)
 ├── shared/
 │   └── types/              # @make-map/types (types TypeScript partagés)
 ├── deploy/                 # Docker Compose + Caddy (production)
@@ -49,11 +47,16 @@ cp apps/frontend/.env.example apps/frontend/.env
 |---|---|---|
 | `BASEROW_API_URL` | backend | URL de l'instance Baserow (ex: https://api.baserow.io) |
 | `BASEROW_API_TOKEN` | backend | Jeton de base de données Baserow |
-| `BASEROW_TABLE_ID` | backend | ID numérique de la table des événements |
-| `BASEROW_PARTNERS_TABLE_ID` | backend | ID numérique de la table des partenaires |
+| `BASEROW_EVENT_TABLE_ID` | backend | ID numérique de la table des événements |
 | `BASEROW_MODERATION_FIELD_ID` | backend | ID numérique du champ de modération |
+| `BASEROW_PARTNERS_TABLE_ID` | backend | ID numérique de la table des partenaires |
+| `BASEROW_THEMATIQUES_TABLE_ID` | backend | ID numérique de la table des thématiques |
+| `BASEROW_FORMATS_TABLE_ID` | backend | ID numérique de la table des formats |
+| `BASEROW_PUBLICS_TABLE_ID` | backend | ID numérique de la table des publics |
+| `APP_CONFIG_PATH` | backend | (optionnel) chemin du `app.config.json` de la carte ; absent : `app.config.json` à la racine |
+| `CORS_ORIGIN` | backend | (optionnel) origine autorisée par CORS |
+| `ALLOW_DEV_MODE` | backend | (optionnel, local seulement) autorise `?devMode=true` ; ignoré en production |
 | `VITE_API_URL` | frontend | URL du backend (`http://localhost:3000`) |
-| `VITE_MAPTILER_KEY` | frontend | Clé API MapTiler ([obtenir ici](https://cloud.maptiler.com/account/keys/)) |
 
 ### Lancer le projet
 
@@ -74,7 +77,7 @@ Proxy sécurisé NestJS pour l'API Baserow. Le token reste côté serveur.
 
 - **API** : `GET /api/events` · `GET /api/events/:id` · `GET /api/health`
 - Géocodage via [api-adresse.data.gouv.fr](https://adresse.data.gouv.fr) avec cache permanent
-- Cache TTL 5 min pour les données Baserow
+- Cache TTL 5 min pour les données Baserow : un événement modéré (accepté ou retiré) n'est visible qu'au plus 5 minutes plus tard, ou après un redémarrage du backend
 - `?devMode=true` pour bypasser le filtre de modération
 
 ### Frontend (`apps/frontend`)
@@ -86,14 +89,6 @@ Application React avec carte interactive MapLibre GL JS.
 - Vue carte + vue liste avec pagination
 - Encarts DOM-TOM
 - Design system calé sur la charte semaine-ia.fr (Rubik / Palanquin)
-
-### map-interactive (`apps/map-interactive`)
-
-Version standalone originale avec appel direct Airtable côté client. Conservée comme référence, non modifiée (elle continue à utiliser Airtable).
-
-```bash
-pnpm map:dev
-```
 
 ## Package partagé
 
@@ -120,8 +115,7 @@ Format ouvert [agents.md](https://agents.md/) : un **`AGENTS.md` par zone** du m
 - [apps/backend/AGENTS.md](apps/backend/AGENTS.md) — API NestJS
 - [shared/types/AGENTS.md](shared/types/AGENTS.md) — package `@make-map/types`
 - [deploy/AGENTS.md](deploy/AGENTS.md) — déploiement
-- [apps/map-interactive/AGENTS.md](apps/map-interactive/AGENTS.md) — référence (non modifiée)
-- [CLAUDE.md](CLAUDE.md) — architecture et conventions détaillées
+- [docs/audit/PLAN-SESSIONS.md](docs/audit/PLAN-SESSIONS.md) — plan de refonte et workflow Git
 
 ## Ressources
 

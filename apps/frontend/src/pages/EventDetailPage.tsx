@@ -19,14 +19,17 @@ import {
 } from 'lucide-react';
 import { useEvents } from '@/hooks';
 import { useConfig } from '@/hooks/useConfig';
+import { HighlightBadge } from '@/components/UI';
 import { Loader2 } from 'lucide-react';
 import {getIcon} from "@/utils/iconResolver.ts";
+import { formatEventDate } from '@/utils/formatEventDate';
 
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { allEvents, loading, error } = useEvents();
   const { helpers } = useConfig();
+  const editionBadge = helpers.getEditionBadge();
   
   const event = allEvents.find(e => e.id === id);
 
@@ -74,21 +77,14 @@ export function EventDetailPage() {
     );
   }
 
-  const formattedDate = new Date(event.date).toLocaleDateString('fr-FR', {
+  const longDate: Intl.DateTimeFormatOptions = {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
-  });
-
-  const formattedEndDate = event.endDate
-    ? new Date(event.endDate).toLocaleDateString('fr-FR', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      })
-    : null;
+  };
+  const formattedDate = formatEventDate(event.date, longDate);
+  const formattedEndDate = formatEventDate(event.endDate, longDate) || null;
 
   const Icon = getIcon(event.type?.pictoName, Globe);
 
@@ -102,9 +98,8 @@ export function EventDetailPage() {
           <img
             src={event.imageUrl}
             alt={event.title}
-            className="w-full h-full object-cover opacity-80"
+            className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent" />
           <button
             onClick={() => navigate(-1)}
             className="absolute top-4 left-4 inline-flex items-center gap-2 bg-white/90 text-primary-dark px-3 py-2 rounded-lg text-sm font-medium hover:bg-white transition-colors"
@@ -134,6 +129,7 @@ export function EventDetailPage() {
           <div className="p-6 md:p-8 border-b border-primary/10">
             {/* Badges */}
             <div className="flex flex-wrap items-center gap-2 mb-4">
+              {event.isHighlighted && <HighlightBadge size="md" withLabel />}
               <span
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-surface-beige text-primary-dark"
               >
@@ -148,10 +144,10 @@ export function EventDetailPage() {
                 )}
                 {helpers.getEnumLabel('modalities', event.modality)}
               </span>
-              {event.isDuringWeek && (
+              {event.isDuringWeek && editionBadge && (
                 <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary-dark px-3 py-1.5 rounded-full text-sm font-medium">
                   <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                  {helpers.getText('home', 'mainTitle')}
+                  {editionBadge}
                 </span>
               )}
               {isComplete && (

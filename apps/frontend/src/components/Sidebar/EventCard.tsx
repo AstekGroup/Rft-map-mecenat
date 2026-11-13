@@ -1,9 +1,10 @@
 import { memo } from 'react';
 import { Event } from '@/types/event';
 import { Calendar, Clock, MapPin, BookOpen, Handshake, Globe } from 'lucide-react';
-import { Badge } from '@/components/UI';
+import { Badge, HighlightBadge } from '@/components/UI';
 import {useConfig} from "@/hooks";
 import {checkIconColor, getIcon} from "@/utils/iconResolver.ts";
+import { formatEventDate } from '@/utils/formatEventDate';
 
 interface EventCardProps {
   event: Event;
@@ -23,7 +24,8 @@ function EventCardComponent({
   onMouseLeave,
 }: EventCardProps) {
   const {helpers} = useConfig();
-  const formattedDate = new Date(event.date).toLocaleDateString('fr-FR', {
+  const editionBadge = helpers.getEditionBadge();
+  const formattedDate = formatEventDate(event.date, {
     day: 'numeric',
     month: 'short',
   });
@@ -38,6 +40,8 @@ function EventCardComponent({
           ? 'border-primary shadow-popup'
           : isHovered
           ? 'border-primary/30 shadow-card'
+          : event.isHighlighted
+          ? 'border-accent-yellow shadow-card hover:border-accent-yellow/80'
           : 'border-transparent shadow-card hover:border-primary/20'
       }`}
       onClick={onClick}
@@ -59,7 +63,10 @@ function EventCardComponent({
         {/* Contenu */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-2">
-            <Badge type={event.type} size="sm" />
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Badge type={event.type} size="sm" />
+              {event.isHighlighted && <HighlightBadge size="xs" />}
+            </div>
             {event.partners && event.partners.length > 0 && (
               <div className="flex -space-x-2 overflow-hidden">
                 {event.partners.slice(0, 3).map((partner) => (
@@ -124,11 +131,11 @@ function EventCardComponent({
             )}
           </div>
 
-          {/* Badge semaine LGSV */}
-          {event.isDuringWeek && (
+          {/* Badge « pendant l'événement » (nom depuis la config) */}
+          {event.isDuringWeek && editionBadge && (
             <div className="mt-2 inline-flex items-center gap-1 text-xs text-primary font-medium">
               <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse-soft" />
-              {helpers.getText('home', 'mainTitle')}
+              {editionBadge}
             </div>
           )}
         </div>

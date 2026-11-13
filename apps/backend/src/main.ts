@@ -1,11 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger } from '@nestjs/common';
+import * as compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
   const isProduction = process.env.NODE_ENV === 'production';
+
+  // Compression gzip des réponses JSON (la liste des événements pèse vite plusieurs centaines
+  // de Ko). Active en local comme en production : même comportement pour les démos.
+  app.use(compression());
 
   // CORS configurable via env var
   const corsOrigin = process.env.CORS_ORIGIN;
@@ -35,8 +40,8 @@ async function bootstrap() {
         logger.log(`Health check: http://localhost:${p}/api/health`);
         logger.log(`Events API: http://localhost:${p}/api/events`);
         return;
-      } catch (err: any) {
-        if (err.code === 'EADDRINUSE') {
+      } catch (err: unknown) {
+        if ((err as NodeJS.ErrnoException).code === 'EADDRINUSE') {
           logger.warn(`Port ${p} déjà utilisé, tentative sur ${p + 1}...`);
           continue;
         }
@@ -49,4 +54,10 @@ async function bootstrap() {
     process.exit(1);
   }
 }
-bootstrap();
+bootstrap().catch((error: unknown) => {
+  // Config invalide, fichier introuvable… : le message explicatif suffit, pas de stack d'une promesse rejetée.
+  new Logger('Bootstrap').error(
+    `Démarrage impossible : ${error instanceof Error ? error.message : String(error)}`,
+  );
+  process.exit(1);
+});

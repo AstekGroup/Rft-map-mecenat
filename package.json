@@ -2,7 +2,7 @@
   "name": "make-map",
   "version": "0.2.0",
   "private": true,
-  "description": "Carte interactive - La Grande Semaine Végétale",
+  "description": "Carte interactive d'événements : un seul code, une config par carte",
   "scripts": {
     "dev": "turbo run dev --filter=@make-map/frontend --filter=@make-map/backend",
     "dev:all": "turbo run dev",
@@ -10,11 +10,9 @@
     "lint": "turbo run lint",
     "front:dev": "turbo run dev --filter=@make-map/frontend",
     "back:dev": "turbo run dev --filter=@make-map/backend",
-    "map:dev": "turbo run dev --filter=@make-map/map-interactive",
-    "install:map": "cd apps/map-interactive && pnpm install",
     "deploy:scw": "./scripts/deploy.sh",
     "deploy:v2": "./scripts/deploy-v2.sh",
-    "test": "turbo run test --filter=@make-map/backend --filter=@make-map/frontend",
+    "test": "turbo run test --filter=@make-map/types --filter=@make-map/backend --filter=@make-map/frontend",
     "prepare": "husky"
   },
   "keywords": [
@@ -23,7 +21,7 @@
     "react",
     "maplibre",
     "nestjs",
-    "airtable"
+    "baserow"
   ],
   "author": "ILAB Innovation Team",
   "packageManager": "pnpm@9.0.0",
