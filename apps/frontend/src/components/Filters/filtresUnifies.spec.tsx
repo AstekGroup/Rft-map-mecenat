@@ -6,7 +6,7 @@ import type { LinkedTableRow } from '@/types/event';
 import { FILTER_DEFINITIONS, getVisibleFilters, type FilterId } from '@/utils/filterDefinitions';
 import { EventFiltersBar } from '@/components/Events/EventFiltersBar';
 import { FilterPanel } from './FilterPanel';
-import { SEARCH_PLACEHOLDER, UNAVAILABLE_LIST_MESSAGE } from './FilterContent';
+import { SEARCH_PLACEHOLDER, UNAVAILABLE_LIST_MESSAGE, NO_PARTNER_RESULT_MESSAGE, PARTNER_SEARCH_ARIA_LABEL, PARTNER_SEARCH_CLEAR_LABEL, PARTNER_SEARCH_PLACEHOLDER } from './FilterContent';
 
 const defaultFilters: EventFilters = {
   search: '',
@@ -206,6 +206,126 @@ describe('filtres unifiés (panneau de la carte et barre de la liste)', () => {
     const bar = render(<EventFiltersBar controls={controls} />);
     expect(bar.getByPlaceholderText(SEARCH_PLACEHOLDER)).toBeInTheDocument();
   });
+});
+
+describe('recherche dans le filtre Partenaires', () => {
+  const partnerRows: LinkedTableRow[] = [
+    { id: 'p1', name: 'Végétal & Compagnie' },
+    { id: 'p2', name: 'Café Théâtre' },
+    { id: 'p3', name: 'Mairie de Paris' },
+  ];
+
+  const partnerControls = (overrides: Partial<EventFilterControls> = {}) =>
+    makeControls({ availablePartners: partnerRows, ...overrides });
+
+  const build = (variant: 'panel' | 'bar', controls: EventFilterControls) =>
+    variant === 'panel' ? <FilterPanel controls={controls} /> : <EventFiltersBar controls={controls} />;
+
+  async function openPartners(variant: 'panel' | 'bar', controls: EventFilterControls) {
+    render(build(variant, controls));
+    // L'accordéon est déjà ouvert quand le filtre est actif : ne pas le refermer.
+    if (!screen.queryByPlaceholderText(PARTNER_SEARCH_PLACEHOLDER)) {
+      await userEvent.click(
+        screen.getByRole('button', { name: new RegExp(`^${titleOf('partners')}`) }),
+      );
+    }
+    return screen.getByPlaceholderText(PARTNER_SEARCH_PLACEHOLDER);
+  }
+
+  it.each(['panel', 'bar'] as const)(
+    'affiche un champ de recherche accessible dans le filtre Partenaires (%s)',
+    async (variant) => {
+      const input = await openPartners(variant, partnerControls());
+
+      expect(input).toHaveAccessibleName(PARTNER_SEARCH_ARIA_LABEL);
+      expect(screen.getByText('Végétal & Compagnie')).toBeInTheDocument();
+      expect(screen.getByText('Café Théâtre')).toBeInTheDocument();
+      expect(screen.getByText('Mairie de Paris')).toBeInTheDocument();
+    },
+  );
+
+  it.each(['panel', 'bar'] as const)(
+    'filtre la liste au fur et à mesure de la saisie, sans tenir compte de la casse ni des accents (%s)',
+    async (variant) => {
+      const input = await openPartners(variant, partnerControls());
+
+      await userEvent.type(input, 'vegetal');
+      expect(screen.getByText('Végétal & Compagnie')).toBeInTheDocument();
+      expect(screen.queryByText('Café Théâtre')).not.toBeInTheDocument();
+      expect(screen.queryByText('Mairie de Paris')).not.toBeInTheDocument();
+
+      await userEvent.clear(input);
+      await userEvent.type(input, 'cAfE tHe');
+      expect(screen.getByText('Café Théâtre')).toBeInTheDocument();
+      expect(screen.queryByText('Végétal & Compagnie')).not.toBeInTheDocument();
+    },
+  );
+
+  it.each(['panel', 'bar'] as const)(
+    'efface la recherche et réaffiche toute la liste (%s)',
+    async (variant) => {
+      const input = await openPartners(variant, partnerControls());
+
+      await userEvent.type(input, 'mairie');
+      expect(screen.queryByText('Café Théâtre')).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: PARTNER_SEARCH_CLEAR_LABEL }));
+
+      expect(input).toHaveValue('');
+      expect(screen.getByText('Végétal & Compagnie')).toBeInTheDocument();
+      expect(screen.getByText('Café Théâtre')).toBeInTheDocument();
+      expect(screen.getByText('Mairie de Paris')).toBeInTheDocument();
+    },
+  );
+
+  it.each(['panel', 'bar'] as const)(
+    'affiche un message dédié quand aucun partenaire ne correspond (%s)',
+    async (variant) => {
+      const input = await openPartners(variant, partnerControls());
+
+      await userEvent.type(input, 'introuvable');
+
+      expect(screen.getByText(NO_PARTNER_RESULT_MESSAGE)).toBeInTheDocument();
+      expect(screen.queryByText('Végétal & Compagnie')).not.toBeInTheDocument();
+      expect(screen.queryByText(UNAVAILABLE_LIST_MESSAGE)).not.toBeInTheDocument();
+    },
+  );
+
+  it.each(['panel', 'bar'] as const)(
+    'conserve la sélection pendant le filtrage et déclenche onTogglePartner avec le bon id (%s)',
+    async (variant) => {
+      const controls = partnerControls({
+        filters: { ...defaultFilters, partners: ['p1'] },
+      });
+      const input = await openPartners(variant, controls);
+
+      await userEvent.type(input, 'cafe');
+      expect(screen.queryByRole('checkbox', { name: 'Végétal & Compagnie' })).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('checkbox', { name: 'Café Théâtre' }));
+      expect(controls.onTogglePartner).toHaveBeenCalledWith('p2');
+
+      await userEvent.clear(input);
+      expect(screen.getByRole('checkbox', { name: 'Végétal & Compagnie' })).toBeChecked();
+    },
+  );
+
+  it.each(['panel', 'bar'] as const)(
+    'garde le message d’indisponibilité (et pas de recherche) quand le référentiel est en erreur (%s)',
+    async (variant) => {
+      const controls = makeControls({
+        availablePartners: [],
+        unavailableReferences: ['partners'],
+      });
+      render(build(variant, controls));
+      await userEvent.click(
+        screen.getByRole('button', { name: new RegExp(`^${titleOf('partners')}`) }),
+      );
+
+      expect(screen.getByText(UNAVAILABLE_LIST_MESSAGE)).toBeInTheDocument();
+      expect(screen.queryByPlaceholderText(PARTNER_SEARCH_PLACEHOLDER)).not.toBeInTheDocument();
+    },
+  );
 });
 
 describe('getVisibleFilters', () => {
