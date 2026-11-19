@@ -21,6 +21,7 @@ import { useEvents } from '@/hooks';
 import { useConfig } from '@/hooks/useConfig';
 import { HighlightBadge } from '@/components/UI';
 import { Loader2 } from 'lucide-react';
+import { AddToCalendar } from '@/components/Events/AddToCalendar';
 import {getIcon} from "@/utils/iconResolver.ts";
 import { formatEventDate } from '@/utils/formatEventDate';
 
@@ -219,6 +220,7 @@ export function EventDetailPage() {
                     {event.time}
                     {event.endTime && ` - ${event.endTime}`}
                   </p>
+                  <AddToCalendar event={event} />
                 </div>
               </div>
 
