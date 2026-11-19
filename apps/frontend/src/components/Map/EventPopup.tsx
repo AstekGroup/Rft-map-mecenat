@@ -2,7 +2,17 @@ import { Event } from '@/types/event';
 import { useConfig } from '@/hooks/useConfig';
 import { formatEventDate } from '@/utils/formatEventDate';
 import { Badge, HighlightBadge } from '@/components/UI';
-import { Calendar, Clock, MapPin, User, Mail, Eye, Video, Building } from 'lucide-react';
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  User,
+  Mail,
+  Eye,
+  Video,
+  Building,
+  ExternalLink,
+} from 'lucide-react';
 
 interface EventPopupProps {
   event: Event;
@@ -97,8 +107,18 @@ export function EventPopup({ event, onClose, onViewDetails }: EventPopupProps) {
         
         {/* Organisateur */}
         <div className="flex items-center gap-2 text-sm">
-          <User className="w-4 h-4 text-primary" />
-          <span className="text-text-secondary">{event.organizer}</span>
+          <User className="w-4 h-4 text-primary flex-shrink-0" />
+          <span className="min-w-0 truncate text-text-secondary">{event.organizer}</span>
+          {event.contactEmail && (
+            <a
+              href={`mailto:${event.contactEmail}`}
+              className="flex-shrink-0 text-primary hover:text-primary-dark transition-colors"
+              title="Contacter l'organisateur"
+              aria-label="Contacter l'organisateur par e-mail"
+            >
+              <Mail className="w-4 h-4" />
+            </a>
+          )}
         </div>
         
         {/* Description */}
@@ -116,16 +136,18 @@ export function EventPopup({ event, onClose, onViewDetails }: EventPopupProps) {
             Détails
           </button>
           
-          {event.organizerContact || event.contactEmail ? (
+          {event.registrationUrl && (
             <a
-              href={`mailto:${event.organizerContact || event.contactEmail}`}
-              className="flex items-center justify-center gap-1.5 py-2 px-3 bg-primary/10 hover:bg-primary/20 text-primary-dark font-medium rounded-button text-sm transition-colors border border-primary/20"
-              title="Contacter l'organisateur"
+              href={event.registrationUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-primary hover:bg-primary-dark text-white font-medium rounded-button text-sm transition-colors"
+              title="S'inscrire par Internet"
             >
-              <Mail className="w-4 h-4" />
-              Contact
+              <ExternalLink className="w-4 h-4" />
+              S'inscrire
             </a>
-          ) : null}
+          )}
         </div>
       </div>
     </div>
