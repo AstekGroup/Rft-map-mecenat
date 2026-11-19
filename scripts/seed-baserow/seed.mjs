@@ -296,7 +296,7 @@ const FORMATS = [
   ['Festival', 'party-popper', '#E74C8C'],
   ['Autres', 'sparkles', 'Gris'],
   // Cas limites référentiel : picto inexistant, puis sans picto ni couleur.
-  ['[TEST] Format picto invalide', 'IconeQuiNexistePas', 'Jaune'],
+  ['[TEST] Format picto invalide', 'icone-qui-nexiste-pas', 'Jaune'],
   ['[TEST] Format sans picto ni couleur', null, null],
 ];
 const PUBLICS = [
