@@ -208,6 +208,31 @@ describe('filtres unifiés (panneau de la carte et barre de la liste)', () => {
   });
 });
 
+describe('pictos des options de référentiel', () => {
+  it.each([
+    ['panel', (c: EventFilterControls) => <FilterPanel controls={c} />],
+    ['bar', (c: EventFilterControls) => <EventFiltersBar controls={c} />],
+  ] as const)(
+    'affichent le picto et la couleur du public cible (%s)',
+    async (_name, build) => {
+      const controls = makeControls({
+        availablePublics: [
+          { id: 'p1', name: 'Familles / enfants', pictoName: 'users', colorHexa: '#AE3B5D' },
+        ],
+      });
+      render(build(controls));
+
+      await userEvent.click(screen.getByRole('button', { name: new RegExp(`^${titleOf('audiences')}`) }));
+
+      const ligne = screen.getByRole('checkbox', { name: 'Familles / enfants' }).closest('label')!;
+      const pastille = ligne.querySelector<HTMLSpanElement>('span[style]');
+      expect(pastille).not.toBeNull();
+      expect(pastille!.style.backgroundColor).toBe('rgb(174, 59, 93)'); // #AE3B5D
+      expect(pastille!.querySelector('svg')).not.toBeNull(); // l'icône Lucide est rendue
+    },
+  );
+});
+
 describe('getVisibleFilters', () => {
   const full = {
     partners: rows('p'),

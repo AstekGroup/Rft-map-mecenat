@@ -408,7 +408,7 @@ export function FilterContent({ id, variant, controls }: FilterContentProps) {
           rows={controls.availablePublics}
           selected={filters.audiences}
           onToggle={controls.onToggleAudience}
-          lead="none"
+          lead="picto"
           variant={variant}
           unavailable={controls.unavailableReferences.includes('publics')}
         />

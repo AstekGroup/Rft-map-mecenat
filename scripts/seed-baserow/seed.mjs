@@ -288,30 +288,30 @@ const COLOR_OPTIONS = [
   ['#E74C8C', 'darker-pink'],
 ];
 const FORMATS = [
-  ['Atelier de cuisine', 'ChefHat', 'Orange'],
-  ['Dégustation ou menu végétal', 'Utensils', 'Vert'],
-  ['Visite de jardin / potager ou cueillette', 'Sprout', 'Vert clair'],
-  ['Atelier pédagogique ou formation', 'GraduationCap', 'Bleu'],
-  ['Conférence/webinaire/table-ronde', 'Mic', 'Violet'],
-  ['Festival', 'PartyPopper', '#E74C8C'],
-  ['Autres', 'Sparkles', 'Gris'],
+  ['Atelier de cuisine', 'chef-hat', 'Orange'],
+  ['Dégustation ou menu végétal', 'utensils', 'Vert'],
+  ['Visite de jardin / potager ou cueillette', 'sprout', 'Vert clair'],
+  ['Atelier pédagogique ou formation', 'graduation-cap', 'Bleu'],
+  ['Conférence/webinaire/table-ronde', 'mic', 'Violet'],
+  ['Festival', 'party-popper', '#E74C8C'],
+  ['Autres', 'sparkles', 'Gris'],
   // Cas limites référentiel : picto inexistant, puis sans picto ni couleur.
-  ['[TEST] Format picto invalide', 'IconeQuiNexistePas', 'Jaune'],
+  ['[TEST] Format picto invalide', 'icone-qui-nexiste-pas', 'Jaune'],
   ['[TEST] Format sans picto ni couleur', null, null],
 ];
 const PUBLICS = [
-  ['Tout public', 'Users', 'Vert'],
-  ['Familles / enfants', 'Baby', 'Orange'],
-  ["Salariés d'une entreprise", 'Briefcase', 'Bleu clair'],
-  ['Professionnels', 'Building2', 'Lilas'],
-  ['Scolaires', 'School', 'Rouge'],
+  ['Tout public', 'users', 'Vert'],
+  ['Familles / enfants', 'baby', 'Orange'],
+  ["Salariés d'une entreprise", 'briefcase', 'Bleu clair'],
+  ['Professionnels', 'building-2', 'Lilas'],
+  ['Scolaires', 'school', 'Rouge'],
 ];
 const THEMES = [
-  ['Cuisine végétale', 'Carrot', 'Orange'],
-  ['Santé & nutrition', 'HeartPulse', 'Saumon'],
-  ['Biodiversité', 'Bug', 'Vert clair'],
-  ['Agriculture', 'Tractor', 'Marron'],
-  ['Climat & environnement', 'Leaf', 'Cyan'],
+  ['Cuisine végétale', 'carrot', 'Orange'],
+  ['Santé & nutrition', 'heart-pulse', 'Saumon'],
+  ['Biodiversité', 'bug', 'Vert clair'],
+  ['Agriculture', 'tractor', 'Marron'],
+  ['Climat & environnement', 'leaf', 'Cyan'],
 ];
 const PARTNERS = [
   ['Association Légumineuses & Co', [255, 190, 120]],
