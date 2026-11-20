@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Globe, Heart, MapPin, Search, X } from 'lucide-react';
 import { useConfig } from '@/hooks';
@@ -6,6 +7,7 @@ import type { LinkedTableRow } from '@/types/event';
 import type { FilterId } from '@/utils/filterDefinitions';
 import { HIGHLIGHT_LABEL } from '@/utils/highlight';
 import { DEFAULT_FORMAT_COLOR, checkIconColor, getIcon } from '@/utils/iconResolver';
+import { normalizeForSearch } from '@/utils/searchText';
 import { DateCustomRangeInputs } from './DateCustomRangeInputs';
 
 /**
@@ -113,6 +115,97 @@ function ReferenceOptions({ rows, selected, onToggle, lead, variant, unavailable
           {row.name}
         </CheckOption>
       ))}
+    </div>
+  );
+}
+
+export const PARTNER_SEARCH_PLACEHOLDER = 'Rechercher un partenaire...';
+export const PARTNER_SEARCH_ARIA_LABEL = 'Rechercher un partenaire';
+export const PARTNER_SEARCH_CLEAR_LABEL = 'Effacer la recherche de partenaire';
+export const NO_PARTNER_RESULT_MESSAGE = 'Aucun partenaire trouvé';
+
+interface PartnersFilterContentProps {
+  rows: LinkedTableRow[];
+  selected: string[];
+  onToggle: (id: string) => void;
+  variant: FilterVariant;
+  unavailable?: boolean;
+}
+
+/**
+ * Filtre « Partenaires » avec recherche locale : la saisie filtre la liste affichée (nom, insensible
+ * à la casse et aux accents) sans modifier la sélection. La sélection reste portée par `selected`.
+ */
+function PartnersFilterContent({ rows, selected, onToggle, variant, unavailable }: PartnersFilterContentProps) {
+  const [query, setQuery] = useState('');
+  const filteredRows = useMemo(() => {
+    const needle = normalizeForSearch(query.trim());
+    if (!needle) return rows;
+    return rows.filter((row) => normalizeForSearch(row.name).includes(needle));
+  }, [rows, query]);
+
+  // Référentiel en erreur : message habituel, sans champ de recherche trompeur.
+  if (unavailable && rows.length === 0) {
+    return (
+      <ReferenceOptions
+        rows={rows}
+        selected={selected}
+        onToggle={onToggle}
+        lead="logo"
+        variant={variant}
+        unavailable
+      />
+    );
+  }
+
+  return (
+    <div>
+      <div className={variant === 'panel' ? 'mb-3' : 'p-2 pb-1 min-w-[220px]'}>
+        <div className="relative">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary"
+            aria-hidden="true"
+          />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={PARTNER_SEARCH_PLACEHOLDER}
+            aria-label={PARTNER_SEARCH_ARIA_LABEL}
+            className={`w-full pl-9 py-2 bg-white border border-primary/20 rounded-lg text-sm text-text-primary placeholder:text-text-secondary/70 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all ${
+              query ? 'pr-9' : 'pr-3'
+            }`}
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-primary transition-colors"
+              aria-label={PARTNER_SEARCH_CLEAR_LABEL}
+            >
+              <X className="w-4 h-4" aria-hidden="true" />
+            </button>
+          )}
+        </div>
+      </div>
+      {filteredRows.length === 0 ? (
+        <p
+          role="status"
+          className={`text-sm text-text-secondary ${
+            variant === 'panel' ? '' : 'px-3 py-2 min-w-[220px]'
+          }`}
+        >
+          {NO_PARTNER_RESULT_MESSAGE}
+        </p>
+      ) : (
+        <ReferenceOptions
+          rows={filteredRows}
+          selected={selected}
+          onToggle={onToggle}
+          lead="logo"
+          variant={variant}
+        />
+      )}
     </div>
   );
 }
@@ -371,11 +464,10 @@ export function FilterContent({ id, variant, controls }: FilterContentProps) {
       return <DateOptions filters={filters} onUpdateFilters={onUpdateFilters} variant={variant} />;
     case 'partners':
       return (
-        <ReferenceOptions
+        <PartnersFilterContent
           rows={controls.availablePartners}
           selected={filters.partners}
           onToggle={controls.onTogglePartner}
-          lead="logo"
           variant={variant}
           unavailable={controls.unavailableReferences.includes('partners')}
         />
