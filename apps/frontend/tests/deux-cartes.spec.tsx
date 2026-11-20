@@ -13,6 +13,7 @@ import { resolve } from 'path';
 import { render, screen } from '@testing-library/react';
 import type { AppConfig } from '@make-map/types';
 import { ConfigProvider } from '@/components/Layout/ConfigProvider';
+import { Badge } from '@/components/UI/Badge';
 import { buildHelpers, useConfig } from '@/hooks/useConfig';
 import { fetchConfig } from '@/services/api';
 import type { EventFilters } from '@/hooks/useEvents';
@@ -44,6 +45,14 @@ function rgb(hex: string): string {
 function EventNameProbe() {
   const { helpers, loading } = useConfig();
   return loading ? null : <h1>{helpers.getEventName()}</h1>;
+}
+
+/** Badge de format (variant highlight) tel que le rend le popup de la carte. */
+function BadgeProbe() {
+  const { loading } = useConfig();
+  return loading ? null : (
+    <Badge type={{ id: 'f1', name: 'Atelier test', colorHexa: '#E8793A' }} variant="highlight" />
+  );
 }
 
 async function renderConfig(file: string): Promise<{ config: AppConfig; text: string }> {
@@ -96,6 +105,25 @@ describe('deux cartes, un seul code (frontend)', () => {
       expect(helpers.getEditionBadge()).toBe(`${config.app.shortName} ${year}`);
       const duringWeek = helpers.getDateFilterModes().find((m) => m.mode === 'during-week');
       expect(duringWeek?.label).toContain(config.app.name);
+    });
+
+    it('rend un badge de format (highlight) qui suit la couleur de thème de sa config', async () => {
+      const config = served(file);
+      vi.mocked(fetchConfig).mockResolvedValue(config);
+      render(
+        <ConfigProvider>
+          <BadgeProbe />
+        </ConfigProvider>,
+      );
+      const badge = await screen.findByText('Atelier test');
+
+      // Le badge se branche sur les variables de thème…
+      expect(badge.style.color).toBe('rgb(var(--color-primary-dark-rgb))');
+      expect(badge.style.backgroundColor).toBe('rgb(var(--color-surface-beige-rgb))');
+      // …et la variable porte la couleur de SA config, jamais celle d'une autre carte.
+      expect(document.documentElement.style.getPropertyValue('--color-primary-dark-rgb')).toBe(
+        rgb(config.theme.colors['primary-dark']),
+      );
     });
   });
 

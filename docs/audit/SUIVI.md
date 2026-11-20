@@ -34,7 +34,7 @@ Vérifié le 2026-10-19 sur `origin/develop` (`2273bcb`) : `pnpm build`, `pnpm l
 |---|---|---|
 | 0 | Plan dans le dépôt, nettoyage de `docs/`, config Astek supprimée | **fait** (PR `docs/plan-fin-refonte`) |
 | 1 | Remettre les tests « deux cartes » et le modèle de PR | **fait** (branche `test/retablir-deux-cartes`) |
-| 3 | Résidus en dur (`Badge.tsx`, palette par défaut, gris de repli) | à faire |
+| 3 | Résidus en dur (`Badge.tsx`, palette par défaut, gris de repli) | **code fait** (2026-11-20, en local sur `develop`, à découper en PR `fix/residus-en-dur`) |
 | 4 | Cas dégradés restants (config absente sur carte et liste, section Format vide) | à faire |
 | 5 | README et `PROJECT_VIBE_CONF.md` neutres | à faire |
 | 6 | Filtre Modalité retiré de la carte ; picto kebab-case | à faire |
@@ -66,6 +66,10 @@ Branche `refactor/supprimer-home-page` (une PR vers `develop`). La carte (`MapPa
 Cache de géocodage persistant (fichier JSON), rafraîchissement des événements en arrière-plan, échecs de géocodage mémorisés, compression gzip de l'API, volume Docker pour le cache. Détail et preuves : [JOURNAL.md](JOURNAL.md), section « Optimisation des temps de chargement ». Plan : [PLAN-FIN-REFONTE.md](PLAN-FIN-REFONTE.md), étape 9.
 
 **Écart au workflow Git** : une seule branche `feat/cache-geocodage-persistant` (depuis `origin/develop`) et une seule PR, découpée en 5 commits atomiques (géocodage, rafraîchissement en arrière-plan, compression, volume de déploiement, docs), au lieu d'une branche par étape comme le prévoyait le plan : le cache et ses échecs touchent le même fichier. **Non vérifié** : mesure avant/après avec ~1000 événements, `docker build` avec le volume.
+
+## Résidus en dur — étape 3 (2026-11-20)
+
+Code fait, en local sur `develop` (à découper en PR `fix/residus-en-dur`). Un seul endroit définit désormais les couleurs par défaut : le `:root` de `globals.css` (palette de la carte du dépôt `#AE3B5D`…, décision du propriétaire, voir « Compromis assumés » du plan) ; `tailwind.config.ts` ne contient plus aucune valeur (replis supprimés, jeton mort `text-green` retiré, ombres `popup`/`cluster` teintées du thème). `Badge.tsx` (variant highlight) passe par `--color-surface-beige-rgb` / `--color-primary-dark-rgb`. Le gris de repli `#D4DDE2` n'est écrit qu'une fois (`DEFAULT_FORMAT_COLOR`, utilisé par `EventListView`, `EventCard`, `EventMarker`). Test « deux cartes » étendu : le badge suit le thème de sa config. `pnpm build`, `pnpm lint` (0 erreur) et `pnpm test` (frontend 233) verts. **Non vérifié** : rendu dans le navigateur avec la seconde config.
 
 ## Décisions en vigueur
 
