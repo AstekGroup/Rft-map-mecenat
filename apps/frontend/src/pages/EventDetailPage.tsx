@@ -19,8 +19,7 @@ import {
 } from 'lucide-react';
 import { useEvents } from '@/hooks';
 import { useConfig } from '@/hooks/useConfig';
-import { HighlightBadge } from '@/components/UI';
-import { Loader2 } from 'lucide-react';
+import { HighlightBadge, PageSkeletonLoader } from '@/components/UI';
 import { AddToCalendar } from '@/components/Events/AddToCalendar';
 import {getIcon} from "@/utils/iconResolver.ts";
 import { formatEventDate } from '@/utils/formatEventDate';
@@ -35,16 +34,7 @@ export function EventDetailPage() {
   const event = allEvents.find(e => e.id === id);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-surface-offwhite flex items-center justify-center font-inter">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-primary mx-auto animate-spin" />
-          <p className="mt-4 font-poppins font-semibold text-text-primary text-lg">
-            Chargement de l'événement...
-          </p>
-        </div>
-      </div>
-    );
+    return <PageSkeletonLoader variant="detail" />;
   }
 
   if (error) {

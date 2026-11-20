@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { LinkedTableRow} from '@/types/event';
-import {checkIconColor, getIcon} from "@/utils/iconResolver.ts";
+import {checkIconColor, getIcon, DEFAULT_FORMAT_COLOR} from "@/utils/iconResolver.ts";
 import {Heart, HelpCircle} from "lucide-react";
 import { HIGHLIGHT_LABEL } from '@/utils/highlight';
 
@@ -27,7 +27,7 @@ function EventMarkerComponent({
   isHighlighted = false,
 }: EventMarkerProps) {
   const Icon = getIcon(type?.pictoName, HelpCircle);
-  const typeColor = checkIconColor(type?.colorHexa, "#D4DDE2");
+  const typeColor = checkIconColor(type?.colorHexa, DEFAULT_FORMAT_COLOR);
   const isSmall = size === 'sm';
 
   return (

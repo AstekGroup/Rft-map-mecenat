@@ -2,7 +2,8 @@ import { useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useEvents, type EventFilters } from '@/hooks';
 import { EventListView, EventFiltersBar } from '@/components/Events';
-import { Loader2, ArrowLeft, Map } from 'lucide-react';
+import { PageSkeletonLoader } from '@/components/UI';
+import { ArrowLeft, Map } from 'lucide-react';
 
 export function EventsListPage() {
   const navigate = useNavigate();
@@ -65,16 +66,7 @@ export function EventsListPage() {
   const pageTitle = isOnlineMode ? 'Les événements en ligne' : 'Assister aux événements';
 
   if (loading) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-surface-offwhite font-inter">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-primary mx-auto animate-spin" />
-          <p className="mt-4 font-poppins font-semibold text-text-primary text-lg">
-            Chargement des événements...
-          </p>
-        </div>
-      </div>
-    );
+    return <PageSkeletonLoader variant="list" />;
   }
 
   if (error) {

@@ -15,14 +15,14 @@ export function Badge({ type, size = 'md', variant = 'default' }: BadgeProps) {
     md: 'px-2.5 py-1 text-sm',
   };
 
-  // Style highlight : Vert foncé sur fond beige
+  // Style highlight : couleur de thème (suit la config de la carte) sur fond beige
   if (variant === 'highlight') {
     return (
       <span
         className={`inline-flex items-center rounded-full font-semibold ${sizes[size]}`}
         style={{
-          backgroundColor: '#F2EDE4',
-          color: '#1F7A3E',
+          backgroundColor: 'rgb(var(--color-surface-beige-rgb))',
+          color: 'rgb(var(--color-primary-dark-rgb))',
         }}
       >
         {label}
