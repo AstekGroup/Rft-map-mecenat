@@ -5,10 +5,10 @@ import { EventCard } from './EventCard';
 import { FilterPanel } from '@/components/Filters/FilterPanel';
 import { PastEventsToggle } from '@/components/Filters/PastEventsToggle';
 import { ActiveFilterTags } from '@/components/Filters/ActiveFilterTags';
-import { ChevronLeft, ChevronRight, Filter, List, MapIcon, RotateCcw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Filter, List, MapIcon } from 'lucide-react';
 import { MapBounds } from '@/components/Map';
 import { countActiveFilters } from '@/utils/eventFilters';
-import { RESET_FILTERS_LABEL, TOTAL_EVENTS_LABEL } from '@/utils/labels';
+import { TOTAL_EVENTS_LABEL } from '@/utils/labels';
 
 interface SidebarProps {
   events: Event[];
@@ -35,7 +35,7 @@ export function Sidebar({
   stats,
   mapBounds,
 }: SidebarProps) {
-  const { filters, onUpdateFilters, onResetFilters } = controls;
+  const { filters, onUpdateFilters } = controls;
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [hasCollapsedOnce, setHasCollapsedOnce] = useState(false);
   const [showAttention, setShowAttention] = useState(false);
@@ -264,15 +264,6 @@ export function Sidebar({
           <span className="text-text-secondary">
             <span className="font-semibold text-primary">{stats.total}</span> {TOTAL_EVENTS_LABEL}
           </span>
-          {activeTab === 'list' && activeFiltersCount > 0 && (
-            <button
-              onClick={onResetFilters}
-              className="flex items-center gap-1 text-accent-red hover:underline font-medium"
-            >
-              <RotateCcw className="w-4 h-4" aria-hidden="true" />
-              {RESET_FILTERS_LABEL}
-            </button>
-          )}
         </div>
         {activeTab === 'list' && (
           <div className="mt-3 pt-3 border-t border-primary/10">
