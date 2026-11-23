@@ -1,11 +1,12 @@
-import { X } from 'lucide-react';
+import { X, RotateCcw } from 'lucide-react';
 import { useConfig } from '@/hooks';
 import type { EventFilterControls } from '@/hooks';
 import { getActiveFilterTags } from '@/utils/activeFilterTags';
+import { RESET_FILTERS_LABEL } from '@/utils/labels';
 
 interface ActiveFilterTagsProps {
   controls: EventFilterControls;
-  /** Affiche « Tout effacer » quand au moins une pastille est présente. */
+  /** Affiche « Réinitialiser » quand au moins une pastille est présente. */
   showClearAll?: boolean;
   className?: string;
 }
@@ -19,6 +20,16 @@ export function ActiveFilterTags({ controls, showClearAll = true, className = ''
 
   return (
     <div className={`flex flex-wrap items-center gap-2 font-inter ${className}`.trim()}>
+      {showClearAll && (
+        <button
+          type="button"
+          onClick={controls.onResetFilters}
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-accent-red hover:bg-accent-red/10 rounded-lg transition-colors"
+        >
+          <RotateCcw className="w-4 h-4" aria-hidden="true" />
+          {RESET_FILTERS_LABEL}
+        </button>
+      )}
       {tags.map((tag) => (
         <span
           key={tag.key}
@@ -35,15 +46,6 @@ export function ActiveFilterTags({ controls, showClearAll = true, className = ''
           </button>
         </span>
       ))}
-      {showClearAll && (
-        <button
-          type="button"
-          onClick={controls.onResetFilters}
-          className="text-xs text-black hover:underline font-bold"
-        >
-          Tout effacer
-        </button>
-      )}
     </div>
   );
 }

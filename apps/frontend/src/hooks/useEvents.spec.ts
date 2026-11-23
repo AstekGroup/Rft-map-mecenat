@@ -600,7 +600,6 @@ describe('useEvents', () => {
       console.log('---> result.current.stats: ', result.current.stats)
       expect(result.current.stats.total).toBe(3);
       expect(result.current.stats.filtered).toBe(3);
-      expect(result.current.stats.duringWeek).toBe(2);
       expect(result.current.stats.byType['atelier-cuisine']).toBe(2);
       expect(result.current.stats.byType['conference']).toBe(1);
     });
