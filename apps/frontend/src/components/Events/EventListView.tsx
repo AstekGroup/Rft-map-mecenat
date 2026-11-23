@@ -7,6 +7,7 @@ import { useConfig } from '@/hooks/useConfig';
 import {Calendar, Clock, Users, Accessibility, MapPin, Video, BookOpen, HelpCircle} from 'lucide-react';
 import {checkIconColor, getIcon, DEFAULT_FORMAT_COLOR} from "@/utils/iconResolver.ts";
 import { formatEventDate } from '@/utils/formatEventDate';
+import { TOTAL_EVENTS_LABEL } from '@/utils/labels';
 
 const ITEMS_PER_PAGE = 24;
 
@@ -55,7 +56,7 @@ export function EventListView({ events }: EventListViewProps) {
           {totalPages > 1 ? (
             <>
               Page {currentPage} sur {totalPages} — 
-              <span className="font-semibold text-primary ml-1">{events.length}</span> événements au total
+              <span className="font-semibold text-primary ml-1">{events.length}</span> {TOTAL_EVENTS_LABEL}
             </>
           ) : (
             <>

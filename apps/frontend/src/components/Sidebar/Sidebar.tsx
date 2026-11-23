@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Event } from '@/types/event';
-import { useConfig } from '@/hooks';
 import type { EventFilterControls } from '@/hooks';
 import { EventCard } from './EventCard';
 import { FilterPanel } from '@/components/Filters/FilterPanel';
@@ -9,6 +8,7 @@ import { ActiveFilterTags } from '@/components/Filters/ActiveFilterTags';
 import { ChevronLeft, ChevronRight, Filter, List, MapIcon } from 'lucide-react';
 import { MapBounds } from '@/components/Map';
 import { countActiveFilters } from '@/utils/eventFilters';
+import { TOTAL_EVENTS_LABEL } from '@/utils/labels';
 
 interface SidebarProps {
   events: Event[];
@@ -21,7 +21,6 @@ interface SidebarProps {
   stats: {
     total: number;
     filtered: number;
-    duringWeek: number;
   };
   mapBounds?: MapBounds | null;
 }
@@ -36,9 +35,7 @@ export function Sidebar({
   stats,
   mapBounds,
 }: SidebarProps) {
-  const { filters, onUpdateFilters, onResetFilters } = controls;
-  const { helpers } = useConfig();
-  const eventTitle = helpers.getEventName();
+  const { filters, onUpdateFilters } = controls;
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [hasCollapsedOnce, setHasCollapsedOnce] = useState(false);
   const [showAttention, setShowAttention] = useState(false);
@@ -172,7 +169,7 @@ export function Sidebar({
               <div className="px-3 py-2 bg-primary/10 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                 <span className="text-xs font-semibold text-primary-dark uppercase tracking-wide">
-                  Visibles sur la carte ({visibleEvents?.length ?? 0})
+                  Visibles sur la carte
                 </span>
               </div>
               <div className="p-2 space-y-2">
@@ -232,7 +229,7 @@ export function Sidebar({
                 <div className="px-3 py-2 bg-primary/5 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-primary/30" />
                   <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">
-                    Autres événements ({hiddenEvents.length})
+                    Autres événements
                   </span>
                 </div>
                 <div className="p-2 space-y-2">
@@ -265,16 +262,8 @@ export function Sidebar({
       <div className="p-4 bg-white border-t border-primary/10">
         <div className="flex items-center justify-between text-sm">
           <span className="text-text-secondary">
-            <span className="font-semibold text-primary">{stats.duringWeek}</span> {eventTitle ? `pour ${eventTitle}` : "pendant l'événement"}
+            <span className="font-semibold text-primary">{stats.total}</span> {TOTAL_EVENTS_LABEL}
           </span>
-          {activeTab === 'list' && activeFiltersCount > 0 && (
-            <button
-              onClick={onResetFilters}
-              className="text-accent-red hover:underline font-medium"
-            >
-              Réinitialiser
-            </button>
-          )}
         </div>
         {activeTab === 'list' && (
           <div className="mt-3 pt-3 border-t border-primary/10">

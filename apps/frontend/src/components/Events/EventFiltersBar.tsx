@@ -5,6 +5,7 @@ import { FilterContent, FilterSearch } from '@/components/Filters/FilterContent'
 import { ActiveFilterTags } from '@/components/Filters/ActiveFilterTags';
 import { countActiveFilters } from '@/utils/eventFilters';
 import { getVisibleFiltersFor } from '@/utils/filterDefinitions';
+import { RESET_FILTERS_LABEL } from '@/utils/labels';
 import { ChevronDown, RotateCcw, History } from 'lucide-react';
 
 interface EventFiltersBarProps {
@@ -88,8 +89,8 @@ export function EventFiltersBar({ controls }: EventFiltersBarProps) {
             onClick={onResetFilters}
             className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-accent-red hover:bg-accent-red/10 rounded-lg transition-colors"
           >
-            <RotateCcw className="w-4 h-4" />
-            Réinitialiser
+            <RotateCcw className="w-4 h-4" aria-hidden="true" />
+            {RESET_FILTERS_LABEL}
           </button>
         )}
 
@@ -123,8 +124,8 @@ export function EventFiltersBar({ controls }: EventFiltersBarProps) {
         </button>
       </div>
 
-      {/* Active filter tags */}
-      <ActiveFilterTags controls={controls} />
+      {/* Active filter tags — la réinitialisation passe par le bouton « Réinitialiser » de la barre */}
+      <ActiveFilterTags controls={controls} showClearAll={false} />
     </div>
   );
 }

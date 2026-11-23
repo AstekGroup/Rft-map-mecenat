@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { EventFilterControls, EventFilters } from '@/hooks';
+import { RESET_FILTERS_LABEL } from '@/utils/labels';
 import { ActiveFilterTags } from './ActiveFilterTags';
 
 // Le composant ne lit que deux helpers de config (libellés de modalité et de période).
@@ -55,10 +56,10 @@ describe('ActiveFilterTags', () => {
     const { container } = render(<ActiveFilterTags controls={makeControls()} />);
 
     expect(container.textContent).toBe('');
-    expect(screen.queryByRole('button', { name: 'Tout effacer' })).toBeNull();
+    expect(screen.queryByRole('button', { name: RESET_FILTERS_LABEL })).toBeNull();
   });
 
-  it('affiche une pastille retirable par filtre actif et « Tout effacer » réinitialise', async () => {
+  it('affiche une pastille retirable par filtre actif et « Réinitialiser » réinitialise', async () => {
     const controls = makeControls({ search: 'vélo', regions: ['Bretagne'] });
     render(<ActiveFilterTags controls={controls} />);
 
@@ -67,7 +68,7 @@ describe('ActiveFilterTags', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Retirer le filtre Bretagne' })).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Tout effacer' }));
+    await userEvent.click(screen.getByRole('button', { name: RESET_FILTERS_LABEL }));
     expect(controls.onResetFilters).toHaveBeenCalledTimes(1);
   });
 
@@ -82,11 +83,11 @@ describe('ActiveFilterTags', () => {
     expect(controls.onToggleRegion).toHaveBeenCalledWith('Bretagne');
   });
 
-  it('masque « Tout effacer » quand showClearAll est faux, mais garde les pastilles', () => {
+  it('masque « Réinitialiser » quand showClearAll est faux, mais garde les pastilles', () => {
     const controls = makeControls({ search: 'vélo' });
     render(<ActiveFilterTags controls={controls} showClearAll={false} />);
 
-    expect(screen.queryByRole('button', { name: 'Tout effacer' })).toBeNull();
+    expect(screen.queryByRole('button', { name: RESET_FILTERS_LABEL })).toBeNull();
     expect(
       screen.getByRole('button', { name: 'Retirer le filtre Recherche : « vélo »' }),
     ).toBeInTheDocument();

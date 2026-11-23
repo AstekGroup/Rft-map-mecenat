@@ -216,7 +216,6 @@ export function useEvents() {
   const stats = useMemo(() => ({
     total: events.length,
     filtered: filteredEvents.length,
-    duringWeek: events.filter(e => e.isDuringWeek).length,
     byType: Object.fromEntries(
       availableFormats.map(format => [
         format.id,

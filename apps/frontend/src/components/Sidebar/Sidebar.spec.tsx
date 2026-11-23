@@ -49,7 +49,7 @@ function renderSidebar(filters: EventFilters = defaultFilters) {
       onSelectEvent={vi.fn()}
       hoveredEvent={null}
       onHoverEvent={vi.fn()}
-      stats={{ total: 0, filtered: 0, duringWeek: 0 }}
+      stats={{ total: 0, filtered: 0 }}
     />,
   );
 }
