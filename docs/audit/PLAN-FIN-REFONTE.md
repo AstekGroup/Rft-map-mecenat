@@ -14,6 +14,7 @@
 ## Compromis assumés
 
 - **Palette Baserow dans le backend** (`apps/backend/src/baserow/baserow-palette.ts`) : les couleurs des référentiels se choisissent avec la pastille native des listes de choix Baserow ; le backend traduit le nom de pastille (`dark-orange`) en code hexadécimal. Ces codes sont ceux de l'outil Baserow, identiques pour toutes les cartes, pas des couleurs de marque : ce fichier est la seule exception attendue de la recherche `rg "#[0-9a-f]{6}"` sur `apps/backend/src`. À revérifier à chaque montée de version de Baserow (voir [../baserow/couleurs.md](../baserow/couleurs.md)).
+- **Palette par défaut du thème (2026-11-20)** : le propriétaire a choisi la palette de la carte du dépôt (`#AE3B5D` / `#7A1F3B` / `#D7A7B5`) comme valeurs par défaut de `globals.css` (`:root`), au lieu de la palette neutre prévue ci-dessous. Décision de l'étape 3, assumée : avant la réponse de `/api/config` (squelette de chargement) ou si une clé de thème manque, toute carte affiche un bref aperçu de cette palette ; la config de chaque carte écrase ces valeurs dès qu'elle arrive (`ConfigProvider`). `globals.css` reste le **seul** endroit du front qui définit des couleurs par défaut (`tailwind.config.ts` n'en contient plus aucune).
 
 ## Règles de travail (rappel)
 
@@ -60,15 +61,13 @@ Branche `test/retablir-deux-cartes`.
 - [x] Docs : `PLAN-SESSIONS.md` déjà à jour à l'étape 0 ; `SUIVI.md`, `JOURNAL.md` mis à jour.
 - Fait quand : `rg -i "deux-cartes|pull_request_template"` retrouve les trois fichiers et leurs références ; `pnpm test` vert.
 
-### 3. Résidus en dur (verdict, écarts 4 et 5)
+### 3. Résidus en dur (verdict, écarts 4 et 5) — fait (2026-11-20, code en local sur `develop`, à découper en PR `fix/residus-en-dur`)
 
-Branche `fix/residus-en-dur`.
-
-- [ ] `apps/frontend/src/components/UI/Badge.tsx` (lignes 24-25, `#F2EDE4` et `#1F7A3E`) : passer par les variables de thème injectées par `ConfigProvider.tsx`.
-- [ ] `apps/frontend/src/styles/globals.css` (ligne 11 et replis lignes 53-71) et `apps/frontend/tailwind.config.ts` (replis lignes 12-29) : palette neutre par défaut à la place de la palette LGSV.
-- [ ] Le gris de repli `#D4DDE2`, dupliqué dans `EventListView.tsx`, `EventCard.tsx`, `EventMarker.tsx` : utiliser `DEFAULT_FORMAT_COLOR` d'`utils/iconResolver.ts`.
-- [ ] Étendre les tests « deux cartes » : le badge de format suit la couleur de thème de la seconde config.
-- Fait quand : `rg -i "#[0-9a-f]{6}" apps/frontend/src --glob '!*.spec.*'` ne renvoie que la constante de repli neutre ; vérifié dans le navigateur avec la seconde config.
+- [x] `apps/frontend/src/components/UI/Badge.tsx` (lignes 24-25, `#F2EDE4` et `#1F7A3E`) : passe par les variables de thème (`--color-surface-beige-rgb`, `--color-primary-dark-rgb`).
+- [x] `apps/frontend/src/styles/globals.css` (`:root` et replis de la scrollbar) et `apps/frontend/tailwind.config.ts` (replis de chaque jeton) : **un seul endroit définit les couleurs**, le `:root` de `globals.css` ; `tailwind.config.ts` ne contient plus aucune valeur. Palette par défaut : celle du dépôt (`#AE3B5D`…), décision du propriétaire (voir « Compromis assumés »). Nettoyés au passage : jeton mort `--color-text-green-rgb` (aucune utilisation), ombres `shadow-popup`/`shadow-cluster` et `:hover` du cluster teintées du thème au lieu du vert LGSV.
+- [x] Le gris de repli `#D4DDE2`, dupliqué dans `EventListView.tsx`, `EventCard.tsx`, `EventMarker.tsx` : passe par `DEFAULT_FORMAT_COLOR` d'`utils/iconResolver.ts`.
+- [x] Étendre les tests « deux cartes » : le badge (variant highlight) suit la couleur de thème de sa config (`tests/deux-cartes.spec.tsx`, +1 test par carte).
+- Fait quand : `rg -i "#[0-9a-f]{6}" apps/frontend/src --glob '!*.spec.*'` ne renvoie que les constantes de repli neutres d'`utils/iconResolver.ts` (vérifié, 2026-11-20) ; **reste à vérifier dans le navigateur avec la seconde config** (non fait).
 
 ### 4. Cas dégradés restants (verdict, écart 6)
 

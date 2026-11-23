@@ -7,10 +7,13 @@
 
 /* Base styles */
 @layer base {
+/* Valeurs par défaut du thème : LE seul endroit du front qui définit des couleurs.
+   Servies avant la réponse de /api/config (squelette de chargement), puis écrasées
+   par la config de chaque carte (ConfigProvider.injectCSSVariables). */
 :root {
-  --color-primary-rgb: 59 174 93;
-  --color-primary-dark-rgb: 31 122 62;
-  --color-primary-light-rgb: 167 215 181;
+  --color-primary-rgb: 174 59 93;
+  --color-primary-dark-rgb: 122 31 59;
+  --color-primary-light-rgb: 215 167 181;
   --color-accent-yellow-rgb: 244 197 66;
   --color-accent-red-rgb: 228 106 93;
   --color-surface-beige-rgb: 242 237 228;
@@ -19,7 +22,6 @@
   --color-text-primary-rgb: 46 46 46;
   --color-text-secondary-rgb: 105 114 125;
   --color-text-light-rgb: 255 255 255;
-  --color-text-green-rgb: 31 122 62;
   --font-heading: 'Roboto';
   --font-body: 'Open Sans';
   --font-heading-weight: '900';
@@ -50,7 +52,7 @@ h1, h2, h3, h4, h5, h6 {
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: rgb(var(--color-primary-rgb, 59 174 93)) rgb(var(--color-surface-beige-rgb, 242 237 228));
+    scrollbar-color: rgb(var(--color-primary-rgb)) rgb(var(--color-surface-beige-rgb));
   }
   
   .scrollbar-thin::-webkit-scrollbar {
@@ -58,24 +60,24 @@ h1, h2, h3, h4, h5, h6 {
   }
   
   .scrollbar-thin::-webkit-scrollbar-track {
-    background: rgb(var(--color-surface-beige-rgb, 242 237 228));
+    background: rgb(var(--color-surface-beige-rgb));
     border-radius: 3px;
   }
   
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: rgb(var(--color-primary-rgb, 59 174 93));
+    background: rgb(var(--color-primary-rgb));
     border-radius: 3px;
   }
   
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: rgb(var(--color-primary-dark-rgb, 31 122 62));
+    background: rgb(var(--color-primary-dark-rgb));
   }
 }
 
 /* Font weight utilities from config */
 @layer utilities {
-  .font-heading { font-weight: var(--font-heading-weight, 900); }
-  .font-body { font-weight: var(--font-body-weight, 400); }
+  .font-heading { font-weight: var(--font-heading-weight); }
+  .font-body { font-weight: var(--font-body-weight); }
 }
 
 /* MapLibre customizations */
@@ -121,7 +123,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .cluster-marker:hover {
   transform: scale(1.1);
-  box-shadow: 0 4px 15px rgba(59, 174, 93, 0.5);
+  box-shadow: 0 4px 15px rgb(var(--color-primary-rgb) / 0.5);
 }
 
 /* Event marker styles */

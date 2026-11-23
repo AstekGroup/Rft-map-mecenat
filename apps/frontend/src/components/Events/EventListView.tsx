@@ -5,7 +5,7 @@ import { HighlightBadge } from '@/components/UI';
 import { Pagination } from '@/components/UI/Pagination';
 import { useConfig } from '@/hooks/useConfig';
 import {Calendar, Clock, Users, Accessibility, MapPin, Video, BookOpen, HelpCircle} from 'lucide-react';
-import {checkIconColor, getIcon} from "@/utils/iconResolver.ts";
+import {checkIconColor, getIcon, DEFAULT_FORMAT_COLOR} from "@/utils/iconResolver.ts";
 import { formatEventDate } from '@/utils/formatEventDate';
 
 const ITEMS_PER_PAGE = 24;
@@ -70,7 +70,7 @@ export function EventListView({ events }: EventListViewProps) {
         <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {paginatedEvents.map((event) => {
             const Icon = getIcon(event.type?.pictoName, HelpCircle);
-            const typeColor = checkIconColor(event.type?.colorHexa, "#D4DDE2");
+            const typeColor = checkIconColor(event.type?.colorHexa, DEFAULT_FORMAT_COLOR);
             
             return (
               <Link
