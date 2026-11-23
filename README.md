@@ -58,6 +58,8 @@ cp apps/frontend/.env.example apps/frontend/.env
 | `ALLOW_DEV_MODE` | backend | (optionnel, local seulement) autorise `?devMode=true` ; ignoré en production |
 | `VITE_API_URL` | frontend | URL du backend (`http://localhost:3000`) |
 
+En production, les variables `BASEROW_*` du backend ne sont ni dans envmap ni dans `.env.prod` : elles sont générées sur le VPS par l'initialisation Baserow (jeton lecture seule + IDs de tables), dans `deploy/instance/backend.env` (voir [deploy/README.md](deploy/README.md)).
+
 ### Lancer le projet
 
 ```bash
@@ -98,13 +100,13 @@ Types TypeScript partagés : `Event`, `EventType`, `EventFormat`, `TargetAudienc
 
 ## Déploiement
 
-Instance **Scaleway DEV1-S** avec Docker Compose : Caddy (HTTPS auto) + Nginx (frontend) + NestJS (backend).
+Instance **Scaleway DEV1-M** avec Docker Compose : **un VPS = une carte = un Baserow dédié auto-hébergé** (Caddy HTTPS + Nginx + NestJS + Baserow).
 
 ```bash
-pnpm deploy:v2
+pnpm deploy:v2 <CARTE>    # ex. pnpm deploy:v2 LGSV
 ```
 
-Voir [deploy/README.md](deploy/README.md) pour le guide complet.
+Voir [deploy/README.md](deploy/README.md) pour le guide complet (ajouter une carte, premier déploiement, secrets, sauvegarde).
 
 ## Documentation pour assistants IA
 

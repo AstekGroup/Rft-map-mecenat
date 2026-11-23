@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { readdirSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 import { buildTestConfig } from '../../test/test-config';
 import {
@@ -6,6 +6,12 @@ import {
   REFERENCE_FIELD_KEYS,
   validateAppConfig,
 } from './config-validation.util';
+
+/** Toutes les configs de cartes de la racine (app.config.json + app.config-<CARTE>.json). */
+const ROOT = resolve(__dirname, '../../../../');
+const ROOT_CONFIGS = readdirSync(ROOT).filter((f) =>
+  /^app\.config(-[\w-]+)?\.json$/.test(f),
+);
 
 /** Copie modifiable de la config de test, vue comme un objet quelconque. */
 function configWith(mutate: (config: Record<string, any>) => void): unknown {
@@ -22,15 +28,13 @@ describe('validateAppConfig', () => {
     });
   });
 
-  it.each([
-    'app.config.json',
-    'docs/audit/fixtures/app.config.second-map.json',
-  ])('accepte la config du dépôt %s', (file) => {
-    const raw = JSON.parse(
-      readFileSync(resolve(__dirname, '../../../../', file), 'utf-8'),
-    );
-    expect(validateAppConfig(raw).errors).toEqual([]);
-  });
+  it.each([...ROOT_CONFIGS, 'docs/audit/fixtures/app.config.second-map.json'])(
+    'accepte la config de carte %s',
+    (file) => {
+      const raw = JSON.parse(readFileSync(resolve(ROOT, file), 'utf-8'));
+      expect(validateAppConfig(raw).errors).toEqual([]);
+    },
+  );
 
   it("refuse autre chose qu'un objet", () => {
     expect(validateAppConfig(null).errors).toHaveLength(1);

@@ -1,27 +1,35 @@
 project: make-map
-default_env: prod
+default_env: prod-lgsv
+
+# Une carte = un environnement envmap = un VPS (voir scripts/deploy-v2.sh et deploy/README.md).
+# Dupliquer le bloc par carte et renseigner (aucune valeur par défaut) :
+#   envmap set --env prod-lgsv SCW_INSTANCE_IP --prompt     # IP publique du VPS de la carte
+#   envmap set --env prod-lgsv DOMAIN --prompt              # domaine public de la carte (ex. map.carte.fr)
+#   envmap set --env prod-lgsv BASEROW_DOMAIN --prompt      # domaine Baserow de l'instance (ex. baserow.carte.fr)
+#   envmap set --env prod-lgsv BASEROW_ADMIN_EMAIL --prompt # e-mail du compte admin Baserow
+#   envmap set --env prod-lgsv CORS_ORIGIN --prompt         # optionnel (défaut : https://<DOMAIN>)
+#
+# Les secrets générés au premier déploiement (SECRET_KEY Baserow, mot de passe admin,
+# jeton lecture seule, IDs de tables) restent SUR LE VPS (deploy/instance/),
+# jamais dans envmap ni dans le dépôt.
 
 envs:
-  prod:
+  prod-lgsv:
     provider: local-dev
-    prefix: make-map/prod/
+    prefix: make-map/prod-lgsv/
     keys:
-      # Backend (Baserow)
-      - BASEROW_API_URL
-      - BASEROW_API_TOKEN
-      - BASEROW_EVENT_TABLE_ID
-      - BASEROW_MODERATION_FIELD_ID
-      - BASEROW_PARTNERS_TABLE_ID
-      - BASEROW_THEMATIQUES_TABLE_ID
-      - BASEROW_FORMATS_TABLE_ID
-      - BASEROW_PUBLICS_TABLE_ID
-      # Frontend
-      - VITE_API_URL
-      # Scaleway
-      - SCW_ACCESS_KEY
-      - SCW_SECRET_KEY
-      - SCW_PROJECT_ID
       - SCW_INSTANCE_IP
-      # Production
       - DOMAIN
+      - BASEROW_DOMAIN
+      - BASEROW_ADMIN_EMAIL
+      - CORS_ORIGIN
+
+  prod-jnr:
+    provider: local-dev
+    prefix: make-map/prod-jnr/
+    keys:
+      - SCW_INSTANCE_IP
+      - DOMAIN
+      - BASEROW_DOMAIN
+      - BASEROW_ADMIN_EMAIL
       - CORS_ORIGIN

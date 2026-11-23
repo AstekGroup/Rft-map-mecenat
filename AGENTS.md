@@ -19,7 +19,7 @@ Ce dépôt est **1 seul code pour N cartes** d'événements (une carte = un év�
 
 ## Règles globales (tout le monorepo)
 
-1. **Baserow** : **lecture seule** depuis l'application (le backend ne fait que des `GET`) ; jeton uniquement côté backend (`BASEROW_API_TOKEN`), jamais dans le front ni dans le dépôt. Exception documentée : les scripts de `scripts/seed-baserow/` écrivent dans une instance **Docker locale jetable** (ne jamais les pointer vers un Baserow réel).
+1. **Baserow** : **lecture seule** depuis l'application (le backend ne fait que des `GET`) ; jeton uniquement côté backend (`BASEROW_API_TOKEN`), jamais dans le front ni dans le dépôt. Exceptions documentées : les scripts de `scripts/seed-baserow/` écrivent dans une instance **Docker locale jetable** (ne jamais les pointer vers un Baserow réel) ; `scripts/baserow-init/` crée le schéma de sa carte (et un jeton en lecture seule) sur le Baserow **vide** de son instance au premier déploiement — création seule : aucune ligne, aucune modification ni suppression (une colonne existante au mauvais type est une erreur).
 2. **Modération** : un événement n'est public que s'il porte la valeur de modération configurée (`baserow.moderationVisibleValue`). En cas de doute (champ manquant, valeur vide), **masquer**, ne pas publier. Le mode `devMode` ne doit pas être accessible publiquement en production.
 3. **Langue** : interface et libellés **en français** ; code, commentaires techniques et noms d'identifiants peuvent rester en anglais.
 4. **Git** : voir « Workflow Git » ci-dessous.

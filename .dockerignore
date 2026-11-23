@@ -10,6 +10,7 @@
 **/.env.local
 **/.env.*.local
 deploy/.env.prod
+deploy/instance
 
 # IDE
 .vscode
@@ -27,7 +28,10 @@ deploy/.env.prod
 docs/
 resources/
 
-# Tests
+# Tests (le build de production n'embarque ni specs ni setup de test ;
+# sinon tsc compile les *.spec.tsx sans les types jest-dom de src/test/)
 **/coverage
 **/*.spec.ts
+**/*.spec.tsx
 **/test/
+**/tests/
